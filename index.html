@@ -2,645 +2,436 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Kaijing Ma | Homepage</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Cdefs%3E%3ClinearGradient id='cyberGradient' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%236ea8ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23a064ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23cyberGradient)' stroke-width='16' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- M (Ma) --%3E%3Cpath d='M15 80 V20 L45 55 L75 20 V80' /%3E%3C!-- - (Logic Link) --%3E%3Cpath d='M95 50 H110' stroke='%23ffffff' stroke-width='12' /%3E%3C!-- KJ (Kaijing) --%3E%3Cpath d='M130 20 V80 M130 50 L160 20 M130 50 L155 55 M175 20 V80 Q175 95 155 95' /%3E%3C/g%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaijing Ma | Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    function updateDynamicTimeline() {
-        const startDate = new Date(2022, 0, 1); // 时间轴起点：2022年1月
-        const endDate = new Date(2026, 0, 1);   // 时间轴终点：2026年1月
-        const today = new Date();
-
-        // 1. 计算总分钟数和已过去分钟数（比按月算更精确）
-        const totalDuration = endDate - startDate;
-        const elapsed = today - startDate;
-        
-        // 计算百分比位置
-        let scrollPercent = (elapsed / totalDuration) * 100;
-        if (scrollPercent > 100) scrollPercent = 100; // 封顶到2026年
-        if (scrollPercent < 0) scrollPercent = 0;
-
-        // 2. 更新 Today 线的位置
-        const todayLine = document.getElementById('todayLine');
-        const todayLabel = document.getElementById('todayLabel');
-        if (todayLine) {
-            todayLine.style.left = scrollPercent + '%';
-            
-            // 更新标签文字，例如 "Today (Dec 2025)"
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            todayLabel.innerText = `Today (${monthNames[today.getMonth()]} ${today.getFullYear()})`;
-        }
-
-        // 3. 自动调整所有标记为 .auto-width 的进行中经历条
-        const autoBars = document.querySelectorAll('.auto-width');
-        autoBars.forEach(bar => {
-            const startYear = parseInt(bar.getAttribute('data-start-year'));
-            const startMonth = parseInt(bar.getAttribute('data-start-month')) - 1; // JS月份从0开始
-            const barStartDate = new Date(startYear, startMonth, 1);
-            
-            const barStartElapsed = barStartDate - startDate;
-            const barStartPercent = (barStartElapsed / totalDuration) * 100;
-            
-            // 设置起点和宽度
-            bar.style.left = barStartPercent + '%';
-            bar.style.width = (scrollPercent - barStartPercent) + '%';
-        });
-    }
-
-    // 页面加载和时间变化时运行
-    window.onload = updateDynamicTimeline;
-</script>
-<body>
-
-<!-- ====================== PARTICLE BACKGROUND ======================= -->
-<div class="particles">
-    <!-- generate 25 floating particles -->
-    <script>
-        for (let i=0;i<25;i++){
-            const p=document.createElement('div');
-            p.className='particle';
-            p.style.left=Math.random()*100+'%';
-            p.style.top=Math.random()*100+'%';
-            p.style.animationDelay=(Math.random()*10)+'s';
-            p.style.opacity=Math.random();
-            document.querySelector('.particles').appendChild(p);
-        }
-    </script>
-</div>
-
-<!-- ====================== NAVIGATION ======================= -->
-<nav>
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <a href="CV.pdf" target="_blank">CV</a>
-    </ul>
-</nav>
-
-<div class="container">
-
-
-<!-- ====================== WELCOME ======================= -->
-<div class="welcome" style="margin-top: -20px;">
-    <div class="profile-box" style="margin-top: 120px;">
-        <img src="assets/kaijing.jpg" alt="Profile Photo">
-
-        <div class="social-links">
-
-            <a href="https://github.com/mkj3085003">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.5 2.87 8.32 6.84 9.68.5.1.68-.22.68-.48v-1.7c-2.78.63-3.37-1.37-3.37-1.37-.46-1.2-1.14-1.52-1.14-1.52-.93-.66.07-.64.07-.64 1.03.07 1.57 1.1 1.57 1.1.91 1.6 2.38 1.14 2.96.88.09-.68.35-1.14.63-1.4-2.22-.26-4.56-1.14-4.56-5.1 0-1.14.39-2.07 1.03-2.8-.1-.26-.45-1.33.1-2.74 0 0 .84-.27 2.75 1.07A9.18 9.18 0 0 1 12 7.5c.85 0 1.7.12 2.5.34 1.9-1.34 2.75-1.07 2.75-1.07.55 1.41.2 2.48.1 2.74.64.73 1.03 1.66 1.03 2.8 0 3.98-2.35 4.83-4.6 5.08.36.32.68.94.68 1.92v2.84c0 .27.18.6.69.48A10.27 10.27 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/>
-                </svg>
-                GitHub
-            </a>
-
-            <a href="mailto:2151400@tongji.edu.cn">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v1l-10 6L2 7V6c0-1.1.9-2 2-2Zm18 5-10 6L2 9v9c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9Z"/>
-                </svg>
-                Email
-            </a>
-
-            <a href="https://scholar.google.com/citations?hl=zh-CN&user=0nt08kUAAAAJ">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M12 3 2 9l10 6 10-6-10-6Zm0 8.7L4.6 9 12 5.3 19.4 9 12 11.7Z" />
-                    <path d="M6 12.5v4.5L12 22l6-5v-4.5l-6 3.5-6-3.5Z"/>
-                </svg>
-                Google Scholar
-            </a>
-
-        </div>
-
-    </div>
-
-    <div class="intro-text">
-        <h1>Hello! I'm <span class="highlight">Kaijing Ma</span></h1>
-
-        <h3>About Me</h3>
-        <p>
-            I recently graduated from <b><span class="highlight">Tongji University</span></b> with a Bachelor's degree in <span class="highlight">Computer Science and Technology</span>. 
-            My name carries the meaning of <i>lush growth and thriving energy</i>, and I am naturally <span class="highlight">cheerful</span>, <span class="highlight">optimistic</span>, and <span class="highlight">curious</span>. 
-            I love exploring diverse facets of life — from arts and literature to hands-on experiments, tinkering with robots, and building quirky projects for fun. 
-            I am always eager to embrace new challenges and learn through both collaborative teamwork and self-driven exploration.
-        </p>
-
-
-        <h3>Research Interests</h3>
-        <p>My research vision focuses on transforming the abstract concept of  <b><span class="highlight">"intelligence"</span></b> into engineering systems that are <span class="highlight">constructible</span>, <span class="highlight">measurable</span>, and <span class="highlight">explainable</span>. 
-        Specifically, my research interests include:</p>
-        <ul>
-            <li><b class="highlight">Natural Language Processing (NLP)</b> — studying language understanding and generation with large-scale models.</li>
-            <li><b class="highlight">Reasoning Capabilities of LLMs</b> — evaluating, enhancing, and systematically improving how LLMs perform logical and multi-step reasoning.</li>
-            <li><b class="highlight">Mechanistic Interpretability</b> — uncovering the underlying mechanisms behind LLM reasoning processes.</li>
-            <li><b class="highlight">AI Safety</b> — designing methods to ensure robust, safe, and aligned AI behavior.</li>
-            <li><b class="highlight">Embodied Intelligence</b> — exploring how AI can interact with and learn from physical environments and robotics systems.</li>
-        </ul>
-    </div>
-
-</div>
-
-<!-- ====================== EDUCATION ======================= -->
-<h2>Education</h2>
-
-<div class="info-block">
-    <div class="info-title">Tongji University
-        <a href="https://www.tongji.edu.cn/eng/index.htm" target="_blank" class="pub-btn" style="margin-left:10px" >Link</a>
-    </div>
-    <div class="info-sub">B.S. in Computer Science · 2021–2025</div>
-</div>
-
-<!-- ====================== PERSONAL DEVELOPMENT TIMELINE ======================= -->
-<section class="cyber-timeline-section">
-    <h2>Personal Development Timeline</h2>
-
-    <!-- 顶部进度指示器 -->
-    <div class="scroll-progress-container">
-        <div class="scroll-progress-bar" id="timelineProgress"></div>
-    </div>
-
-    <!-- 滚动查看器 -->
-    <div class="timeline-scroll-viewer" id="timelineViewer">
-        <div class="timeline-canvas">
-            
-            <!-- 今天标记线 (由 JS 自动定位) -->
-            <div class="today-line" id="todayLine">
-                <span class="today-label" id="todayLabel">Today</span>
-            </div>
-
-            <!-- 背景年份刻度 -->
-            <div class="year-markers">
-                <div class="year-mark"><span>2022</span></div>
-                <div class="year-mark"><span>2023</span></div>
-                <div class="year-mark"><span>2024</span></div>
-                <div class="year-mark"><span>2025</span></div>
-                <div class="year-mark"><span>2026</span></div>
-            </div>
-
-            <!-- 经历轨道 -->
-            <div class="experience-tracks">
-                
-                <!-- Track 1: 长期的学术积累 -->
-                <div class="track-row">
-                    <!-- MAP: 2023.10 开始，持续至今 -->
-                    <div class="exp-bar ongoing auto-width" data-start-year="2023" data-start-month="10">
-                        <div class="bar-content">
-                            <span class="bar-title">MAP Open Source Community</span>
-                            <span class="bar-tag">Reasoning Benchmarks (KOR-Bench, SuperGPQA)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Track 2: 视觉、交叉与前沿 -->
-                <div class="track-row">
-                    <!-- SRIAS: 2022.06 - 2023.09 (静态宽度) -->
-                    <div class="exp-bar" style="left: 10.4%; width: 31.3%;">
-                        <div class="bar-content">
-                            <span class="bar-title">SRIAS (Tongji)</span>
-                            <span class="bar-tag">Pedestrian Re-ID & Cloud-Edge Algorithms</span>
-                        </div>
-                    </div>
-                    <!-- SPAR: 2024.02 - 2024.06 -->
-                    <div class="exp-bar" style="left: 52%; width: 8.3%;">
-                        <div class="bar-content">
-                            <span class="bar-title">SPAR Project</span>
-                            <span class="bar-tag">AI Safety & Steganography</span>
-                        </div>
-                    </div>
-                    <!-- MIT: 2025.06 开始，持续至今 -->
-                    <div class="exp-bar ongoing auto-width" data-start-year="2025" data-start-month="6">
-                        <div class="bar-content">
-                            <span class="bar-title">MIT CSAIL (Remote)</span>
-                            <span class="bar-tag">MusicDSL & Computational Design</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Track 3: 逻辑推理与解释性 -->
-                <div class="track-row">
-                    <!-- VEX: 2022.10 - 2023.12 -->
-                    <div class="exp-bar" style="left: 18.7%; width: 29.2%;">
-                        <div class="bar-content">
-                            <span class="bar-title">VEX Robotics Team Leader</span>
-                            <span class="bar-tag">Tjulib Library & Odometry Positioning</span>
-                        </div>
-                    </div>
-                    <!-- AI Safety Hungary: 2024.02 - 2024.04 -->
-                    <div class="exp-bar" style="left: 52%; width: 4.2%;">
-                        <div class="bar-content">
-                            <span class="bar-title">AI Safety Hungary</span>
-                            <span class="bar-tag">Alignment Trainee</span>
-                        </div>
-                    </div>
-                    <!-- ByteDance: 2025.05 - 2025.10 -->
-                    <div class="exp-bar" style="left: 81.2%; width: 12.5%;">
-                        <div class="bar-content">
-                            <span class="bar-title">ByteDance Intern</span>
-                            <span class="bar-tag">Formal Reasoning (Lean 4) & Mech Interp</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Track 4: 工业界大规模训练 -->
-                <div class="track-row">
-                     <!-- Stepfun: 2025.12 开始，持续至今 -->
-                     <div class="exp-bar ongoing auto-width current-task" data-start-year="2025" data-start-month="12">
-                        <div class="bar-content">
-                            <span class="bar-title">Stepfun</span>
-                            <span class="bar-tag">LLM Pretrain</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div> <!-- End tracks -->
-        </div> <!-- End canvas -->
-    </div> <!-- End viewer -->
-    <p class="scroll-hint">← Drag to scroll | Updates automatically based on current date →</p>
-</section>
-
-<!-- ====================== RESEARCH & EXPERIENCE ======================= -->
-<h2>Research Experience</h2>
-
-<div class="exp-grid">
-
-
-    <!-- Stepfun -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">Stepfun — LLM Pretrain Intern
-                <a href="https://platform.stepfun.com/" target="_blank" class="pub-btn" style="margin-left:10px" >Link</a>
-            </div>
-            <div class="exp-time">Dec 2025 – Present</div>
-            <p>
-                Working on pretraining algorithms for large-scale models, focusing on optimization, data pipeline design, and scaling model training for enhanced performance and efficiency.
-            </p>
-        </div>
-    </div>
-    <!-- ByteDance -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">
-                ByteDance — LLM Research Intern
-                <a href="https://seed.bytedance.com/en/" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-            </div>
-            <div class="advisor-block">
-                <span class="advisor-prefix">Advised by </span>
-                <a href="https://scholar.google.com/citations?user=OdE3MsQAAAAJ&hl=en" target="_blank" class="advisor-badge">Dr. Wenhao Huang</a>
-                <a href="https://scholar.google.com/citations?user=qyTrq4kAAAAJ&hl=en" target="_blank" class="advisor-badge">Dr. Ge Zhang</a>
-            </div>
-            <div class="exp-time">May 2025 – Oct 2025</div>
-            <p>
-                Worked on formal reasoning and automated theorem proving with large language models (LLMs), constructing large datasets for reasoning experiments and evaluation.
-            </p>
-        </div>
-    </div>
-
-    <!-- MIT CSAIL -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">
-                MIT CSAIL CDFG — Research Intern
-                <a href="https://cdfg.csail.mit.edu/team" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-            </div>
-            <div class="advisor-block">
-                <span>Advised by </span>
-                <a href="https://scholar.google.com/citations?hl=en&user=wbIMbL8AAAAJ" target="_blank" class="advisor-badge">
-                    Prof. Wojciech Matusik
-                </a>
-                <span class="advisor-remote">(Remote)</span>
-            </div>            
-            <div class="exp-time">Jun 2025 – Present</div>
-            <p>
-                Developed MusicDSL, a domain-specific language for musical structure, and built middleware connecting DAWs with AI models.
-            </p>
-        </div>
-    </div>
-
-    <!-- MAP Lab -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">
-                MAP Open Source Community — Intern
-                <a href="https://huggingface.co/m-a-p" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-            </div>
-
-            <div class="advisor-block">
-                <span class="advisor-prefix">Advised by </span>
-                <a href="https://scholar.google.com/citations?user=qyTrq4kAAAAJ&hl=en" target="_blank" class="advisor-badge">Dr. Ge Zhang</a>
-                <span>& other community mentors</span>
-            </div>
-
-            <div class="exp-time">Oct 2023 – Present</div>
-            <p>
-                Focused on designing benchmarks and evaluation tools to systematically assess model reasoning capabilities, and authored detailed research reports supporting team projects and analyses.
-            </p>
-        </div>
-    </div>
-
-    <!-- Shanghai Institute for Intelligent Autonomous Systems -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">Shanghai Institute for Intelligent Autonomous Systems — Research Assistant
-                <a href="https://srias.tongji.edu.cn/" target="_blank" class="pub-btn" style="margin-left:10px" >Link</a>
-            </div>
-            <div class="exp-time">Jun 2022 – Sep 2023</div>
-            <p>
-                Developed cloud–edge pedestrian re-identification algorithms, implemented multi-level clustering methods, and authored patents.
-            </p>
-        </div>
-    </div>
-
-    <!-- SPAR Project -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">SPAR Project — Mentee
-                <a href="https://sparai.org/" target="_blank" class="pub-btn" style="margin-left:10px" >Link</a>
-            </div>
-            <div class="exp-time">Feb 2024 – Jun 2024</div>
-            <p>
-                Implemented a secure steganography system integrating iMEC and GPT-2.
-            </p>
-        </div>
-    </div>
-    
-
-    <!-- AI Safety Hungary Technical Course -->
-    <div class="exp-row">
-        <div class="exp-text">
-            <div class="exp-title">AI Safety Hungary Course — Trainee
-                <a href="https://www.aishungary.com/" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-            </div>
-            <div class="exp-time">Feb 2024 – Apr 2024</div>
-            <p>Studied AI alignment and safety through technical readings and group discussions.</p>
-        </div>
-    </div>
-
-</div>
-
-<h2>Other Experience</h2>
-
-<div class="other-exp-card">
-    <div class="other-exp-header">
-        <div>
-            <div class="other-exp-title">
-                VEX Robotics Laboratory, Tongji University — Program Team Leader
-            </div>
-            <div class="other-exp-time">
-                Oct 2022 – Dec 2023
-            </div>
-        </div>
-        <div class="other-exp-links">
-            <a href="https://github.com/TongJiVex" target="_blank">Lab GitHub</a>
-            <a href="https://github.com/TongJiVexProgramGroup" target="_blank">Program GitHub</a>
-            <a href="https://www.bilibili.com/video/BV11q421w7JQ/" target="_blank">Videos</a>
-            <a href="https://tongjivex.github.io/2022-2023_TJU_Engineering_Notebook/" target="_blank">Engineering Notes</a>
-        </div>
-    </div>
-
-    <!-- Image Ring -->
-    <div class="other-exp-images">
-        <img src="assets/robot1.jpg" alt="Robot1">
-        <img src="assets/robot2.jpg" alt="Robot2">
-        <img src="assets/robot3.jpg" alt="Robot3">
-        <img src="assets/robot4.jpg" alt="Robot4">
-        <img src="assets/robot5.jpg" alt="Robot5">
-    </div>
-
-    <ul>
-        <li>
-            Led the development of the <b>tjulib</b> library, overseeing design and coding of its functionality,
-            and implemented an omni-directional octagonal chassis design and odometry algorithm for full-field positioning.
-        </li>
-    </ul>
-</div>
-
-
-<!-- ====================== PUBLICATIONS ======================= -->
-<h2>Publications</h2>
-<p style="font-size:0.9em; color: #555;">
-    Listed in reverse chronological order (most recent first)
-</p>
-<div class="pub-grid">
-
-    <div class="pub-card">
-        <div class="pub-title">Scaling Latent Reasoning via Looped Language Models</div>
-        <div class="pub-venue">Mechanistic Interpretability</div>
-        <div class="pub-links">
-            <a href="http://ouro-llm.github.io/" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2510.25741" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-
-    <div class="pub-card first-author">
-        <div class="pub-title">Criticlean: Critic-guided reinforcement learning for mathematical formalization</div>
-        <div class="pub-venue">Co-First Author</div>
-        <div class="pub-links">
-            <a href="https://github.com/multimodal-art-projection/CriticLean" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2507.06181" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card">
-        <div class="pub-title">Seed-Prover: Deep and broad reasoning for automated theorem proving</div>
-        <div class="pub-venue">Data Support</div>
-        <div class="pub-links">
-            <a href="https://github.com/ByteDance-Seed/Seed-Prover" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2507.23726" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card">
-        <div class="pub-title">KORGym: A Dynamic Game Platform for LLM Reasoning Evaluation</div>
-        <div class="pub-venue">NeurIPS 2025 Spotlight • Game Support</div>
-        <div class="pub-links">
-            <a href="https://github.com/multimodal-art-projection/KORGym" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2505.14552" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card first-author">
-        <div class="pub-title">SuperGPQA: Scaling LLM Evaluation across 285 Graduate Disciplines</div>
-        <div class="pub-venue">NeurIPS 2025 • Leading Author</div>
-        <div class="pub-links">
-            <a href="https://supergpqa.github.io/" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2502.14739" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card first-author">
-        <div class="pub-title">KOR-Bench: Benchmarking Language Models on Knowledge-Orthogonal Reasoning Tasks</div>
-        <div class="pub-venue">ICLR 2025 • First Author</div>
-        <div class="pub-links">
-            <a href="https://kor-bench.github.io/" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2410.06526" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card">
-        <div class="pub-title">KARPA: A Training-free Method of Adapting Knowledge Graph as References for LLM’s Reasoning Path Aggregation</div>
-        <div class="pub-venue">ACL Findings 2025 • Second Author</div>
-        <div class="pub-links">
-            <a href="https://github.com/Icamd/KARPA" target="_blank" class="pub-btn">Website</a>
-            <a href="https://aclanthology.org/2025.findings-acl.1269.pdf" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card first-author">
-        <div class="pub-title">CodeEditorBench: Evaluating Code Editing Capability of Large Language Models</div>
-        <div class="pub-venue">ICLR 2025 DL4C • Co-First Author</div>
-        <div class="pub-links">
-            <a href="https://codeeditorbench.github.io/" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2404.03543" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card">
-        <div class="pub-title">SciMMIR: Benchmarking Scientific Multi-modal Information Retrieval</div>
-        <div class="pub-venue">Data Support</div>
-        <div class="pub-links">
-            <a href="https://github.com/Wusiwei0410/SciMMIR" target="_blank" class="pub-btn">Website</a>
-            <a href="https://aclanthology.org/2024.findings-acl.746.pdf" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-    <div class="pub-card">
-        <div class="pub-title">MAP-Neo: Highly Capable and Transparent Bilingual Large Language Model Series</div>
-        <div class="pub-venue">Data Pipeline</div>
-        <div class="pub-links">
-            <a href="https://map-neo.github.io/" target="_blank" class="pub-btn">Website</a>
-            <a href="https://arxiv.org/pdf/2405.19327" target="_blank" class="pub-btn">PDF</a>
-        </div>
-    </div>
-
-</div>
-
-
-
-<h2>Ongoing Long-term Project</h2>
-
-<div class="exp-row">
-    <div class="exp-text">
-        <div class="exp-title">
-            OpSynth-MI — Operator Synthesis for Mechanistic Interpretability
-            <a href="https://github.com/opulse-exp/op_plus" target="_blank" class="pub-btn"  style="margin-left:16px;">GitHub</a>
-        </div>
-        <div class="exp-time">2025 – Present</div>
-        <p>
-            <b>OpSynth-MI is a long-term, lead-by-me research agenda</b> aimed at developing a systematic operator-based framework for mechanistic interpretability.
-            Using newly defined operators, the project constructs a controllable <b>reasoning sandbox</b> that continuously simulates declarative and procedural knowledge from cognitive psychology, explicitly modeling dependencies between different knowledge types and exploring their compositional interactions. 
-            This series of works seeks to progressively uncover and formalize the internal mechanisms of large language models, enhancing transparency and reasoning understanding.
-        </p>
-    </div>
-</div>
-
-
-<!-- ====================== RESEARCH VISION & CONCEPT MAPS ======================= -->
-<h2>Research Vision & Concept Maps</h2>
-<p style="font-size:0.9em; color:#555;">
-    A collection of selected visual summaries of my research ideas, conceptual frameworks, and long-term directions.
-</p>
-
-<div class="research-carousel">
-    <div class="slides">
-        <div class="slide">
-            <img src="./assets/overview_01.png" alt="Reasoning Roadmap" class="slide-img" onclick="openLightbox(this)">
-            <div class="caption">Figure 1: Toward Deeper, Longer, and More Reliable Reasoning: Theory, Mechanisms, and Training Paradigms</div>
-            <div class="description">
-                This roadmap proposes a systematic framework for advancing AI reasoning via reproducible and interpretable patterns. A methodological loop—“theory → mechanism → training → feedback”—integrates abstract reasoning, mechanism analysis, and training design. Experimentally, a complementary cycle of clean and chaotic data tests capabilities, guides architecture, and drives iterative improvement. Together, these cycles enhance model reasoning in a controlled, interpretable, and reproducible manner, shifting research from engineering-driven practice toward foundational science.
-            </div>
-        </div>
-
-        <!-- Slide 2 -->
-        <div class="slide">
-            <img src="./assets/overview_02.png" alt="Research Framework" class="slide-img" onclick="openLightbox(this)">
-            <div class="caption">Figure 2: Wiser Agent, Wider World: Customizing the World for Agent Growth</div>
-            <div class="description">
-                This framework illustrates tiered agent training guided by WorldGPT, where synthetic environments are progressively adapted to the agent's skill level. A scheduler sets objectives, generates multimodal data, and iteratively refines both agent behavior and environment complexity, enabling continuous capability enhancement through feedback loops.
-            </div>
-        </div>
-
-        <div class="slide">
-            <img src="./assets/overview_03.png" alt="LLM-Empowered Embodied Intelligence" class="slide-img" onclick="openLightbox(this)">
-            <div class="caption">Figure 3: LLM-Empowered Embodied Intelligence for Physical Interaction</div>
-            <div class="description">
-                This study addresses the semantic gap between physical multimodal data and LLM reasoning in embodied intelligence. We propose a framework that converts sensor data into LLM-interpretable formats, integrates physical rules, and constructs a task-specific reasoning library for single and multi-agent scenarios. A feedback-based mechanism iteratively refines LLM reasoning using execution outcomes, aiming to improve task success rates in complex, dynamic environments.
-            </div>
-        </div>
-    </div>
-
-    <div class="dots-container">
-        <span class="dot active"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-    </div>
-</div>
-
-<!-- Lightbox Overlay -->
-<div id="lightbox" onclick="closeLightbox()">
-    <img id="lightbox-img" src="">
-</div>
-
-<script>
-const slides = document.querySelectorAll('.slide');
-const dots = document.querySelectorAll('.dot');
-let current = 0;
-
-function showSlide(index) {
-    slides.forEach((s, i) => s.style.display = i === index ? 'flex' : 'none');
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
-    current = index;
-}
-
-dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => showSlide(i));
-});
-
-// 初始化显示第一张
-showSlide(0);
-
-function openLightbox(img) {
-    document.getElementById('lightbox-img').src = img.src;
-    document.getElementById('lightbox').style.display = 'flex';
-}
-
-function closeLightbox() {
-    document.getElementById('lightbox').style.display = 'none';
-}
-
-</script>
-<!-- ====================== AWARDS ======================= -->
-<h2>Competition Awards</h2>
-
-<div class="info-card">
-    <p>
-        <b>Excellence Award</b> — 2023 CCF Software Conference Robotics Large Model and Embodied Intelligence Competition
-        <a href="https://chinasoft.ccf.org.cn/2023/notice/Robot.html" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-    </p>
-    <p><b>First Prize</b> — Professional Track 1, 2023 AI for Brain Science Collegiate Challenge</p>
-    <p><b>First Prize</b> — Creative Group, 2023 Shanghai Female Student Innovation and Entrepreneurship Competition</p>
-    <p>
-        <b>4th Place</b> — 2023 VEX Robotics World Championships VEX U Design Division
-        <a href="https://recf.org/vex-robotics-world-championship/" target="_blank" class="pub-btn" style="margin-left:10px">Link</a>
-    </p>
-    <p><b>Design Award</b> — 2023 China University Students Intelligent Robot Creativity Competition</p>
-</div>
-
-
-<!-- ====================== SKILLS ======================= -->
-<h2>Languages & Skills</h2>
-
-<div class="info-card">
-    <p><b>Languages:</b> Chinese (Native) | English (Fluent)</p>
-    <p><b>Programming:</b> Python, C/C++, Verilog, JavaScript, HTML/CSS, Assembly</p>
-    <p><b>Machine Learning & Deep Learning:</b> PyTorch, TensorFlow, HuggingFace Transformers</p>
-    <p><b>Large Language Models:</b> Megatron-LM, vLLM, LLaMA-Factory (SFT), VERL (RL), NNSight (Interpretability), Ray (Distributed)</p>
-    <p><b>Robotics & Simulation:</b> Mechanical Assembly, SolidWorks, 3D Printing, ROS, Sensors, Basic Control</p>
-</div>
-
-
-<footer>
-    © 2025 Kaijing Ma
-</footer>
-
+<body id="top">
+    <table class="page-table" align="center" border="0" cellspacing="0" cellpadding="20">
+        <tr>
+            <td>
+                <header class="site-header">
+                    <nav class="quick-nav" aria-label="Section navigation">
+                        <a href="#news">News</a>
+                        <a href="#publications">Publications</a>
+                        <a href="#experience">Experience</a>
+                    </nav>
+                    <h1>Kaijing Ma <span class="cn-name">「麻开菁」</span></h1>
+                </header>
+
+                <table class="intro-table" width="100%" align="center" border="0" cellspacing="0" cellpadding="20">
+                    <tr>
+                        <td class="portrait-cell" width="36%" valign="top">
+                            <a href="assets/kaijing0.jpg">
+                                <img src="assets/kaijing0.jpg" alt="Kaijing Ma" class="portrait">
+                            </a>
+                            <div class="email-block" aria-label="Email addresses">
+                                <div class="email-heading">
+                                    <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M4.5 7.5 12 12.8l7.5-5.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>Email</span>
+                                </div>
+                                <span class="email-address">kaijing.ma [at] utexas [dot] edu</span>
+                                <span class="email-address">mkj3085003 [at] gmail [dot] com</span>
+                            </div>
+                            <p class="contact-links">
+                                <a href="https://scholar.google.com/citations?hl=zh-CN&user=0nt08kUAAAAJ" target="_blank" rel="noreferrer" aria-label="Google Scholar" class="contact-link">
+                                    <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 3 2 8.5 12 14l10-5.5L12 3Zm-5.7 9.1v4.2c0 1.8 2.5 3.2 5.7 3.2s5.7-1.4 5.7-3.2v-4.2L12 15.2l-5.7-3.1Z"/>
+                                    </svg>
+                                    <span>Scholar</span>
+                                </a>
+                                <a href="https://github.com/mkj3085003" target="_blank" rel="noreferrer" aria-label="Github" class="contact-link">
+                                    <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.4-1.1-1-1.4-1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.6.4-1.1.7-1.3-2.2-.3-4.6-1.1-4.6-5A3.9 3.9 0 0 1 6.8 8.8c-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.8 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.8V21c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/>
+                                    </svg>
+                                    <span>Github</span>
+                                </a>
+                                <a href="https://twitter.com/ma_kaijing" target="_blank" rel="noreferrer" aria-label="Twitter" class="contact-link">
+                                    <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M18.3 2.8h3.1l-6.8 7.8 8 10.6h-6.3l-4.9-6.4-5.6 6.4H2.7l7.3-8.4L2.3 2.8h6.4l4.4 5.9 5.2-5.9Zm-1.1 16.5h1.7L7.8 4.6H6L17.2 19.3Z"/>
+                                    </svg>
+                                    <span>Twitter</span>
+                                </a>
+                            </p>
+                        </td>
+                        <td class="intro-copy" width="64%" valign="top">
+                            <p class="intro-lead">
+                                I am a first-year Ph.D. student in Computer Science at The University of Texas at Austin,
+                                co-advised by <strong><a href="https://www.vita-group.space/pi" target="_blank" rel="noreferrer">Prof. Atlas Wang</a></strong>
+                                and <strong><a href="https://www.cs.utexas.edu/~lqiang/" target="_blank" rel="noreferrer">Prof. Qiang Liu</a></strong>.
+                            </p>
+                            <p>
+                                My current interests include <span class="topic-chip">long-horizon agents</span>,
+                                <span class="topic-chip">recursive self-improvement</span>, <span class="topic-chip">LLM reasoning</span>,
+                                <span class="topic-chip">mechanistic interpretability</span>, and <span class="topic-chip">embodied intelligence</span>.
+                            </p>
+                            <p>
+                                Before UT Austin, I received my B.S. in Computer Science and Technology from Tongji University.
+                                <span class="intro-emphasis">I am grateful to the mentors and collaborators I have met along the way</span>, especially the
+                                <strong><a href="https://huggingface.co/m-a-p" target="_blank" rel="noreferrer">MAP Open Source Community</a></strong>,
+                                whose warm and open research culture has deeply shaped how I think about research,
+                                collaboration, and systems building.
+                            </p>
+                            <p>
+                                Outside of research, I love tinkering, building quirky side projects, and exploring anything that sparks my curiosity. I believe the best ideas often come from unexpected places, and I'm always eager to embrace new challenges.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <section id="news" class="section-block">
+                    <h2>News</h2>
+                    <ul class="plain-list dated-list">
+                        <li><span class="date">2026.08</span> Excited to start my Ph.D. in Computer Science at UT Austin.</li>
+                    </ul>
+                </section>
+
+                <hr>
+
+                <section id="publications" class="section-block">
+                    <h2>Publications</h2>
+
+                    <table class="publication-table" width="100%" align="center" border="0" cellspacing="0" cellpadding="12">
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://arxiv.org/abs/2606.05104" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/kina.webp" alt="KINA thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://arxiv.org/abs/2606.05104" target="_blank" rel="noreferrer">Knowledge Index of Noah's Ark</a>
+                                </p>
+                                <p class="paper-authors">Sheng Jin, Minghao Liu, Yunze Xiao, Zeqi Zhou, Heli Qi, Yifan Yao, Meishu Song, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Sheng Jin, Minghao Liu, Yunze Xiao, Zeqi Zhou, Heli Qi, Yifan Yao, Meishu Song, <strong>Kaijing Ma</strong>, Xuan Zhang, Sicong Jiang, Yizhe Li, Ningshan Ma, Jie Wei, Ziniu Li, Minglai Yang, Bangya Liu, Yiming Liang, Xiao Fang, Qingcheng Zeng, Jiarui Liu, Rui Yang, Shen Yan, Wenhao Huang, Jiaheng Liu, Zihan Wang, Weihao Xuan, Ge Zhang</span>
+                                </details>
+                                <p class="paper-meta">arXiv preprint arXiv:2606.05104</p>
+                                <p class="paper-links">
+                                    <a href="https://www.2077ai.com/datasets/dataset-kina" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2606.05104" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr class="featured-paper">
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://arxiv.org/abs/2605.17283" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/oprover.webp" alt="OProver thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://arxiv.org/abs/2605.17283" target="_blank" rel="noreferrer">OProver: A Unified Framework for Agentic Formal Theorem Proving</a>
+                                </p>
+                                <p class="paper-authors">David Ma, <strong>Kaijing Ma</strong>, Shawn Guo, Yunfeng Shi, Enduo Zhao, Jiajun Shi, Zhaoxiang Zhang, Gavin Cheung, Jiaheng Liu, Zili Wang</p>
+                                <p class="paper-meta">arXiv preprint arXiv:2605.17283</p>
+                                <p class="paper-links">
+                                    <a href="https://github.com/multimodal-art-projection/OProver" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2605.17283" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="http://ouro-llm.github.io/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/ouro_main.webp" alt="Looped Language Models thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="http://ouro-llm.github.io/" target="_blank" rel="noreferrer">Scaling Latent Reasoning via Looped Language Models</a>
+                                </p>
+                                <p class="paper-authors">Rui-Jie Zhu, Zixuan Wang, Kai Hua, Tianyu Zhang, Ziniu Li, Haoran Que, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Rui-Jie Zhu, Zixuan Wang, Kai Hua, Tianyu Zhang, Ziniu Li, Haoran Que, Boyi Wei, Zixin Wen, Fan Yin, He Xing, Lu Li, Jiajun Shi, <strong>Kaijing Ma</strong>, Shanda Li, Taylor Kergan, Andrew Smith, Xingwei Qu, Mude Hui, Bohong Wu, Qiyang Min, Hongzhi Huang, Xun Zhou, Wei Ye, Jiaheng Liu, Jian Yang, Yunfeng Shi, Chenghua Lin, Enduo Zhao, Tianle Cai, Ge Zhang, Wenhao Huang, Yoshua Bengio, Jason Eshraghian</span>
+                                </details>
+                                <p class="paper-meta">arXiv preprint arXiv:2510.25741</p>
+                                <p class="paper-links">
+                                    <a href="http://ouro-llm.github.io/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2510.25741" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://github.com/ByteDance-Seed/Seed-Prover" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/miniF2F_SOTA.webp" alt="Seed-Prover thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://github.com/ByteDance-Seed/Seed-Prover" target="_blank" rel="noreferrer">Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving</a>
+                                </p>
+                                <p class="paper-authors">Luoxin Chen, Jinming Gu, Liankai Huang, Wenhao Huang, Zhicheng Jiang, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Luoxin Chen, Jinming Gu, Liankai Huang, Wenhao Huang, Zhicheng Jiang, Allan Jie, Xiaoran Jin, Xing Jin, Chenggang Li, <strong>Kaijing Ma</strong>, Cheng Ren, Jiawei Shen, Wenlei Shi, Tong Sun, He Sun, Jiahui Wang, Siran Wang, Zhihong Wang, Chenrui Wei, Shufa Wei, Yonghui Wu, Yuchen Wu, Yihang Xia, Huajian Xin, Fan Yang, Huaiyuan Ying, Hongyi Yuan, Zheng Yuan, Tianyang Zhan, Chi Zhang, Yue Zhang, Ge Zhang, Tianyun Zhao, Jianqiu Zhao, Yichi Zhou, Thomas Hanwen Zhu</span>
+                                </details>
+                                <p class="paper-meta">arXiv preprint arXiv:2507.23726</p>
+                                <p class="paper-links">
+                                    <a href="https://github.com/ByteDance-Seed/Seed-Prover" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2507.23726" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr class="featured-paper">
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://arxiv.org/abs/2507.06181" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/criticlean_data.webp" alt="CriticLean thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://arxiv.org/abs/2507.06181" target="_blank" rel="noreferrer">CriticLean: Critic-Guided Reinforcement Learning for Mathematical Formalization</a>
+                                </p>
+                                <p class="paper-authors">Zhongyuan Peng, Yifan Yao, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Zhongyuan Peng, Yifan Yao, <strong>Kaijing Ma</strong>, Shuyue Guo, Yizhe Li, Yichi Zhang, Chenchen Zhang, Yifan Zhang, Zhouliang Yu, Luming Li, Minghao Liu, Yihang Xia, Jiawei Shen, Yuchen Wu, Yixin Cao, Zhaoxiang Zhang, Wenhao Huang, Jiaheng Liu, Ge Zhang</span>
+                                </details>
+                                <p class="paper-meta">ACL Main 2026</p>
+                                <p class="paper-links">
+                                    <a href="https://github.com/multimodal-art-projection/CriticLean" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2507.06181" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://razor233.github.io/KORGYM_HomePage/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/korgym.webp" alt="KORGym thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://razor233.github.io/KORGYM_HomePage/" target="_blank" rel="noreferrer">KORGym: A Dynamic Game Platform for LLM Reasoning Evaluation</a>
+                                </p>
+                                <p class="paper-authors">Jiajun Shi, Jian Yang, Jiaheng Liu, Xingyuan Bu, Jiangjie Chen, Junting Zhou, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Jiajun Shi, Jian Yang, Jiaheng Liu, Xingyuan Bu, Jiangjie Chen, Junting Zhou, <strong>Kaijing Ma</strong>, Zhoufutu Wen, Bingli Wang, Yancheng He, Liang Song, Hualei Zhu, Shilong Li, Xingjian Wang, Wei Zhang, Ruibin Yuan, Yifan Yao, Wenjun Yang, Yunli Wang, Siyuan Fang, Siyu Yuan, Qianyu He, Xiangru Tang, Yingshui Tan, Wangchunshu Zhou, Zhaoxiang Zhang, Zhoujun Li, Wenhao Huang, Ge Zhang</span>
+                                </details>
+                                <p class="paper-meta">NeurIPS Spotlight 2025</p>
+                                <p class="paper-links">
+                                    <a href="https://razor233.github.io/KORGYM_HomePage/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2505.14552" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr class="featured-paper">
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://supergpqa.github.io/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/supergpqa.webp" alt="SuperGPQA thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://supergpqa.github.io/" target="_blank" rel="noreferrer">SuperGPQA: Scaling LLM Evaluation across 285 Graduate Disciplines</a>
+                                </p>
+                                <p class="paper-authors">M-A-P Team, Xinrun Du, Yifan Yao, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">M-A-P Team, Xinrun Du, Yifan Yao, <strong>Kaijing Ma</strong>, Bingli Wang, Tianyu Zheng, King Zhu, Minghao Liu, Yiming Liang, Xiaolong Jin, Zhenlin Wei, Chujie Zheng, Kaixin Deng, Shawn Gavin, Shian Jia, Sichao Jiang, Yiyan Liao, Rui Li, Qinrui Li, Sirun Li, Yizhi Li, Yunwen Li, David Ma, Yuansheng Ni, Haoran Que, Qiyao Wang, Zhoufutu Wen, Siwei Wu, Tyshawn Hsing, Ming Xu, Zhenzhu Yang, Zekun Moore Wang, Junting Zhou, Yuelin Bai, Xingyuan Bu, Chenglin Cai, Liang Chen, Yifan Chen, Chengtuo Cheng, Tianhao Cheng, Keyi Ding, Siming Huang, Yun Huang, Yaoru Li, Yizhe Li, Zhaoqun Li, Tianhao Liang, Chengdong Lin, Hongquan Lin, Yinghao Ma, Tianyang Pang, Zhongyuan Peng, Zifan Peng, Qige Qi, Shi Qiu, Xingwei Qu, Shanghaoran Quan, Yizhou Tan, Zili Wang, Chenqing Wang, Hao Wang, Yiya Wang, Yubo Wang, Jiajun Xu, Kexin Yang, Ruibin Yuan, Yuanhao Yue, Tianyang Zhan, Chun Zhang, Jinyang Zhang, Xiyue Zhang, Xingjian Zhang, Yue Zhang, Yongchi Zhao, Xiangyu Zheng, Chenghua Zhong, Yang Gao, Zhoujun Li, Dayiheng Liu, Qian Liu, Tianyu Liu, Shiwen Ni, Junran Peng, Yujia Qin, Wenbo Su, Guoyin Wang, Shi Wang, Jian Yang, Min Yang, Meng Cao, Xiang Yue, Zhaoxiang Zhang, Wangchunshu Zhou, Jiaheng Liu, Qunshu Lin, Wenhao Huang, Ge Zhang</span>
+                                </details>
+                                <p class="paper-meta">NeurIPS 2025</p>
+                                <p class="paper-links">
+                                    <a href="https://supergpqa.github.io/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2502.14739" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://arxiv.org/abs/2412.20995" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/karpa.webp" alt="KARPA thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://arxiv.org/abs/2412.20995" target="_blank" rel="noreferrer">KARPA: A Training-free Method of Adapting Knowledge Graph as References for Large Language Model's Reasoning Path Aggregation</a>
+                                </p>
+                                <p class="paper-authors">Siyuan Fang, <strong>Kaijing Ma</strong>, Tianyu Zheng, Xinrun Du, Ningxuan Lu, Ge Zhang, Qingkun Tang</p>
+                                <p class="paper-meta">ACL Findings 2025</p>
+                                <p class="paper-links">
+                                    <a href="https://github.com/Icamd/KARPA" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2412.20995" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr class="featured-paper">
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://kor-bench.github.io/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/korbench.webp" alt="KOR-Bench thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://kor-bench.github.io/" target="_blank" rel="noreferrer">KOR-Bench: Benchmarking Language Models on Knowledge-Orthogonal Reasoning Tasks</a>
+                                </p>
+                                <p class="paper-authors"><strong>Kaijing Ma</strong>, Xinrun Du, Yunran Wang, Haoran Zhang, Zhoufutu Wen, Xingwei Qu, Jian Yang, Jiaheng Liu, Minghao Liu, Xiang Yue, Wenhao Huang, Ge Zhang</p>
+                                <p class="paper-meta">ICLR 2025</p>
+                                <p class="paper-links">
+                                    <a href="https://kor-bench.github.io/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2410.06526" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://map-neo.github.io/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/map-neo.webp" alt="MAP-Neo thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://map-neo.github.io/" target="_blank" rel="noreferrer">MAP-Neo: Highly Capable and Transparent Bilingual Large Language Model Series</a>
+                                </p>
+                                <p class="paper-authors">Ge Zhang, Scott Qu, Jiaheng Liu, Chenchen Zhang, Chenghua Lin, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Ge Zhang, Scott Qu, Jiaheng Liu, Chenchen Zhang, Chenghua Lin, Chou Leuang Yu, Danny Pan, Esther Cheng, Jie Liu, Qunshu Lin, Raven Yuan, Tuney Zheng, Wei Pang, Xinrun Du, Yiming Liang, Yinghao Ma, Yizhi Li, Ziyang Ma, Bill Lin, Emmanouil Benetos, Huan Yang, Junting Zhou, <strong>Kaijing Ma</strong>, Minghao Liu, Morry Niu, Noah Wang, Quehry Que, Ruibo Liu, Sine Liu, Shawn Guo, Soren Gao, Wangchunshu Zhou, Xinyue Zhang, Yizhi Zhou, Yubo Wang, Yuelin Bai, Yuhan Zhang, Yuxiang Zhang, Zenith Wang, Zhenzhu Yang, Zijian Zhao, Jiajun Zhang, Wanli Ouyang, Wenhao Huang, Wenhu Chen</span>
+                                </details>
+                                <p class="paper-meta">arXiv preprint arXiv:2405.19327</p>
+                                <p class="paper-links">
+                                    <a href="https://map-neo.github.io/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2405.19327" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr class="featured-paper">
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://codeeditorbench.github.io/" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/codeeditorbench.webp" alt="CodeEditorBench thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://codeeditorbench.github.io/" target="_blank" rel="noreferrer">CodeEditorBench: Evaluating Code Editing Capability of Large Language Models</a>
+                                </p>
+                                <p class="paper-authors">Jiawei Guo, Ziming Li, Xueling Liu, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Jiawei Guo, Ziming Li, Xueling Liu, <strong>Kaijing Ma</strong>, Tianyu Zheng, Zhouliang Yu, Ding Pan, Yizhi Li, Ruibo Liu, Yue Wang, Shuyue Guo, Xingwei Qu, Xiang Yue, Ge Zhang, Wenhu Chen, Jie Fu</span>
+                                </details>
+                                <p class="paper-meta">ICLR 2025 Third Workshop on Deep Learning for Code</p>
+                                <p class="paper-links">
+                                    <a href="https://codeeditorbench.github.io/" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2404.03543" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="pub-thumb-cell" width="28%" valign="top" align="center">
+                                <a href="https://arxiv.org/abs/2401.13478" target="_blank" rel="noreferrer">
+                                    <img src="assets/pub-thumbs/scimmir.webp" alt="SciMMIR thumbnail" class="pub-thumb" loading="lazy" decoding="async">
+                                </a>
+                            </td>
+                            <td class="pub-info" width="72%" valign="top">
+                                <p class="paper-title">
+                                    <a href="https://arxiv.org/abs/2401.13478" target="_blank" rel="noreferrer">SciMMIR: Benchmarking Scientific Multi-modal Information Retrieval</a>
+                                </p>
+                                <p class="paper-authors">Siwei Wu, Yizhi Li, Kang Zhu, Ge Zhang, Yiming Liang, <strong>Kaijing Ma</strong>, et al.</p>
+                                <details class="author-details">
+                                    <summary>show all authors</summary>
+                                    <span class="author-list">Siwei Wu, Yizhi Li, Kang Zhu, Ge Zhang, Yiming Liang, <strong>Kaijing Ma</strong>, Chenghao Xiao, Haoran Zhang, Bohao Yang, Wenhu Chen, Wenhao Huang, Noura Al Moubayed, Jie Fu, Chenghua Lin</span>
+                                </details>
+                                <p class="paper-meta">ACL Findings 2024</p>
+                                <p class="paper-links">
+                                    <a href="https://github.com/Wusiwei0410/SciMMIR" target="_blank" rel="noreferrer">webpage</a>
+                                    <a href="https://arxiv.org/abs/2401.13478" target="_blank" rel="noreferrer">arXiv</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+
+                <hr>
+
+                <section id="experience" class="section-block">
+                    <h2>Experience</h2>
+                    <table class="experience-table" width="100%" align="center" border="0" cellspacing="0" cellpadding="8">
+                        <tr>
+                            <td class="date-cell" width="24%" valign="middle">2025.12 - Present</td>
+                            <td class="exp-logo-cell" width="11%" valign="middle" align="center">
+                                <a href="https://platform.stepfun.com/" target="_blank" rel="noreferrer" class="exp-logo-link" aria-label="Stepfun">
+                                    <img src="assets/stepfun.jpeg" alt="StepFun logo" class="exp-logo-img">
+                                </a>
+                            </td>
+                            <td valign="middle">
+                                <strong><a href="https://platform.stepfun.com/" target="_blank" rel="noreferrer">Stepfun</a></strong>, Pretrain Team Intern<br>
+                                Advised by <strong><a href="https://commencement.github.io/" target="_blank" rel="noreferrer">Zili Wang</a></strong>.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="date-cell" valign="middle">2025.06 - Present</td>
+                            <td class="exp-logo-cell" valign="middle" align="center">
+                                <a href="https://cdfg.csail.mit.edu/team" target="_blank" rel="noreferrer" class="exp-logo-link" aria-label="MIT CSAIL">
+                                    <img src="assets/mit_csail_logo_cropped.png" alt="MIT CSAIL logo" class="exp-logo-img">
+                                </a>
+                            </td>
+                            <td valign="middle">
+                                <strong><a href="https://cdfg.csail.mit.edu/team" target="_blank" rel="noreferrer">MIT CSAIL CDFG</a></strong>, Research Intern<br>
+                                Advised by <strong><a href="https://scholar.google.com/citations?hl=en&user=wbIMbL8AAAAJ" target="_blank" rel="noreferrer">Prof. Wojciech Matusik</a></strong>.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="date-cell" valign="middle">2025.05 - 2025.10</td>
+                            <td class="exp-logo-cell" valign="middle" align="center">
+                                <a href="https://seed.bytedance.com/en/" target="_blank" rel="noreferrer" class="exp-logo-link" aria-label="ByteDance">
+                                    <img src="assets/bytedance.jpeg" alt="ByteDance logo" class="exp-logo-img">
+                                </a>
+                            </td>
+                            <td valign="middle">
+                                <strong><a href="https://seed.bytedance.com/en/" target="_blank" rel="noreferrer">ByteDance</a></strong>, Research Intern<br>
+                                Advised by <strong><a href="https://scholar.google.com/citations?user=OdE3MsQAAAAJ&hl=en" target="_blank" rel="noreferrer">Wenhao Huang</a></strong> and <strong><a href="https://scholar.google.com/citations?user=qyTrq4kAAAAJ&hl=en" target="_blank" rel="noreferrer">Ge Zhang</a></strong>.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="date-cell" valign="middle">2023.10 - Present</td>
+                            <td class="exp-logo-cell" valign="middle" align="center">
+                                <a href="https://huggingface.co/m-a-p" target="_blank" rel="noreferrer" class="exp-logo-link" aria-label="MAP Open Source Community">
+                                    <img src="assets/map_logo_c.png" alt="MAP logo" class="exp-logo-img">
+                                </a>
+                            </td>
+                            <td valign="middle">
+                                <strong><a href="https://huggingface.co/m-a-p" target="_blank" rel="noreferrer">MAP Open Source Community</a></strong>, Research Intern & Community Member<br>
+                                Advised by <strong><a href="https://scholar.google.com/citations?user=qyTrq4kAAAAJ&hl=en" target="_blank" rel="noreferrer">Ge Zhang</a></strong> & <strong>other community mentors</strong>.
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+
+                <footer class="site-footer">
+                    <span>Last updated: Jun 2026</span>
+                    <span class="footer-links">
+                        <a href="#top">Back to top</a>
+                    </span>
+                </footer>
+
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
