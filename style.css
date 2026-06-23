@@ -1,6 +1,6 @@
 html {
     min-height: 100%;
-    background: #eef9ff;
+    background: #f4fbff;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -27,7 +27,7 @@ body {
     margin: 0;
     overflow-x: hidden;
     background:
-        linear-gradient(125deg, #edf8ff 0%, #f8fdff 34%, #effbf4 68%, #fbfffd 100%);
+        linear-gradient(125deg, #f3fbff 0%, #fbfdff 36%, #f2fbf6 72%, #ffffff 100%);
 }
 
 body::before,
@@ -41,9 +41,9 @@ body::after {
 
 body::before {
     background:
-        linear-gradient(90deg, rgba(24, 106, 188, 0.09) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(31, 155, 110, 0.08) 1px, transparent 1px),
-        linear-gradient(118deg, transparent 0 13%, rgba(31, 123, 210, 0.12) 13% 28%, transparent 28% 56%, rgba(31, 167, 113, 0.13) 56% 73%, transparent 73% 100%);
+        linear-gradient(90deg, rgba(24, 106, 188, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(31, 155, 110, 0.04) 1px, transparent 1px),
+        linear-gradient(118deg, transparent 0 13%, rgba(31, 123, 210, 0.055) 13% 28%, transparent 28% 56%, rgba(31, 167, 113, 0.06) 56% 73%, transparent 73% 100%);
     background-size: 64px 64px, 64px 64px, 100% 100%;
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.52));
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.52));
@@ -51,8 +51,8 @@ body::before {
 
 body::after {
     background:
-        repeating-linear-gradient(135deg, transparent 0 44px, rgba(24, 106, 188, 0.07) 44px 45px, transparent 45px 132px),
-        repeating-linear-gradient(45deg, transparent 0 70px, rgba(31, 167, 113, 0.06) 70px 71px, transparent 71px 168px),
+        repeating-linear-gradient(135deg, transparent 0 52px, rgba(24, 106, 188, 0.035) 52px 53px, transparent 53px 156px),
+        repeating-linear-gradient(45deg, transparent 0 86px, rgba(31, 167, 113, 0.032) 86px 87px, transparent 87px 190px),
         linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 30%, rgba(239, 252, 244, 0.56) 100%);
 }
 
@@ -89,14 +89,13 @@ hr {
 }
 
 .page-table {
-    width: min(1440px, calc(100% - 32px));
-    max-width: none;
+    width: 880px;
+    max-width: 100%;
     margin: 0 auto;
     border-right: 1px solid rgba(116, 169, 215, 0.26);
     border-left: 1px solid rgba(57, 169, 116, 0.24);
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 24px 70px rgba(29, 83, 128, 0.12);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.93);
+    box-shadow: none;
 }
 
 .page-table > tbody > tr > td {
@@ -190,9 +189,9 @@ hr {
     margin: 0 auto 10px;
     padding: 5px 14px;
     border: 1px solid rgba(151, 195, 229, 0.68);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.76);
-    box-shadow: 0 8px 22px rgba(18, 83, 117, 0.08);
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: none;
     font-size: 15px;
     font-weight: 600;
 }
@@ -211,13 +210,13 @@ hr {
 .intro-table {
     margin-top: 18px;
     border: 1px solid rgba(148, 199, 227, 0.74);
-    border-radius: 20px;
+    border-radius: 0;
     border-collapse: separate;
     border-spacing: 0;
     background:
         linear-gradient(135deg, rgba(251, 253, 255, 0.92) 0%, rgba(239, 248, 255, 0.86) 45%, rgba(239, 252, 246, 0.9) 100%),
         linear-gradient(118deg, rgba(23, 114, 208, 0.12), transparent 40%, rgba(34, 166, 113, 0.13));
-    box-shadow: 0 16px 42px rgba(31, 84, 122, 0.10);
+    box-shadow: none;
 }
 
 .portrait-cell {
@@ -230,8 +229,8 @@ hr {
     width: 86%;
     margin: 0 auto;
     border: 1px solid #eeeeee;
-    border-radius: 16px;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .email-block {
@@ -294,8 +293,8 @@ hr {
 
 .intro-copy {
     padding: 20px 24px !important;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.68);
+    border-radius: 0;
+    background: transparent;
     text-align: left;
 }
 
@@ -391,7 +390,7 @@ hr {
     background: rgba(255, 255, 255, 0.9);
     border-top: 1px solid rgba(207, 224, 239, 0.9);
     border-bottom: 1px solid rgba(207, 224, 239, 0.9);
-    box-shadow: 0 7px 18px rgba(18, 69, 94, 0.055);
+    box-shadow: none;
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -399,21 +398,21 @@ hr {
 .publication-table tr:focus-within td {
     background: rgba(238, 248, 255, 0.96);
     border-color: #82c4dd;
-    box-shadow: 0 10px 24px rgba(23, 114, 208, 0.12);
+    box-shadow: none;
 }
 
 .publication-table .pub-thumb-cell {
     border-left: 1px solid rgba(207, 224, 239, 0.9);
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
     padding-left: 10px;
     vertical-align: middle;
 }
 
 .publication-table .pub-info {
     border-right: 1px solid rgba(207, 224, 239, 0.9);
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
     padding-right: 10px;
 }
 
@@ -421,14 +420,14 @@ hr {
     background: rgba(236, 248, 255, 0.94);
     border-top: 1px solid #a9cffb;
     border-bottom: 1px solid #a9cffb;
-    box-shadow: 0 6px 16px rgba(23, 114, 208, 0.12);
+    box-shadow: none;
 }
 
 .publication-table tr.featured-paper:hover td,
 .publication-table tr.featured-paper:focus-within td {
     background: rgba(230, 248, 240, 0.96);
     border-color: #65c09b;
-    box-shadow: 0 9px 22px rgba(23, 114, 208, 0.14);
+    box-shadow: none;
 }
 
 .publication-table tr.featured-paper .pub-thumb-cell {
@@ -458,7 +457,7 @@ hr {
     object-fit: contain;
     object-position: center center;
     border: 1px solid #dddddd;
-    border-radius: 12px;
+    border-radius: 0;
     background: #ffffff;
 }
 
@@ -491,13 +490,13 @@ hr {
     min-height: 24px;
     padding: 2px 9px;
     border: 1px solid rgba(23, 114, 208, 0.28);
-    border-radius: 999px;
+    border-radius: 0;
     background: #ffffff;
     color: #1769c2;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.2;
-    box-shadow: 0 1px 2px rgba(23, 114, 208, 0.08);
+    box-shadow: none;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
@@ -507,7 +506,7 @@ hr {
     background: #eaf4ff;
     color: #0b5fb8;
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(23, 114, 208, 0.18);
+    box-shadow: none;
 }
 
 .paper-authors {
@@ -576,22 +575,22 @@ hr {
     background: #ffffff;
     border-top: 1px solid #e6ebf1;
     border-bottom: 1px solid #e6ebf1;
-    box-shadow: 0 5px 14px rgba(18, 44, 74, 0.04);
+    box-shadow: 0 4px 12px rgba(18, 44, 74, 0.035);
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     vertical-align: middle;
 }
 
 .experience-table td:first-child {
     border-left: 1px solid #e6ebf1;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
     padding-left: 14px;
 }
 
 .experience-table td:last-child {
     border-right: 1px solid #e6ebf1;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
     padding-right: 14px;
 }
 
@@ -599,7 +598,7 @@ hr {
 .experience-table tr:focus-within td {
     background: #eef6ff;
     border-color: #8fc2f8;
-    box-shadow: 0 8px 20px rgba(23, 114, 208, 0.12);
+    box-shadow: none;
 }
 
 .date-cell {
@@ -622,7 +621,7 @@ hr {
     justify-content: center;
     width: 62px;
     height: 62px;
-    border-radius: 12px;
+    border-radius: 0;
     color: #ffffff;
     font-size: 16px;
     font-weight: 700;
@@ -645,7 +644,7 @@ hr {
     justify-content: center;
     width: 62px;
     height: 62px;
-    border-radius: 12px;
+    border-radius: 0;
     background: #ffffff;
     box-shadow: inset 0 0 0 1px #e5e7eb;
     overflow: hidden;
@@ -699,7 +698,7 @@ hr {
 
 @media (max-width: 880px) {
     .page-table {
-        width: min(100%, calc(100% - 18px));
+        width: 100%;
     }
 
     .page-table > tbody > tr > td {
@@ -720,7 +719,7 @@ hr {
 
     .intro-table {
         margin-top: 14px;
-        border-radius: 16px;
+        border-radius: 0;
     }
 
     .portrait-cell {
@@ -806,8 +805,8 @@ hr {
         padding: 12px;
         background: #ffffff;
         border: 1px solid #e6ebf1;
-        border-radius: 12px;
-        box-shadow: 0 5px 14px rgba(18, 44, 74, 0.04);
+        border-radius: 0;
+        box-shadow: none;
         transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -815,7 +814,7 @@ hr {
     .experience-table tr:focus-within {
         background: #eaf4ff;
         border-color: #8fc2f8;
-        box-shadow: 0 10px 24px rgba(23, 114, 208, 0.14);
+        box-shadow: none;
     }
 
     .publication-table,
@@ -835,29 +834,29 @@ hr {
         padding: 12px;
         background: #ffffff;
         border: 1px solid #e6ebf1;
-        border-radius: 10px;
-        box-shadow: 0 5px 14px rgba(18, 44, 74, 0.04);
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .publication-table tr.featured-paper {
         background: #eef6ff;
         border-color: #a9cffb;
         border-left: 4px solid #1772d0;
-        box-shadow: 0 6px 16px rgba(23, 114, 208, 0.12);
+        box-shadow: none;
     }
 
     .publication-table tr:hover,
     .publication-table tr:focus-within {
         background: #eaf4ff;
         border-color: #8fc2f8;
-        box-shadow: 0 10px 24px rgba(23, 114, 208, 0.14);
+        box-shadow: none;
     }
 
     .publication-table tr.featured-paper:hover,
     .publication-table tr.featured-paper:focus-within {
         background: #dfefff;
         border-color: #6fb1f5;
-        box-shadow: 0 12px 28px rgba(23, 114, 208, 0.18);
+        box-shadow: none;
     }
 
     .publication-table td,
@@ -906,7 +905,7 @@ hr {
     .experience-table tr:focus-within > td {
         background-color: #eef6ff !important;
         border-color: #76b6f5 !important;
-        box-shadow: 0 8px 20px rgba(23, 114, 208, 0.12);
+        box-shadow: none;
     }
 
     .publication-table tr:hover .pub-thumb,
@@ -926,6 +925,6 @@ hr {
     .experience-table tr:focus-within {
         background-color: #eef6ff !important;
         border-color: #76b6f5 !important;
-        box-shadow: 0 8px 20px rgba(23, 114, 208, 0.12);
+        box-shadow: none;
     }
 }
