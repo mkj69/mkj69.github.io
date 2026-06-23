@@ -1,6 +1,6 @@
 html {
     min-height: 100%;
-    background: #f6f6f6;
+    background: #fff8ea;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -15,7 +15,7 @@ body,
 td,
 th {
     color: #222222;
-    font-family: "Titillium Web", "Noto Sans SC", Verdana, Helvetica, sans-serif;
+    font-family: "IBM Plex Sans", "Noto Sans SC", Verdana, Helvetica, sans-serif;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.48;
@@ -27,7 +27,7 @@ body {
     margin: 0;
     overflow-x: hidden;
     background:
-        linear-gradient(125deg, #ffffff 0%, #f7f7f7 52%, #ffffff 100%);
+        linear-gradient(125deg, #fffdf8 0%, #fbf6eb 44%, #ffffff 100%);
 }
 
 body::before,
@@ -40,52 +40,53 @@ body::after {
 }
 
 body::before {
+    inset: -12%;
     background:
-        linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
-        linear-gradient(118deg, transparent 0 14%, rgba(0, 0, 0, 0.035) 14% 27%, transparent 27% 58%, rgba(0, 0, 0, 0.028) 58% 73%, transparent 73% 100%);
-    background-size: 72px 72px, 72px 72px, 100% 100%;
-    opacity: 0.38;
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.44));
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.44));
+        radial-gradient(ellipse at 16% -8%, rgba(255, 217, 136, 0.72) 0%, rgba(255, 232, 179, 0.34) 30%, transparent 58%),
+        linear-gradient(113deg, transparent 0 10%, rgba(255, 220, 126, 0.34) 10% 22%, rgba(255, 249, 226, 0.50) 22% 27%, transparent 27% 40%, rgba(255, 235, 170, 0.18) 40% 52%, transparent 52% 100%);
+    opacity: 0.9;
+    transform-origin: 18% 0;
 }
 
 body::after {
+    inset: -8%;
     background:
-        repeating-linear-gradient(135deg, transparent 0 52px, rgba(0, 0, 0, 0.032) 52px 53px, transparent 53px 156px),
-        repeating-linear-gradient(45deg, transparent 0 86px, rgba(0, 0, 0, 0.026) 86px 87px, transparent 87px 190px),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 32%, rgba(255, 255, 255, 0.72) 100%);
-    background-size: 320px 320px, 420px 420px, 100% 100%;
-    opacity: 0.64;
+        repeating-linear-gradient(112deg, transparent 0 92px, rgba(133, 101, 45, 0.025) 92px 93px, transparent 93px 190px),
+        radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.86) 0 8%, transparent 26%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.72));
+    background-size: 360px 360px, 100% 100%, 100% 100%;
+    opacity: 0.75;
 }
 
 @media (prefers-reduced-motion: no-preference) {
     body::before {
-        animation: background-grid-drift 42s linear infinite;
+        animation: sunlight-breathe 22s ease-in-out infinite alternate;
     }
 
     body::after {
-        animation: background-line-drift 55s linear infinite;
+        animation: sunlight-haze 38s linear infinite;
     }
 }
 
-@keyframes background-grid-drift {
+@keyframes sunlight-breathe {
+    from {
+        transform: translate3d(-1%, -1%, 0) scale(1.01);
+        opacity: 0.72;
+    }
+
+    to {
+        transform: translate3d(1.4%, 0.5%, 0) scale(1.04);
+        opacity: 0.95;
+    }
+}
+
+@keyframes sunlight-haze {
     from {
         background-position: 0 0, 0 0, 0 0;
     }
 
     to {
-        background-position: 72px 36px, -36px 72px, 0 0;
-    }
-}
-
-@keyframes background-line-drift {
-    from {
-        background-position: 0 0, 0 0, 0 0;
-    }
-
-    to {
-        background-position: 320px 160px, -210px 210px, 0 0;
+        background-position: 360px 180px, 0 0, 0 0;
     }
 }
 
@@ -94,14 +95,14 @@ body > * {
     z-index: 1;
 }
 
-.ambient-network {
+.ambient-sunlight {
     position: fixed;
     inset: 0;
     z-index: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.82;
+    opacity: 0.74;
 }
 
 a {
@@ -154,7 +155,7 @@ hr {
 .site-header h1 {
     margin: 0;
     color: #202020;
-    font-family: "Titillium Web", "Noto Sans SC", Verdana, Helvetica, sans-serif;
+    font-family: "Space Grotesk", "Noto Sans SC", Verdana, Helvetica, sans-serif;
     font-size: 41px;
     font-weight: 400;
     line-height: 1.1;
@@ -269,6 +270,7 @@ hr {
 .portrait {
     display: block;
     width: 86%;
+    height: auto;
     margin: 0 auto;
     border: 0;
     border-radius: 0;
@@ -394,7 +396,7 @@ hr {
     color: #202020;
     border-left: 4px solid #111111;
     border-image: none;
-    font-family: "Titillium Web", "Noto Sans SC", Verdana, Helvetica, sans-serif;
+    font-family: "Space Grotesk", "Noto Sans SC", Verdana, Helvetica, sans-serif;
     font-size: 22px;
     font-weight: 600;
     line-height: 1.1;
