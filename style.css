@@ -1,17 +1,16 @@
 :root {
-    --bg: #0a0d14;
-    --bg-deeper: #05070d;
-    --panel: rgba(17, 23, 34, 0.88);
-    --panel-strong: rgba(14, 18, 27, 0.94);
-    --line: rgba(155, 188, 255, 0.18);
-    --line-strong: rgba(110, 168, 255, 0.42);
-    --text: #e3e8f0;
-    --text-strong: #f8fbff;
-    --muted: #a9b5c8;
-    --muted-soft: #7d8aa3;
-    --link: #9bbcff;
-    --link-hover: #d8e6ff;
-    --accent: #6ea8ff;
+    --bg: #ffffff;
+    --panel: rgba(255, 255, 255, 0.96);
+    --panel-strong: rgba(255, 255, 255, 0.78);
+    --line: rgba(0, 0, 0, 0.14);
+    --line-strong: #999999;
+    --text: #222222;
+    --text-strong: #111111;
+    --muted: #555555;
+    --muted-soft: #777777;
+    --link: #111111;
+    --link-hover: #666666;
+    --accent: #111111;
 }
 
 html {
@@ -42,11 +41,7 @@ body {
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
-    background:
-        radial-gradient(ellipse at 16% -12%, rgba(80, 140, 255, 0.30) 0%, rgba(80, 140, 255, 0.10) 32%, transparent 60%),
-        radial-gradient(ellipse at 92% 8%, rgba(106, 76, 180, 0.20) 0%, rgba(106, 76, 180, 0.06) 34%, transparent 62%),
-        radial-gradient(ellipse at 50% 115%, rgba(31, 95, 138, 0.26) 0%, transparent 56%),
-        linear-gradient(180deg, #0b111d 0%, var(--bg) 42%, var(--bg-deeper) 100%);
+    background: #ffffff;
 }
 
 body::before,
@@ -59,19 +54,11 @@ body::after {
 }
 
 body::before {
-    inset: -8%;
-    background:
-        linear-gradient(116deg, transparent 0 24%, rgba(155, 188, 255, 0.08) 36%, transparent 52%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 30%, rgba(0, 0, 0, 0.22) 100%);
-    opacity: 0.88;
+    display: none;
 }
 
 body::after {
-    inset: 0;
-    background:
-        radial-gradient(ellipse at center top, transparent 0%, transparent 46%, rgba(0, 0, 0, 0.36) 100%),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.34));
-    opacity: 0.9;
+    display: none;
 }
 
 body > * {
@@ -104,7 +91,7 @@ hr {
     border: 0;
     height: 1px;
     margin: 20px 0;
-    background-image: linear-gradient(to right, transparent, rgba(155, 188, 255, 0.24), transparent);
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0));
 }
 
 .page-table {
@@ -209,8 +196,7 @@ hr {
     border: 1px solid var(--line);
     border-radius: 0;
     background: var(--panel-strong);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
-    backdrop-filter: blur(10px);
+    box-shadow: none;
     font-size: 15px;
     font-weight: 600;
 }
@@ -247,9 +233,9 @@ hr {
     width: 86%;
     height: auto;
     margin: 0 auto;
-    border: 1px solid rgba(155, 188, 255, 0.26);
+    border: 0;
     border-radius: 0;
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32), 0 0 24px rgba(80, 140, 255, 0.12);
+    box-shadow: none;
 }
 
 .email-block {
@@ -319,13 +305,13 @@ hr {
 
 .intro-copy p {
     margin-bottom: 12px;
-    color: #d5deec;
+    color: #1f2937;
     font-size: 16.4px;
     font-weight: 400;
     line-height: 1.54;
-    text-align: left;
+    text-align: justify;
     text-align-last: left;
-    hyphens: none;
+    hyphens: auto;
 }
 
 .intro-lead {
@@ -353,7 +339,7 @@ hr {
     padding: 0;
     border-radius: 0;
     background: transparent;
-    color: #c9dcff;
+    color: #111111;
     font-weight: 700;
 }
 
@@ -369,8 +355,8 @@ hr {
     display: inline-block;
     margin: 0 0 12px;
     padding: 0 0 3px;
-    color: #dbe9ff;
-    border-bottom: 1px solid rgba(110, 168, 255, 0.65);
+    color: #202020;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.34);
     font-family: "Space Grotesk", "Noto Sans SC", Verdana, Helvetica, sans-serif;
     font-size: 21px;
     font-weight: 600;
@@ -390,7 +376,7 @@ hr {
 .dated-list .date {
     display: inline-block;
     min-width: 76px;
-    color: var(--accent);
+    color: #303235;
     font-weight: 700;
 }
 
@@ -409,15 +395,15 @@ hr {
     background: var(--panel);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+    box-shadow: none;
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .publication-table tr:hover td,
 .publication-table tr:focus-within td {
-    background: rgba(22, 34, 52, 0.96);
+    background: rgba(245, 245, 245, 0.96);
     border-color: var(--line-strong);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+    box-shadow: none;
 }
 
 .publication-table .pub-thumb-cell {
@@ -436,25 +422,25 @@ hr {
 }
 
 .publication-table tr.featured-paper td {
-    background: rgba(20, 32, 50, 0.94);
-    border-top: 1px solid rgba(110, 168, 255, 0.34);
-    border-bottom: 1px solid rgba(110, 168, 255, 0.34);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+    background: rgba(243, 243, 243, 0.94);
+    border-top: 1px solid #bdbdbd;
+    border-bottom: 1px solid #bdbdbd;
+    box-shadow: none;
 }
 
 .publication-table tr.featured-paper:hover td,
 .publication-table tr.featured-paper:focus-within td {
-    background: rgba(24, 42, 66, 0.98);
-    border-color: rgba(110, 168, 255, 0.56);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+    background: rgba(237, 237, 237, 0.96);
+    border-color: #777777;
+    box-shadow: none;
 }
 
 .publication-table tr.featured-paper .pub-thumb-cell {
-    border-left: 4px solid var(--accent);
+    border-left: 4px solid #111111;
 }
 
 .publication-table tr.featured-paper .pub-info {
-    border-right: 1px solid rgba(110, 168, 255, 0.34);
+    border-right: 1px solid #bdbdbd;
 }
 
 .pub-thumb-cell {
@@ -475,9 +461,9 @@ hr {
     height: auto;
     object-fit: contain;
     object-position: center center;
-    border: 1px solid rgba(155, 188, 255, 0.22);
+    border: 1px solid #dddddd;
     border-radius: 0;
-    background: #0a0f18;
+    background: #ffffff;
 }
 
 .paper-title {
@@ -508,10 +494,10 @@ hr {
     justify-content: center;
     min-height: 24px;
     padding: 2px 9px;
-    border: 1px solid rgba(155, 188, 255, 0.28);
+    border: 1px solid rgba(0, 0, 0, 0.28);
     border-radius: 0;
-    background: rgba(10, 15, 24, 0.82);
-    color: var(--link);
+    background: #ffffff;
+    color: #111111;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.2;
@@ -521,29 +507,29 @@ hr {
 
 .paper-links a:hover,
 .paper-links a:focus {
-    border-color: var(--line-strong);
-    background: rgba(22, 42, 68, 0.96);
-    color: var(--link-hover);
+    border-color: rgba(0, 0, 0, 0.66);
+    background: #f2f2f2;
+    color: #111111;
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.20);
+    box-shadow: none;
 }
 
 .paper-authors {
-    color: #c3ccdc;
+    color: #33363a;
     font-size: 15px;
     line-height: 1.35;
 }
 
 .author-details {
     margin: 3px 0 0;
-    color: #95a3b8;
+    color: #4f5660;
     font-size: 14px;
     line-height: 1.35;
 }
 
 .author-details summary {
     display: inline-block;
-    color: var(--link);
+    color: #111111;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -564,17 +550,17 @@ hr {
 
 .paper-authors strong,
 .author-list strong {
-    color: var(--text-strong);
+    color: #111111;
     font-weight: 600;
 }
 
 .paper-meta {
-    color: var(--accent);
+    color: #555555;
     font-weight: 600;
 }
 
 .paper-note {
-    color: var(--muted);
+    color: #555555;
 }
 
 .experience-table {
@@ -594,7 +580,7 @@ hr {
     background: var(--panel);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+    box-shadow: none;
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     vertical-align: middle;
 }
@@ -615,13 +601,13 @@ hr {
 
 .experience-table tr:hover td,
 .experience-table tr:focus-within td {
-    background: rgba(22, 34, 52, 0.96);
+    background: #f2f2f2;
     border-color: var(--line-strong);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+    box-shadow: none;
 }
 
 .date-cell {
-    color: var(--accent);
+    color: #555555;
     font-weight: 600;
     min-width: 132px;
     padding-right: 20px;
@@ -664,8 +650,8 @@ hr {
     width: 62px;
     height: 62px;
     border-radius: 0;
-    background: #0a0f18;
-    box-shadow: inset 0 0 0 1px rgba(155, 188, 255, 0.22);
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
     overflow: hidden;
 }
 
@@ -686,16 +672,16 @@ hr {
 }
 
 .exp-bd {
-    background: #111722;
+    background: #111111;
     font-size: 15px;
 }
 
 .exp-map {
-    background: #1d3557;
+    background: #333333;
 }
 
 .exp-stepfun {
-    background: #25344d;
+    background: #444444;
 }
 
 .site-footer {
@@ -704,8 +690,8 @@ hr {
     gap: 16px;
     margin-top: 24px;
     padding-top: 14px;
-    border-top: 1px solid var(--line);
-    color: var(--muted-soft);
+    border-top: 1px solid #d8d8d8;
+    color: #667085;
     font-size: 14px;
 }
 
@@ -827,18 +813,18 @@ hr {
     .experience-table tr {
         margin-bottom: 12px;
         padding: 12px;
-        background: var(--panel);
-        border: 1px solid var(--line);
+        background: #ffffff;
+        border: 1px solid #d8d8d8;
         border-radius: 0;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        box-shadow: none;
         transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .experience-table tr:hover,
     .experience-table tr:focus-within {
-        background: rgba(22, 34, 52, 0.96);
-        border-color: var(--line-strong);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+        background: #f2f2f2;
+        border-color: #999999;
+        box-shadow: none;
     }
 
     .publication-table,
@@ -856,31 +842,31 @@ hr {
     .publication-table tr {
         margin-bottom: 14px;
         padding: 12px;
-        background: var(--panel);
-        border: 1px solid var(--line);
+        background: #ffffff;
+        border: 1px solid #d8d8d8;
         border-radius: 0;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        box-shadow: none;
     }
 
     .publication-table tr.featured-paper {
-        background: rgba(20, 32, 50, 0.94);
-        border-color: rgba(110, 168, 255, 0.34);
-        border-left: 4px solid var(--accent);
-        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+        background: #f3f3f3;
+        border-color: #bdbdbd;
+        border-left: 4px solid #111111;
+        box-shadow: none;
     }
 
     .publication-table tr:hover,
     .publication-table tr:focus-within {
-        background: rgba(22, 34, 52, 0.96);
-        border-color: var(--line-strong);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+        background: #f2f2f2;
+        border-color: #999999;
+        box-shadow: none;
     }
 
     .publication-table tr.featured-paper:hover,
     .publication-table tr.featured-paper:focus-within {
-        background: rgba(24, 42, 66, 0.98);
-        border-color: rgba(110, 168, 255, 0.56);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+        background: #ededed;
+        border-color: #777777;
+        box-shadow: none;
     }
 
     .publication-table td,
@@ -948,17 +934,17 @@ hr {
     .publication-table tr:focus-within > td,
     .experience-table tr:hover > td,
     .experience-table tr:focus-within > td {
-        background-color: rgba(22, 34, 52, 0.96) !important;
-        border-color: var(--line-strong) !important;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+        background-color: #f2f2f2 !important;
+        border-color: #999999 !important;
+        box-shadow: none;
     }
 
     .publication-table tr:hover .pub-thumb,
     .publication-table tr:focus-within .pub-thumb,
     .experience-table tr:hover .exp-logo-link,
     .experience-table tr:focus-within .exp-logo-link {
-        background-color: #0a0f18;
-        border-color: rgba(155, 188, 255, 0.36);
+        background-color: #ffffff;
+        border-color: #cccccc;
         box-shadow: none;
     }
 }
@@ -968,8 +954,8 @@ hr {
     .publication-table tr:focus-within,
     .experience-table tr:hover,
     .experience-table tr:focus-within {
-        background-color: rgba(22, 34, 52, 0.96) !important;
-        border-color: var(--line-strong) !important;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+        background-color: #f2f2f2 !important;
+        border-color: #999999 !important;
+        box-shadow: none;
     }
 }
