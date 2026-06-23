@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="top">
+    <canvas id="ambient-network" class="ambient-network" aria-hidden="true"></canvas>
     <table class="page-table" align="center" border="0" cellspacing="0" cellpadding="20">
         <tr>
             <td>
@@ -435,5 +436,125 @@
             </td>
         </tr>
     </table>
+    <script>
+        (() => {
+            const canvas = document.getElementById("ambient-network");
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+            const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+            let width = 0;
+            let height = 0;
+            let dpr = 1;
+            let points = [];
+            let frameId = 0;
+            let lastTime = 0;
+
+            const buildPoints = () => {
+                const area = width * height;
+                const count = Math.max(36, Math.min(96, Math.floor(area / 24000)));
+                points = Array.from({ length: count }, (_, index) => ({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.11,
+                    vy: (Math.random() - 0.5) * 0.11,
+                    radius: 0.7 + Math.random() * 1.2,
+                    phase: index * 0.37 + Math.random() * Math.PI
+                }));
+            };
+
+            const resize = () => {
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = Math.floor(width * dpr);
+                canvas.height = Math.floor(height * dpr);
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                buildPoints();
+            };
+
+            const wrapPoint = (point) => {
+                if (point.x < -24) point.x = width + 24;
+                if (point.x > width + 24) point.x = -24;
+                if (point.y < -24) point.y = height + 24;
+                if (point.y > height + 24) point.y = -24;
+            };
+
+            const draw = (time = 0) => {
+                const elapsed = Math.min((time - lastTime) || 16, 34);
+                lastTime = time;
+                ctx.clearRect(0, 0, width, height);
+
+                const linkDistance = width < 700 ? 108 : 158;
+                const timeScale = reduceMotion.matches ? 0 : elapsed;
+
+                for (const point of points) {
+                    point.x += point.vx * timeScale;
+                    point.y += point.vy * timeScale;
+                    point.x += Math.sin(time * 0.00018 + point.phase) * 0.018 * timeScale;
+                    point.y += Math.cos(time * 0.00015 + point.phase) * 0.018 * timeScale;
+                    wrapPoint(point);
+                }
+
+                for (let i = 0; i < points.length; i += 1) {
+                    const a = points[i];
+                    for (let j = i + 1; j < points.length; j += 1) {
+                        const b = points[j];
+                        const dx = a.x - b.x;
+                        const dy = a.y - b.y;
+                        const distance = Math.hypot(dx, dy);
+                        if (distance >= linkDistance) continue;
+
+                        const alpha = (1 - distance / linkDistance) * 0.13;
+                        ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
+                        ctx.lineWidth = 0.75;
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.stroke();
+                    }
+                }
+
+                for (const point of points) {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.24)";
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (!reduceMotion.matches && !document.hidden) {
+                    frameId = window.requestAnimationFrame(draw);
+                }
+            };
+
+            const restart = () => {
+                window.cancelAnimationFrame(frameId);
+                lastTime = 0;
+                draw();
+                if (!reduceMotion.matches) {
+                    frameId = window.requestAnimationFrame(draw);
+                }
+            };
+
+            window.addEventListener("resize", () => {
+                resize();
+                restart();
+            });
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    window.cancelAnimationFrame(frameId);
+                } else {
+                    restart();
+                }
+            });
+
+            reduceMotion.addEventListener("change", restart);
+            resize();
+            restart();
+        })();
+    </script>
 </body>
 </html>
