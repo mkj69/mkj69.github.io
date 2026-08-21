@@ -637,9 +637,6 @@ body[data-direction="backward"] .section-block:not([style]) {
 }
 
 .intro-copy .personal-note {
-    display: flex;
-    gap: 9px;
-    align-items: baseline;
     max-width: 72ch;
     margin-top: 12px;
     padding-top: 9px;
@@ -648,13 +645,6 @@ body[data-direction="backward"] .section-block:not([style]) {
     font-family: "Nunito Sans", "Noto Sans SC", sans-serif;
     font-size: 13.5px;
     line-height: 1.48;
-}
-
-.personal-note > span {
-    flex: 0 0 auto;
-    color: #8a70ae;
-    font-family: Georgia, serif;
-    font-size: 17px;
 }
 
 .intro-emphasis {
