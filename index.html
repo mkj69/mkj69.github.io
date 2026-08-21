@@ -6,24 +6,61 @@
     <title>Kaijing Ma | Home</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-clean.css">
 </head>
-<body id="top">
+<body id="top" data-view="about">
+    <div class="background-charms" aria-hidden="true">
+        <span class="charm charm-star">✦</span>
+        <span class="charm charm-spark">✧</span>
+        <span class="charm charm-dot"></span>
+        <span class="charm charm-flower">✣</span>
+        <svg class="doodle doodle-smile" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="23"/>
+            <circle cx="24" cy="27" r="2.2" class="doodle-fill"/>
+            <circle cx="40" cy="27" r="2.2" class="doodle-fill"/>
+            <path d="M21 38c3.2 5 7 7 11 7s7.8-2 11-7"/>
+            <path d="M13 17c2-3 4-5 7-7M45 10c3 2 5 4 7 7" class="doodle-accent"/>
+        </svg>
+        <svg class="doodle doodle-sun" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="11"/>
+            <path d="M32 5v10M32 49v10M5 32h10M49 32h10M13 13l7 7M44 44l7 7M51 13l-7 7M20 44l-7 7"/>
+            <path d="M27 34c3 2.5 7 2.5 10 0" class="doodle-accent"/>
+        </svg>
+        <svg class="doodle doodle-sunflower" viewBox="0 0 72 84" aria-hidden="true">
+            <g class="sunflower-head">
+                <ellipse cx="36" cy="13" rx="6" ry="11"/>
+                <ellipse cx="36" cy="43" rx="6" ry="11"/>
+                <ellipse cx="21" cy="28" rx="11" ry="6"/>
+                <ellipse cx="51" cy="28" rx="11" ry="6"/>
+                <ellipse cx="25" cy="17" rx="6" ry="10" transform="rotate(-45 25 17)"/>
+                <ellipse cx="47" cy="17" rx="6" ry="10" transform="rotate(45 47 17)"/>
+                <ellipse cx="25" cy="39" rx="6" ry="10" transform="rotate(45 25 39)"/>
+                <ellipse cx="47" cy="39" rx="6" ry="10" transform="rotate(-45 47 39)"/>
+                <circle cx="36" cy="28" r="10" class="doodle-fill"/>
+            </g>
+            <path d="M36 47v32"/>
+            <path d="M36 61c-10-8-16-5-17 3 8 3 13 1 17-3ZM36 68c9-8 15-5 16 3-7 3-12 1-16-3Z" class="doodle-leaf"/>
+        </svg>
+    </div>
     <table class="page-table" align="center" border="0" cellspacing="0" cellpadding="20">
         <tr>
             <td>
                 <header class="site-header">
                     <nav class="quick-nav" aria-label="Section navigation">
+                        <a href="#about">About</a>
+                        <a href="#education">Education</a>
                         <a href="#news">News</a>
                         <a href="#publications">Publications</a>
-                        <!-- <a href="#experience">Experience</a> -->
+                        <a href="#experience">Experience</a>
                     </nav>
-                    <h1>Kaijing Ma <span class="cn-name">「麻开菁」</span></h1>
+                    <h1>
+                        <span class="latin-name">Kaijing Ma</span> <span class="cn-name">「麻开菁」</span>
+                    </h1>
                 </header>
 
-                <table class="intro-table" width="100%" align="center" border="0" cellspacing="0" cellpadding="20">
+                <table id="about" class="intro-table" width="100%" align="center" border="0" cellspacing="0" cellpadding="20">
                     <tr>
                         <td class="portrait-cell" width="36%" valign="top">
                             <a href="assets/kaijing0.jpg">
@@ -32,6 +69,34 @@
                                     <img src="assets/kaijing0-360.jpg" srcset="assets/kaijing0-360.jpg 360w, assets/kaijing0-560.jpg 560w" sizes="(max-width: 880px) 236px, 260px" width="358" height="360" alt="Kaijing Ma" class="portrait" decoding="async" fetchpriority="high">
                                 </picture>
                             </a>
+                        </td>
+                        <td class="intro-copy" width="64%" valign="top">
+                            <p class="intro-lead">
+                                I am a first-year Ph.D. student in Computer Science at The University of Texas at Austin,
+                                co-advised by <strong><a href="https://www.cs.utexas.edu/~lqiang/" target="_blank" rel="noreferrer">Prof. Qiang Liu</a></strong>
+                                and <strong><a href="https://www.vita-group.space/pi" target="_blank" rel="noreferrer">Prof. Atlas Wang</a></strong>.
+                            </p>
+                            <p>
+                                My current interests include <span class="topic-chip">long-horizon agents</span>,
+                                <span class="topic-chip">recursive self-improvement</span>, <span class="topic-chip">LLM reasoning</span>,
+                                and <span class="topic-chip">mechanistic interpretability</span>.
+                            </p>
+                            <p>
+                                <span class="intro-emphasis">I am grateful to the mentors and collaborators I have met along the way</span>, especially the
+                                <strong><a href="https://huggingface.co/m-a-p" target="_blank" rel="noreferrer">MAP Open Source Community</a></strong>,
+                                whose warm and open research culture has deeply shaped how I think about research,
+                                collaboration, and systems building.
+                            </p>
+                            <p class="personal-note">
+                                <span aria-hidden="true">✿</span>
+                                Outside research, I enjoy movies, variety shows, and life’s little moments.
+                                Feel free to email me—I read every message and will always do my best to reply.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="contact-panel" colspan="2">
+                            <div class="contact-panel-inner">
                             <div class="email-block" aria-label="Email addresses">
                                 <div class="email-heading">
                                     <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -63,28 +128,32 @@
                                     <span>Twitter</span>
                                 </a>
                             </p>
-                        </td>
-                        <td class="intro-copy" width="64%" valign="top">
-                            <p class="intro-lead">
-                                I am a first-year Ph.D. student in Computer Science at The University of Texas at Austin,
-                                co-advised by <strong><a href="https://www.cs.utexas.edu/~lqiang/" target="_blank" rel="noreferrer">Prof. Qiang Liu</a></strong> 
-                                and <strong><a href="https://www.vita-group.space/pi" target="_blank" rel="noreferrer">Prof. Atlas Wang</a></strong>.
-                            </p>
-                            <p>
-                                My current interests include <span class="topic-chip">long-horizon agents</span>,
-                                <span class="topic-chip">recursive self-improvement</span>, <span class="topic-chip">LLM reasoning</span>,
-                                and <span class="topic-chip">mechanistic interpretability</span>.
-                            </p>
-                            <p>
-                                Before UT Austin, I received my B.S. in Computer Science and Technology from Tongji University.
-                                <span class="intro-emphasis">I am grateful to the mentors and collaborators I have met along the way</span>, especially the
-                                <strong><a href="https://huggingface.co/m-a-p" target="_blank" rel="noreferrer">MAP Open Source Community</a></strong>,
-                                whose warm and open research culture has deeply shaped how I think about research,
-                                collaboration, and systems building.
-                            </p>
+                            </div>
                         </td>
                     </tr>
                 </table>
+
+                <hr>
+
+                <section id="education" class="section-block">
+                    <h2>Education</h2>
+                    <div class="education-list">
+                        <div class="education-item">
+                            <span class="education-date">2026 - Present</span>
+                            <div>
+                                <strong>The University of Texas at Austin</strong>
+                                <p>Ph.D. in Computer Science</p>
+                            </div>
+                        </div>
+                        <div class="education-item">
+                            <span class="education-date">2021 - 2025</span>
+                            <div>
+                                <strong>Tongji University</strong>
+                                <p>B.S. in Computer Science and Technology</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <hr>
 
@@ -367,7 +436,6 @@
                     </table>
                 </section>
 
-<!-- 
                 <hr>
 
                 <section id="experience" class="section-block">
@@ -385,6 +453,7 @@
                                 Advised by <strong><a href="https://commencement.github.io/" target="_blank" rel="noreferrer">Zili Wang</a></strong>.
                             </td>
                         </tr>
+                        <!-- MIT CSAIL experience temporarily hidden.
                         <tr>
                             <td class="date-cell" valign="middle">2025.06 - Present</td>
                             <td class="exp-logo-cell" valign="middle" align="center">
@@ -397,6 +466,7 @@
                                 Advised by <strong><a href="https://scholar.google.com/citations?hl=en&user=wbIMbL8AAAAJ" target="_blank" rel="noreferrer">Prof. Wojciech Matusik</a></strong>.
                             </td>
                         </tr>
+                        -->
                         <tr>
                             <td class="date-cell" valign="middle">2025.05 - 2025.10</td>
                             <td class="exp-logo-cell" valign="middle" align="center">
@@ -422,7 +492,7 @@
                             </td>
                         </tr>
                     </table>
-                </section> -->
+                </section>
 
                 <footer class="site-footer">
                     <span>Last updated: Jun 2026</span>
@@ -434,5 +504,6 @@
             </td>
         </tr>
     </table>
+    <script src="navigation.js"></script>
 </body>
 </html>
