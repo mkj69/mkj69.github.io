@@ -1,5 +1,5 @@
 (() => {
-    const views = ["about", "education", "news", "publications", "experience"];
+    const views = ["about", "education", "news", "publications", "experience", "writing"];
     const viewSet = new Set(views);
     const navigationLinks = [...document.querySelectorAll(".quick-nav a[href^='#']")];
     const wheelThreshold = 46;

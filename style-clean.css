@@ -412,7 +412,8 @@ body[data-view="about"] #about {
 body[data-view="education"] #education,
 body[data-view="news"] #news,
 body[data-view="publications"] #publications,
-body[data-view="experience"] #experience {
+body[data-view="experience"] #experience,
+body[data-view="writing"] #writing {
     display: block;
 }
 
@@ -709,6 +710,151 @@ body[data-direction="backward"] .section-block:not([style]) {
 #news h2::before { content: "✦  02"; color: var(--blue); background: var(--surface-blue); }
 #publications h2::before { content: "◆  03"; color: var(--purple); background: var(--surface-purple); }
 #experience h2::before { content: "◎  04"; background: var(--surface-blue); }
+#writing h2::before { content: "✎  05"; color: #3f7350; background: rgba(104, 161, 120, 0.1); }
+
+.writing-intro {
+    max-width: 68ch;
+    margin: -2px 0 30px 68px;
+    color: var(--muted);
+    font-family: "Lora", Georgia, serif;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.writing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.writing-card {
+    position: relative;
+    display: flex;
+    min-height: 290px;
+    flex-direction: column;
+    overflow: hidden;
+    padding: clamp(24px, 3vw, 34px);
+    border: 1px solid rgba(121, 106, 92, 0.18);
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at 92% 8%, rgba(104, 161, 120, 0.1), transparent 13rem),
+        rgba(255, 255, 255, 0.62);
+    box-shadow: 0 18px 44px rgba(80, 68, 56, 0.06);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.writing-card-featured {
+    grid-column: 1 / -1;
+}
+
+.writing-card:hover {
+    border-color: rgba(121, 106, 92, 0.3);
+    box-shadow: 0 22px 52px rgba(80, 68, 56, 0.09);
+    transform: translateY(-3px);
+}
+
+.writing-card::after {
+    content: "↗";
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    color: rgba(63, 115, 80, 0.2);
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 42px;
+    line-height: 1;
+}
+
+.writing-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.writing-card-index {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border: 1px solid rgba(63, 115, 80, 0.22);
+    border-radius: 50%;
+    color: #3f7350;
+    background: rgba(104, 161, 120, 0.07);
+    font-size: 10px;
+}
+
+.writing-card h3 {
+    max-width: 24ch;
+    margin: 28px 0 12px;
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: clamp(32px, 4vw, 46px);
+    font-style: italic;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+}
+
+.writing-card h3 a {
+    color: var(--heading);
+}
+
+.writing-card h3 a:hover,
+.writing-card h3 a:focus-visible {
+    color: #3f7350;
+}
+
+.writing-card > p {
+    max-width: 70ch;
+    margin-bottom: 28px;
+    color: var(--text);
+    font-family: "Lora", Georgia, serif;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.writing-card-footer {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(121, 106, 92, 0.12);
+}
+
+.writing-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.writing-tags li {
+    padding: 5px 9px;
+    border-radius: 999px;
+    color: #687168;
+    background: rgba(104, 161, 120, 0.08);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.writing-links {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 18px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.writing-links a:first-child {
+    color: #3f7350;
+}
 
 .education-list {
     display: grid;
@@ -1157,6 +1303,23 @@ body[data-direction="backward"] .section-block:not([style]) {
         grid-template-columns: 1fr;
         gap: 7px;
         padding: 18px;
+    }
+
+    .writing-intro {
+        margin-left: 0;
+    }
+
+    .writing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .writing-card {
+        min-height: 0;
+    }
+
+    .writing-card-footer {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .publication-table,
