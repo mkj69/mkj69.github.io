@@ -723,15 +723,16 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    grid-template-columns: 1fr;
+    gap: 16px;
 }
 
 .writing-card {
     position: relative;
-    display: flex;
-    min-height: 290px;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(240px, 0.78fr) minmax(0, 1.35fr);
+    align-items: stretch;
+    gap: clamp(34px, 5vw, 76px);
     overflow: hidden;
     padding: clamp(24px, 3vw, 34px);
     border: 1px solid rgba(121, 106, 92, 0.18);
@@ -743,8 +744,30 @@ body[data-direction="backward"] .section-block:not([style]) {
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.writing-card-featured {
-    grid-column: 1 / -1;
+.writing-card-notebook {
+    border-color: rgba(75, 91, 132, 0.32);
+    border-left: 4px solid #596a98;
+    background:
+        radial-gradient(circle at 94% 12%, rgba(102, 120, 170, 0.16), transparent 17rem),
+        linear-gradient(135deg, rgba(247, 248, 253, 0.98), rgba(255, 255, 255, 0.76));
+    box-shadow: 0 20px 52px rgba(69, 80, 112, 0.1);
+}
+
+.writing-card-notebook .writing-card-index {
+    border-color: rgba(75, 91, 132, 0.32);
+    color: #4b5b84;
+    background: rgba(102, 120, 170, 0.1);
+}
+
+.writing-card-notebook .writing-card-meta,
+.writing-card-notebook h3 a,
+.writing-card-notebook .writing-links a:first-child {
+    color: #4b5b84;
+}
+
+.writing-card-notebook .writing-tags li {
+    color: #596786;
+    background: rgba(102, 120, 170, 0.1);
 }
 
 .writing-card:hover {
@@ -762,6 +785,17 @@ body[data-direction="backward"] .section-block:not([style]) {
     font-family: "Space Grotesk", sans-serif;
     font-size: 42px;
     line-height: 1;
+}
+
+.writing-card-notebook::after {
+    color: rgba(75, 91, 132, 0.2);
+}
+
+.writing-card-lead,
+.writing-card-body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
 }
 
 .writing-card-meta {
@@ -790,9 +824,9 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-card h3 {
     max-width: 24ch;
-    margin: 28px 0 12px;
+    margin: 24px 0 0;
     font-family: "Cormorant Garamond", Georgia, serif;
-    font-size: clamp(32px, 4vw, 46px);
+    font-size: clamp(32px, 4vw, 44px);
     font-style: italic;
     line-height: 1.02;
     letter-spacing: -0.025em;
@@ -807,9 +841,19 @@ body[data-direction="backward"] .section-block:not([style]) {
     color: #3f7350;
 }
 
-.writing-card > p {
+.writing-card-course {
+    margin: 22px 0 -8px;
+    color: #6a7390;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    line-height: 1.55;
+    text-transform: uppercase;
+}
+
+.writing-card-body > p {
     max-width: 70ch;
-    margin-bottom: 28px;
+    margin: 2px 54px 28px 0;
     color: var(--text);
     font-family: "Lora", Georgia, serif;
     font-size: 16px;
@@ -854,12 +898,6 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-links a:first-child {
     color: #3f7350;
-}
-
-@media (max-width: 1100px) and (min-width: 881px) {
-    .writing-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }
 
 .education-list {
@@ -1320,7 +1358,13 @@ body[data-direction="backward"] .section-block:not([style]) {
     }
 
     .writing-card {
+        grid-template-columns: 1fr;
+        gap: 20px;
         min-height: 0;
+    }
+
+    .writing-card-body > p {
+        margin: 0 36px 24px 0;
     }
 
     .writing-card-footer {
