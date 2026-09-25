@@ -776,8 +776,8 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-group-head {
     display: grid;
-    grid-template-columns: minmax(190px, 250px) minmax(0, 1fr);
-    gap: clamp(24px, 3.5vw, 44px);
+    grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+    gap: clamp(20px, 2.5vw, 32px);
     align-items: end;
     padding: 0 8px 13px;
     border-bottom: 1px solid var(--group-line);
