@@ -721,6 +721,64 @@ body[data-direction="backward"] .section-block:not([style]) {
     line-height: 1.7;
 }
 
+.writing-groups {
+    display: grid;
+    gap: 54px;
+}
+
+.writing-group {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+}
+
+.writing-group-head {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.78fr) minmax(0, 1.35fr);
+    gap: clamp(34px, 5vw, 76px);
+    align-items: end;
+    padding: 0 8px 13px;
+    border-bottom: 1px solid rgba(121, 106, 92, 0.16);
+}
+
+.writing-group-head > div {
+    display: flex;
+    align-items: baseline;
+    gap: 13px;
+}
+
+.writing-group-number {
+    color: #3f7350;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.writing-group-head h3 {
+    margin: 0;
+    color: var(--heading);
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.writing-group-head p {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--muted);
+    font-family: "Lora", Georgia, serif;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.writing-group-head a {
+    color: #3f7350;
+    font-weight: 700;
+}
+
 .writing-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -751,6 +809,27 @@ body[data-direction="backward"] .section-block:not([style]) {
         radial-gradient(circle at 94% 12%, rgba(102, 120, 170, 0.16), transparent 17rem),
         linear-gradient(135deg, rgba(247, 248, 253, 0.98), rgba(255, 255, 255, 0.76));
     box-shadow: 0 20px 52px rgba(69, 80, 112, 0.1);
+}
+
+.writing-card-essay {
+    border-color: rgba(63, 115, 80, 0.34);
+    border-left: 4px solid #3f7350;
+    background:
+        radial-gradient(circle at 94% 12%, rgba(104, 161, 120, 0.17), transparent 17rem),
+        linear-gradient(135deg, rgba(247, 251, 247, 0.98), rgba(255, 255, 255, 0.76));
+    box-shadow: 0 20px 52px rgba(63, 115, 80, 0.1);
+}
+
+.writing-card-essay .writing-card-index {
+    border-color: rgba(63, 115, 80, 0.32);
+    color: #326342;
+    background: rgba(104, 161, 120, 0.12);
+}
+
+.writing-card-essay .writing-card-meta,
+.writing-card-essay h3 a,
+.writing-card-essay .writing-links a:first-child {
+    color: #326342;
 }
 
 .writing-card-notebook .writing-card-index {
@@ -1351,6 +1430,16 @@ body[data-direction="backward"] .section-block:not([style]) {
 
     .writing-intro {
         margin-left: 0;
+    }
+
+    .writing-groups {
+        gap: 42px;
+    }
+
+    .writing-group-head {
+        grid-template-columns: 1fr;
+        gap: 7px;
+        padding-inline: 2px;
     }
 
     .writing-grid {
