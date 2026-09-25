@@ -727,9 +727,30 @@ body[data-direction="backward"] .section-block:not([style]) {
 }
 
 .writing-group {
+    --group-accent: #39786f;
+    --group-accent-deep: #2f675f;
+    --group-line: rgba(57, 120, 111, 0.2);
     display: grid;
     gap: 18px;
     min-width: 0;
+}
+
+.writing-group-ideas {
+    --group-accent: #a66632;
+    --group-accent-deep: #885124;
+    --group-line: rgba(166, 102, 50, 0.22);
+}
+
+.writing-group-course {
+    --group-accent: #596a98;
+    --group-accent-deep: #4b5b84;
+    --group-line: rgba(89, 106, 152, 0.22);
+}
+
+.writing-group-research {
+    --group-accent: #39786f;
+    --group-accent-deep: #2f675f;
+    --group-line: rgba(57, 120, 111, 0.2);
 }
 
 .writing-group-head {
@@ -738,7 +759,7 @@ body[data-direction="backward"] .section-block:not([style]) {
     gap: clamp(34px, 5vw, 76px);
     align-items: end;
     padding: 0 8px 13px;
-    border-bottom: 1px solid rgba(121, 106, 92, 0.16);
+    border-bottom: 1px solid var(--group-line);
 }
 
 .writing-group-head > div {
@@ -748,7 +769,7 @@ body[data-direction="backward"] .section-block:not([style]) {
 }
 
 .writing-group-number {
-    color: #3f7350;
+    color: var(--group-accent);
     font-family: "Space Grotesk", sans-serif;
     font-size: 10px;
     font-weight: 700;
@@ -757,7 +778,7 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-group-head h3 {
     margin: 0;
-    color: var(--heading);
+    color: var(--group-accent-deep);
     font-family: "Space Grotesk", sans-serif;
     font-size: 16px;
     font-weight: 700;
@@ -775,7 +796,7 @@ body[data-direction="backward"] .section-block:not([style]) {
 }
 
 .writing-group-head a {
-    color: #3f7350;
+    color: var(--group-accent-deep);
     font-weight: 700;
 }
 
@@ -811,25 +832,34 @@ body[data-direction="backward"] .section-block:not([style]) {
     box-shadow: 0 20px 52px rgba(69, 80, 112, 0.1);
 }
 
-.writing-card-essay {
-    border-color: rgba(63, 115, 80, 0.34);
-    border-left: 4px solid #3f7350;
+.writing-card-garden {
+    border-color: rgba(166, 102, 50, 0.34);
+    border-left: 4px solid #a66632;
     background:
-        radial-gradient(circle at 94% 12%, rgba(104, 161, 120, 0.17), transparent 17rem),
-        linear-gradient(135deg, rgba(247, 251, 247, 0.98), rgba(255, 255, 255, 0.76));
-    box-shadow: 0 20px 52px rgba(63, 115, 80, 0.1);
+        radial-gradient(circle at 94% 12%, rgba(202, 143, 82, 0.18), transparent 17rem),
+        linear-gradient(135deg, rgba(253, 249, 243, 0.98), rgba(255, 255, 255, 0.76));
+    box-shadow: 0 20px 52px rgba(145, 86, 36, 0.1);
 }
 
-.writing-card-essay .writing-card-index {
-    border-color: rgba(63, 115, 80, 0.32);
-    color: #326342;
-    background: rgba(104, 161, 120, 0.12);
+.writing-card-garden .writing-card-index {
+    border-color: rgba(166, 102, 50, 0.32);
+    color: #885124;
+    background: rgba(202, 143, 82, 0.12);
 }
 
-.writing-card-essay .writing-card-meta,
-.writing-card-essay h3 a,
-.writing-card-essay .writing-links a:first-child {
-    color: #326342;
+.writing-card-garden .writing-card-meta,
+.writing-card-garden h3 a,
+.writing-card-garden .writing-links a:first-child {
+    color: #885124;
+}
+
+.writing-card-garden .writing-tags li {
+    color: #8a5b32;
+    background: rgba(202, 143, 82, 0.12);
+}
+
+.writing-card-garden::after {
+    color: rgba(166, 102, 50, 0.2);
 }
 
 .writing-card-notebook .writing-card-index {
@@ -868,6 +898,36 @@ body[data-direction="backward"] .section-block:not([style]) {
 
 .writing-card-notebook::after {
     color: rgba(75, 91, 132, 0.2);
+}
+
+.writing-group-research .writing-card {
+    border-color: rgba(57, 120, 111, 0.24);
+    border-left: 3px solid #39786f;
+    background:
+        radial-gradient(circle at 92% 8%, rgba(69, 139, 129, 0.12), transparent 13rem),
+        rgba(255, 255, 255, 0.66);
+    box-shadow: 0 18px 44px rgba(47, 103, 95, 0.07);
+}
+
+.writing-group-research .writing-card-index {
+    border-color: rgba(57, 120, 111, 0.28);
+    color: #2f675f;
+    background: rgba(69, 139, 129, 0.1);
+}
+
+.writing-group-research .writing-card-meta,
+.writing-group-research .writing-card h3 a,
+.writing-group-research .writing-links a:first-child {
+    color: #2f675f;
+}
+
+.writing-group-research .writing-tags li {
+    color: #356f67;
+    background: rgba(69, 139, 129, 0.1);
+}
+
+.writing-group-research .writing-card::after {
+    color: rgba(57, 120, 111, 0.2);
 }
 
 .writing-card-lead,
