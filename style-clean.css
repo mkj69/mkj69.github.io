@@ -476,13 +476,31 @@ body[data-direction="backward"] .section-block:not([style]) {
     z-index: 1;
 }
 
-.portrait {
+.portrait-cell > a {
     display: block;
     width: min(78%, 280px);
-    height: auto;
+    aspect-ratio: 1;
     margin: 0 auto;
-    border: 0;
+    overflow: hidden;
     border-radius: 12px;
+}
+
+.portrait-cell > a picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.portrait {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    object-fit: cover;
+    transform: scale(1.28);
+    transform-origin: 50% 34%;
 }
 
 .email-block {
@@ -1491,8 +1509,12 @@ body[data-direction="backward"] .section-block:not([style]) {
         padding: 24px 16px !important;
     }
 
+    .portrait-cell > a {
+        width: min(78%, 230px);
+    }
+
     .portrait {
-        max-width: 230px;
+        max-width: none;
     }
 
     .intro-copy {
