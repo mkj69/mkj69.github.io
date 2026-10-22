@@ -16,7 +16,14 @@
         "Scaling"
       ],
       "source_url": "https://arxiv.org/abs/2403.03206v1",
-      "source_label": "arXiv 2403.03206"
+      "source_label": "arXiv 2403.03206",
+      "summary_zh": "把 Rectified Flow 放大到高分辨率文生图。精读包括训练目标、MM-DiT、实验和高分辨率配方。",
+      "url": "https://mkj69.github.io/#paper-sd3",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "inline_homepage_writing"
     },
     {
       "slug": "instaflow",
@@ -31,7 +38,14 @@
         "Image generation"
       ],
       "source_url": "https://arxiv.org/abs/2309.06380v2",
-      "source_label": "arXiv 2309.06380"
+      "source_label": "arXiv 2309.06380",
+      "summary_zh": "先通过 reflow 改善配对，再蒸馏成一步模型。精读包括理论、算法、实验、成本和局限。",
+      "url": "https://mkj69.github.io/#paper-instaflow",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "inline_homepage_writing"
     }
   ]
 }

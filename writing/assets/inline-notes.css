@@ -1,0 +1,129 @@
+#writing .inline-paper-reader {
+    --ink: #202124;
+    --muted: #5d6062;
+    --blue: #2f5f93;
+    --pink: #c93664;
+    --orange: #c9741c;
+    --green: #2e7d4f;
+    min-width: 0;
+    color: var(--ink);
+}
+
+#writing .inline-paper-reader [hidden],
+#writing .writing-group-papers [data-paper-ui-language][hidden] { display: none !important; }
+#writing .writing-group-papers [data-paper-ui-language] { display: block; }
+#writing .inline-paper-reader .paper-reader-toolbar { position: sticky; top: 8px; z-index: 4; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; padding: 12px 15px; background: #fffef9f2; border: 1px solid #d8ded8; border-radius: 7px; backdrop-filter: blur(10px); }
+#writing .inline-paper-reader .paper-reader-toolbar > p { margin: 0; color: #496151; font: 600 12px/1.5 "Space Grotesk", "Noto Sans SC", sans-serif; letter-spacing: .04em; }
+#writing .inline-paper-reader .paper-language-controls { display: flex; flex-wrap: wrap; gap: 5px; }
+#writing .inline-paper-reader .paper-language-controls button { padding: 5px 12px; border: 1px solid transparent; border-radius: 4px; color: #58615a; background: transparent; cursor: pointer; font: 13px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+#writing .inline-paper-reader .paper-language-controls button[aria-pressed="true"] { border-color: #b8c9bd; color: #264f38; background: #eaf1e9; font-weight: 600; }
+#writing .inline-paper-reader .paper-language-controls button:focus-visible,
+#writing .inline-paper-reader summary:focus-visible,
+#writing .inline-paper-reader .figure-open:focus-visible,
+#writing .inline-paper-reader a:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+#writing .inline-paper-reader .paper-note { min-width: 0; border-bottom: 1px solid #cdd7ce; scroll-margin-top: 80px; }
+#writing .inline-paper-reader .paper-note > summary { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 27px 8px; cursor: pointer; list-style: none; }
+#writing .inline-paper-reader .paper-note > summary::-webkit-details-marker { display: none; }
+#writing .inline-paper-reader .paper-note-summary-main { display: grid; gap: 6px; min-width: 0; }
+#writing .inline-paper-reader .paper-note-summary-main > strong { color: #2d4f3c; font: 600 27px/1.2 "Cormorant Garamond", Georgia, serif; }
+#writing .inline-paper-reader .paper-note-description { color: #626b64; font: 14px/1.55 "Lora", "Noto Sans SC", serif; }
+#writing .inline-paper-reader .paper-note-expansion { flex: 0 0 24px; color: #536c58; font: 24px/1 sans-serif; text-align: center; }
+#writing .inline-paper-reader .paper-note-expansion::before { content: "+"; }
+#writing .inline-paper-reader .paper-note[open] > summary .paper-note-expansion::before { content: "−"; }
+#writing .inline-paper-reader .paper-note-versions { min-width: 0; padding: 0 8px 24px; }
+#writing .inline-paper-reader .paper-note-content { min-width: 0; font: 16px/1.65 "Noto Serif CJK SC", "Songti SC", "STSong", "Iowan Old Style", "Times New Roman", serif; }
+#writing .inline-paper-reader .paper-language-label { display: none; }
+#writing .inline-paper-reader[data-language="both"] .paper-note-versions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
+#writing .inline-paper-reader[data-language="both"] .paper-language-label { display: block; margin: 0 0 18px; color: #42614a; font: 600 12px/1.5 "Noto Sans SC", sans-serif; }
+#writing .inline-paper-reader[data-language="both"] .paper-note-content + .paper-note-content { padding-left: 25px; border-left: 1px solid #d6dfd7; }
+#writing .inline-paper-reader .paper-note-content :is(h1,h2,h3,h4,h5,h6)::before,
+#writing .inline-paper-reader .paper-note-content :is(h1,h2,h3,h4,h5,h6)::after { content: none; display: none; }
+#writing .inline-paper-reader .sheet { min-width: 0; max-width: none; min-height: 0; margin: 0 0 28px; padding: 23px 0 0; background: transparent; border-top: 1px solid #acb9ad; box-shadow: none; scroll-margin-top: 80px; }
+#writing .inline-paper-reader .running { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin: 0 0 18px; padding: 0 0 9px; border-bottom: 1px solid #d6ded7; color: #3f5547; font: 12px/1.5 "Noto Sans SC", sans-serif; }
+#writing .inline-paper-reader .running :is(h2,h5) { display: block; flex: 1 1 250px; gap: 0; margin: 0; color: #354e3c; font: 600 16px/1.5 "Noto Sans SC", sans-serif; letter-spacing: 0; }
+#writing .inline-paper-reader .running .subject { display: none; }
+#writing .inline-paper-reader .page-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; }
+#writing .inline-paper-reader .page-columns.overview { grid-template-columns: 1.2fr 1fr; }
+#writing .inline-paper-reader .column { min-width: 0; }
+#writing .inline-paper-reader .column:nth-child(even) { padding-left: 23px; border-left: 1px solid #d7ded8; }
+#writing .inline-paper-reader .bibliography { margin-bottom: 18px; padding: 14px 16px; background: #f5f6f3; border: 1px solid #c9cfca; border-radius: 5px; }
+#writing .inline-paper-reader .bibliography :is(h1,h2,h4) { display: block; margin: 0 0 8px; color: #263b2f; font: 600 23px/1.35 "Noto Sans SC", sans-serif; letter-spacing: 0; }
+#writing .inline-paper-reader .bibliography .bib-title { display: block; margin: 0 0 8px; color: #263b2f; font: 600 23px/1.35 "Noto Sans SC", sans-serif; letter-spacing: 0; }
+#writing .inline-paper-reader .bibliography .subtitle { margin: 0 0 8px; font-size: 15px; font-style: italic; }
+#writing .inline-paper-reader .bibliography p { margin: 5px 0; font-size: 13px; }
+#writing .inline-paper-reader .accent { display: block; margin: 20px 0 9px; padding-left: 9px; border-left: 4px solid currentColor; font: 600 17px/1.5 "Noto Sans SC", sans-serif; letter-spacing: 0; }
+#writing .inline-paper-reader .accent:first-child { margin-top: 0; }
+#writing .inline-paper-reader .blue { color: var(--blue); }
+#writing .inline-paper-reader .pink { color: var(--pink); }
+#writing .inline-paper-reader .orange { color: var(--orange); }
+#writing .inline-paper-reader .green { color: var(--green); }
+#writing .inline-paper-reader .gray { color: #383c39; }
+#writing .inline-paper-reader .callout { margin: 14px 0; padding: 11px 13px; border: 1px solid currentColor; border-radius: 5px; }
+#writing .inline-paper-reader .callout > p,
+#writing .inline-paper-reader .callout > ul { color: var(--ink); }
+#writing .inline-paper-reader .callout.pink { background: #fbf1f4; }
+#writing .inline-paper-reader .callout.blue { background: #f0f4fa; }
+#writing .inline-paper-reader .callout.green { background: #eef6f0; }
+#writing .inline-paper-reader .callout.orange { background: #fdf5eb; }
+#writing .inline-paper-reader .callout.gray { background: #f3f4f2; }
+#writing .inline-paper-reader .callout .accent { margin-top: 0; padding-left: 0; border-left: 0; }
+#writing .inline-paper-reader .overview .column + .column { padding-left: 0; border-left: 0; }
+#writing .inline-paper-reader .overview figure { padding: 10px; border: 1px solid #c8d0c9; border-radius: 5px; }
+#writing .inline-paper-reader .paper-note-content p { margin: 8px 0; overflow-wrap: anywhere; text-align: start; }
+#writing .inline-paper-reader .paper-note-content ul { margin: 9px 0; padding-left: 21px; }
+#writing .inline-paper-reader .paper-note-content li { margin: 6px 0; overflow-wrap: anywhere; }
+#writing .inline-paper-reader .equation { margin: 13px 0; padding: 9px 11px; border-left: 2px solid #b4c7d6; background: #f1f4f7; font: 16px/1.7 "STIX Two Math", "Cambria Math", "Times New Roman", serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+#writing .inline-paper-reader pre { margin: 13px 0; padding: 11px; color: #333d35; background: #f0f3ef; font: 12px/1.6 "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+#writing .inline-paper-reader figure { margin: 16px 0; }
+#writing .inline-paper-reader .figure-open { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+#writing .inline-paper-reader .figure-open img { display: block; width: 100%; height: auto; max-height: 600px; object-fit: contain; }
+#writing .inline-paper-reader figcaption,
+#writing .inline-paper-reader .table-note { margin-top: 7px; color: #5a625b; font-size: 13px; line-height: 1.55; }
+#writing .inline-paper-reader figcaption strong { color: #303a32; }
+#writing .inline-paper-reader .table-wrap { width: 100%; max-width: 100%; margin: 14px 0; overflow-x: auto; }
+#writing .inline-paper-reader table { width: 100%; border-collapse: collapse; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+#writing .inline-paper-reader caption { padding-bottom: 6px; color: #38453c; font-size: 13px; font-weight: 600; line-height: 1.5; text-align: start; }
+#writing .inline-paper-reader :is(th,td) { padding: 6px; border-bottom: 1px solid #ccd3cd; text-align: right; vertical-align: top; }
+#writing .inline-paper-reader th { border-top: 1px solid #677969; border-bottom: 1px solid #677969; font-weight: 600; white-space: normal; }
+#writing .inline-paper-reader th[scope="row"] { border-top: 0; border-bottom: 1px solid #ccd3cd; font-weight: 400; }
+#writing .inline-paper-reader :is(th,td):first-child { text-align: start; }
+#writing .inline-paper-reader td strong { padding: 0 2px; color: #91465e; background: #fae5eb; }
+#writing .inline-paper-reader .page-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 15px; margin-top: 18px; padding-top: 7px; border-top: 1px solid #b8c6ba; color: #68726a; font-size: 11px; }
+#writing .inline-paper-reader .edition { margin: 18px 0; color: #68726a; font-size: 12px; line-height: 1.65; }
+#writing .inline-paper-reader .paper-image-dialog { width: auto; max-width: 95vw; max-height: 95vh; padding: 42px 12px 12px; border: 0; border-radius: 6px; background: white; box-shadow: 0 15px 70px #0005; }
+#writing .inline-paper-reader .paper-image-dialog::backdrop { background: #07120de6; }
+#writing .inline-paper-reader .paper-image-dialog > img { display: block; width: auto; height: auto; max-width: 90vw; max-height: 82vh; }
+#writing .inline-paper-reader .paper-dialog-close { position: absolute; top: 9px; right: 10px; padding: 4px 10px; border: 1px solid #aab7ad; border-radius: 3px; background: white; color: #344c3b; cursor: pointer; font: 13px/1.5 "Noto Sans SC", sans-serif; }
+#writing .inline-paper-reader .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+#writing .inline-paper-reader[data-language="both"] .page-columns { display: block; }
+#writing .inline-paper-reader[data-language="both"] .column + .column { margin-top: 22px; padding-left: 0; border-left: 0; }
+
+@media (max-width: 980px) {
+    #writing .inline-paper-reader .page-columns,
+    #writing .inline-paper-reader .page-columns.overview { display: block; }
+    #writing .inline-paper-reader .column + .column { margin-top: 24px; padding-left: 0; border-left: 0; }
+    #writing .inline-paper-reader[data-language="both"] .paper-note-versions { display: block; }
+    #writing .inline-paper-reader[data-language="both"] .paper-note-content + .paper-note-content { margin-top: 30px; padding-left: 0; border-left: 0; border-top: 2px solid #b5c5b8; }
+    #writing .inline-paper-reader[data-language="both"] .paper-language-label { padding-top: 14px; }
+}
+
+@media (max-width: 600px) {
+    #writing .inline-paper-reader .paper-reader-toolbar { top: 0; padding: 9px 10px; }
+    #writing .inline-paper-reader .paper-language-controls button { padding: 5px 9px; font-size: 12px; }
+    #writing .inline-paper-reader .paper-note > summary { gap: 16px; padding: 23px 2px; }
+    #writing .inline-paper-reader .paper-note-versions { padding-inline: 0; }
+    #writing .inline-paper-reader .paper-note-content { font-size: 16px; }
+    #writing .inline-paper-reader .bibliography :is(h1,h2,h4) { font-size: 21px; }
+    #writing .inline-paper-reader .bibliography .bib-title { font-size: 21px; }
+    #writing .inline-paper-reader .accent { font-size: 17px; }
+    #writing .inline-paper-reader table { font-size: 12px; }
+}
+
+@media print {
+    #writing .inline-paper-reader .paper-reader-toolbar,
+    #writing .inline-paper-reader .paper-image-dialog,
+    #writing .inline-paper-reader .paper-note-expansion { display: none !important; }
+    #writing .inline-paper-reader .sheet { break-inside: auto; }
+    #writing .inline-paper-reader figure,
+    #writing .inline-paper-reader tr { break-inside: avoid; }
+}

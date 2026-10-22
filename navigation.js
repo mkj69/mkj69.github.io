@@ -15,6 +15,10 @@
 
     function viewFromLocation() {
         const requestedView = window.location.hash.slice(1).toLowerCase();
+        const requestedTarget = document.getElementById(requestedView);
+        if (requestedTarget && requestedTarget.closest("#writing details[data-paper-note]")) {
+            return "writing";
+        }
         return viewSet.has(requestedView) ? requestedView : "about";
     }
 
