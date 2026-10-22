@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "title": "Paper Notes",
+  "description": "Detailed reading notes on methods, evidence, and limits. Figures and tables stay close to the claims they support.",
+  "papers": [
+    {
+      "slug": "sd3",
+      "short_title": "SD3",
+      "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
+      "authors": "Esser et al.",
+      "published": "2026-10-22",
+      "summary": "Rectified flow at scale. The note connects the flow objective, MM-DiT, training choices, and evaluation.",
+      "topics": [
+        "Rectified flow",
+        "Image generation",
+        "Scaling"
+      ],
+      "source_url": "https://arxiv.org/abs/2403.03206v1",
+      "source_label": "arXiv 2403.03206"
+    },
+    {
+      "slug": "instaflow",
+      "short_title": "InstaFlow",
+      "paper_title": "InstaFlow: One Step is Enough for High-Quality Diffusion-Based Text-to-Image Generation",
+      "authors": "Liu et al.",
+      "published": "2026-10-22",
+      "summary": "From reflow to one-step generation. The note follows the coupling, distillation objective, experiments, and costs.",
+      "topics": [
+        "Rectified flow",
+        "Distillation",
+        "Image generation"
+      ],
+      "source_url": "https://arxiv.org/abs/2309.06380v2",
+      "source_label": "arXiv 2309.06380"
+    }
+  ]
+}

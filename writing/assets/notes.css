@@ -1,0 +1,67 @@
+.paper-notes {
+    --paper: #ffffff;
+    --ink: #202522;
+    --muted: #626b65;
+    --rule: #d8dfda;
+    --accent: #28564b;
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
+}
+
+.paper-notes * { box-sizing: border-box; }
+.paper-notes a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.paper-notes a:hover { color: #152f28; }
+.paper-notes a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.paper-notes .notes-page { width: min(100% - 64px, 1080px); margin: 0 auto; }
+.paper-notes .notes-header,
+.paper-notes .notes-footer { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.paper-notes .notes-header { padding: 28px 0 22px; border-bottom: 1px solid var(--rule); }
+.paper-notes .notes-header nav { display: flex; gap: 24px; }
+.paper-notes .notes-header a,
+.paper-notes .notes-footer a { text-decoration: none; }
+.paper-notes .author-link { color: var(--ink); font-size: 20px; font-weight: 600; }
+.paper-notes .notes-header nav,
+.paper-notes .eyebrow,
+.paper-notes .list-heading,
+.paper-notes .paper-meta,
+.paper-notes .paper-topics,
+.paper-notes .paper-source,
+.paper-notes .note-link,
+.paper-notes .notes-footer,
+.paper-notes .paper-number { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.paper-notes .notes-header nav { font-size: 13px; }
+.paper-notes .notes-intro { max-width: 760px; padding: 66px 0 54px; }
+.paper-notes .eyebrow { margin: 0 0 18px; color: var(--accent); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+.paper-notes h1 { margin: 0 0 22px; font-size: clamp(40px, 5vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.12; }
+.paper-notes .notes-description { max-width: 67ch; margin: 0; color: #4a554d; font-size: 19px; line-height: 1.65; }
+.paper-notes .list-heading { display: flex; justify-content: space-between; padding: 11px 0; color: var(--accent); border-top: 2px solid var(--accent); border-bottom: 1px solid var(--rule); font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
+.paper-notes .paper-entry { display: grid; grid-template-columns: 48px minmax(0, 1fr) 80px; align-items: start; gap: 20px; padding: 34px 0 32px; border-bottom: 1px solid var(--rule); }
+.paper-notes .paper-number { padding-top: 3px; color: var(--accent); font-size: 12px; }
+.paper-notes .paper-meta { margin: 0 0 9px; color: var(--muted); font-size: 11px; letter-spacing: .02em; }
+.paper-notes h2 { margin: 0 0 7px; font-size: 30px; font-weight: 500; line-height: 1.2; letter-spacing: -.02em; }
+.paper-notes h2 a { text-decoration: none; }
+.paper-notes .paper-title { max-width: 65ch; margin: 0; color: #39463d; font-size: 17px; line-height: 1.45; }
+.paper-notes .paper-summary { max-width: 66ch; margin: 17px 0; color: #4f5952; font-size: 16px; line-height: 1.65; }
+.paper-notes .paper-topics { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 17px 0 13px; padding: 0; color: var(--accent); list-style: none; font-size: 11px; }
+.paper-notes .paper-source { margin: 0; color: var(--muted); font-size: 11px; }
+.paper-notes .note-link { margin-top: 29px; font-size: 12px; text-decoration: none; white-space: nowrap; }
+.paper-notes .notes-footer { margin: 46px 0 30px; color: var(--muted); font-size: 11px; }
+.paper-notes .skip-link { position: absolute; top: -100px; left: 20px; padding: 8px 14px; color: white; background: var(--accent); }
+.paper-notes .skip-link:focus { top: 10px; }
+
+@media (max-width: 640px) {
+    .paper-notes .notes-page { width: min(100% - 36px, 1080px); }
+    .paper-notes .notes-header { padding-top: 20px; }
+    .paper-notes .notes-header nav { gap: 16px; }
+    .paper-notes .notes-intro { padding: 42px 0 36px; }
+    .paper-notes .notes-description { font-size: 17px; }
+    .paper-notes .paper-entry { grid-template-columns: 27px minmax(0, 1fr); gap: 12px; padding: 26px 0; }
+    .paper-notes .note-link { grid-column: 2; margin-top: 2px; }
+    .paper-notes .paper-title { font-size: 16px; }
+    .paper-notes .paper-summary { font-size: 15px; }
+    .paper-notes .notes-footer { gap: 16px; }
+}
