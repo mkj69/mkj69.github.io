@@ -27,6 +27,29 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "alexnet-2012",
+      "short_title": "AlexNet",
+      "paper_title": "ImageNet Classification with Deep Convolutional Neural Networks",
+      "authors": "Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton",
+      "published": "2026-10-23",
+      "summary": "Convolutional learning at ImageNet scale. Architecture, optimization, regularization and evaluation costs explain the result and its limits.",
+      "summary_zh": "从结构、优化、正则化与评估成本理解 ImageNet 规模上的卷积网络，区分单模型、集成与额外预训练的证据。",
+      "topics": [
+        "Convolutional networks",
+        "ImageNet",
+        "GPU parallelism",
+        "Regularization"
+      ],
+      "source_url": "https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf",
+      "source_label": "NIPS 2012 full paper",
+      "url": "https://mkj69.github.io/writing/papers/alexnet-2012/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",

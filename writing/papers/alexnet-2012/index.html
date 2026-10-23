@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ImageNet Classification with Deep Convolutional Neural Networks | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/alexnet-2012/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+</head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">ImageNet Classification with Deep Convolutional Neural Networks</h1></header><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#alexnet-2012-zh-page-1">1 · 问题：容量与结构如何同时成立</a></li><li><a href="#alexnet-2012-zh-page-2">2 · 架构：先理解连接，再理解层数</a></li><li><a href="#alexnet-2012-zh-page-3">3 · 拟合速度与局部竞争</a></li><li><a href="#alexnet-2012-zh-page-4">4 · 数据增强：不变性来自具体选择</a></li><li><a href="#alexnet-2012-zh-page-5">5 · 优化与 dropout：具体改变了什么</a></li><li><a href="#alexnet-2012-zh-page-6">6 · 实验依据：两届竞赛与不同模型集合</a></li><li><a href="#alexnet-2012-zh-page-7">7 · 成本：参数、算术量与实际用时</a></li><li><a href="#alexnet-2012-zh-page-8">8 · 解释：论文证明到哪一步</a></li></ol></nav>
+<div class="bibliography"><p>Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton</p><p>Advances in Neural Information Processing Systems 25 (NIPS 2012) · 2012 年完整九页会议论文 PDF</p><p><a href="https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf">官方完整会议论文</a>
+ · <a href="https://code.google.com/archive/p/cuda-convnet/">作者代码</a>
+</p></div>
+<article class="sheet" id="alexnet-2012-zh-page-1" aria-labelledby="alexnet-2012-zh-page-1-heading"><header class="running"><h2 id="alexnet-2012-zh-page-1-heading">问题：容量与结构如何同时成立</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">一个完整系统的结果</h3>
+<p>论文的问题是，大型卷积网络能否直接从带标签图像中学到有效的视觉表示。答案依赖多个环节共同成立。卷积限制假设空间，GPU 让更大的模型能够训练，ReLU 加快拟合，数据增强与 dropout 抑制过拟合。最终基准测量的是这个系统，不能把全部收益归于某一个因素。</p>
+<p>本笔记以完整会议论文 PDF 为依据。PDF 摘要给出 top 1 错误率 37.5%、top 5 错误率 17.0% 与约 650,000 个神经元。会议网页摘要却列为 39.7%、18.9% 与 500,000 个神经元。两份记录不同，因此本笔记的分析与表格以完整 PDF 为准。常被引用的 15.3% 属于 ILSVRC 2012 竞赛集成模型，对应另一套评测设置。</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">数据决定问题的边界</h3>
+<div class="table-wrap"><table><caption>数据背景取自第 2 节，第 2 页。原文中的部分数量为近似值。</caption><thead><tr><th scope="col">原文设置</th><th scope="col">图像与标签</th><th scope="col">作用</th></tr></thead><tbody><tr><th scope="row">ImageNet 整体</th><td>超过 15 million 张图像；约 22,000 类</td><td>更大集合，不等于标准竞赛划分</td></tr><tr><th scope="row">ILSVRC 训练集</th><td>约 1.2 million 张图像；1,000 类</td><td>监督拟合</td></tr><tr><th scope="row">ILSVRC 验证集</th><td>50,000 张图像</td><td>模型选择与验证错误率</td></tr><tr><th scope="row">ILSVRC 测试集</th><td>150,000 张图像</td><td>保留评测；标签是否公开取决于年份</td></tr></tbody></table></div>
+<p>大型数据集仍需要结构假设。作者用像素依赖的局部性与图像统计的近似平稳性来解释卷积。同一个局部滤波器可以在不同位置复用，减少有限数据需要分别确定的自由度。但这并不保证网络对所有视角、背景或变换都不敏感。</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">指标对应明确的错误事件</h3>
+<div class="equation" role="math" aria-label="err_top1 = (1/M) Σ_i 1[argmax_c pθ(c|x_i) ≠ y_i];   err_top5 = (1/M) Σ_i 1[y_i ∉ Top5(pθ(·|x_i))]">err_top1 = (1/M) Σ_i 1[argmax_c pθ(c|x_i) ≠ y_i];   err_top5 = (1/M) Σ_i 1[y_i ∉ Top5(pθ(·|x_i))]</div>
+<p>Top 5 错误率统计真实类别没有进入概率最高的五个标签的比例。它不是五次预测错误率的平均值，也不直接衡量定位、概率校准或鲁棒性。因此，竞赛错误率下降回答的是一个比通用视觉理解更窄的问题。</p>
+</section>
+<section class="callout orange">
+<h3 class="accent orange">本次阅读的覆盖范围</h3>
+<p>本次阅读覆盖完整九页 PDF，包括脚注与参考文献，并目视检查了原文四幅图。笔记保留架构图与激活函数实验图，用于直接的技术讨论。本次工作没有独立重读全部参考文献，也不代表用户已经完成任何一遍阅读。</p>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-2" aria-labelledby="alexnet-2012-zh-page-2-heading"><header class="running"><h2 id="alexnet-2012-zh-page-2-heading">架构：先理解连接，再理解层数</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="放大：原始双 GPU 卷积架构，包含五个卷积层与三个全连接层"><img src="assets/source-architecture.png" alt="原始双 GPU 卷积架构，包含五个卷积层与三个全连接层" loading="lazy"></button><figcaption><strong>原文 Figure 2 · 第 5 页。</strong> Krizhevsky、Sutskever 与 Hinton，NIPS 2012 完整会议 PDF。上下两路分别位于不同 GPU，部分层的跨路连接把它们组成一个网络。图中保留原文的 224 输入与首层 55 空间网格，两者的复现歧义在下文说明。</figcaption></figure>
+<h3 class="accent blue">八个有权重的层</h3>
+<p>网络包含五个卷积层与三个全连接层。归一化和池化增加计算步骤，但不增加这里统计的有权重层数。ReLU 提供隐藏层非线性，最终分类器通过 softmax 输出 1,000 类的概率分布。第 3.5 节给出连接方式，Figure 2 展示这些连接如何分布到两个设备上。</p>
+<div class="table-wrap"><table><caption>架构取自第 3.2、3.5 节，第 3 至 5 页。卷积核深度已经包含分组连接的影响。</caption><thead><tr><th scope="col">层</th><th scope="col">卷积核或宽度</th><th scope="col">输入连接</th><th scope="col">后续操作</th></tr></thead><tbody><tr><th scope="row">Conv 1</th><td>96 × (11 × 11 × 3)，步长 4</td><td>全部 3 个 RGB 通道</td><td>ReLU；响应归一化；最大池化</td></tr><tr><th scope="row">Conv 2</th><td>256 × (5 × 5 × 48)</td><td>前层同一 GPU 的特征图</td><td>ReLU；响应归一化；最大池化</td></tr><tr><th scope="row">Conv 3</th><td>384 × (3 × 3 × 256)</td><td>两个 GPU 的全部前层特征图</td><td>ReLU</td></tr><tr><th scope="row">Conv 4</th><td>384 × (3 × 3 × 192)</td><td>前层同一 GPU 的特征图</td><td>ReLU</td></tr><tr><th scope="row">Conv 5</th><td>256 × (3 × 3 × 192)</td><td>前层同一 GPU 的特征图</td><td>ReLU；最大池化</td></tr><tr><th scope="row">FC 6</th><td>4,096 个输出</td><td>全部前层激活</td><td>ReLU；dropout</td></tr><tr><th scope="row">FC 7</th><td>4,096 个输出</td><td>全部前层激活</td><td>ReLU；dropout</td></tr><tr><th scope="row">FC 8</th><td>1,000 个输出</td><td>全部前层激活</td><td>softmax 类别概率</td></tr></tbody></table></div>
+<h3 class="accent blue">GPU 划分改变了计算图</h3>
+<p>第 2、4、5 层只读取同一 GPU 上的前层特征图，第 3 层则读取两路特征图。全连接层也连接完整的前层表示。因此，两路不是独立训练的分类器。受限连接同时减少部分层的通信与参数，它既是实现选择，也是架构本身的一部分。</p>
+<h3 class="accent orange">原文尺寸不能完整确定 padding</h3>
+<div class="equation" role="math" aria-label="H_out = floor((H_in + 2P − K)/S) + 1;   floor((224 − 11)/4) + 1 = 54;   55 × 55 × 96 = 290,400">H_out = floor((H_in + 2P − K)/S) + 1;   floor((224 − 11)/4) + 1 = 54;   55 × 55 × 96 = 290,400</div>
+<p>上式采用普通卷积、对称 padding 与无空洞卷积的假设。正文和 Figure 2 均写输入为 224 × 224 × 3，同时图中首层空间网格为 55 × 55。核大小 11、步长 4 时，不补边的 224 输入会产生 54 个位置。Padding 可以改变结果，但 PDF 未完整说明边界约定。直接把 224 改成 227 会改写原文记录。</p>
+<p>Figure 2 图注列出的首层神经元数为 253,440，与图中 55 × 55 × 96 的乘积不一致。因此，摘要约 650,000 个神经元的说法在这里作为规模描述，而非已经核对一致的精确总和。后面的计算会明确列出尺寸假设。</p>
+<h3 class="accent blue">参数共享的局部算子</h3>
+<div class="equation" role="math" aria-label="z[o,u,v] = b[o] + Σ_(c∈G(o)) Σ_a Σ_b W[o,c,a,b] x[c,Su+a−P,Sv+b−P]">z[o,u,v] = b[o] + Σ_(c∈G(o)) Σ_a Σ_b W[o,c,a,b] x[c,Su+a−P,Sv+b−P]</div>
+<p>输入通道集合 G(o) 取决于输出所在的分组。空间位置变化会改变读取的输入区域，却不会选择另一套卷积核。正是这一点，使同一层可以拥有较少参数，同时把每个参数用于很多空间位置。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-3" aria-labelledby="alexnet-2012-zh-page-3-heading"><header class="running"><h2 id="alexnet-2012-zh-page-3-heading">拟合速度与局部竞争</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">ReLU 改变局部导数</h3>
+<div class="equation" role="math" aria-label="ReLU(z) = max(0,z);   d ReLU(z)/dz = 1 for z &gt; 0, and 0 for z &lt; 0;   d tanh(z)/dz = 1 − tanh²(z)">ReLU(z) = max(0,z);   d ReLU(z)/dz = 1 for z &gt; 0, and 0 for z &lt; 0;   d tanh(z)/dz = 1 − tanh²(z)</div>
+<p>正输入区域的 ReLU 导数为一，tanh 接近饱和时导数很小。这一局部机制可以加快梯度拟合，但不能避免负输入 ReLU 的局部导数为零，也不能单独证明测试误差会改善。原文明确区分拟合速度与正则化效果。</p>
+<figure><button class="figure-open" type="button" aria-label="放大：原始 CIFAR 10 上 ReLU 与 tanh 的训练错误率曲线"><img src="assets/source-relu.png" alt="原始 CIFAR 10 上 ReLU 与 tanh 的训练错误率曲线" loading="lazy"></button><figcaption><strong>原文 Figure 1 · 第 3 页。</strong> Krizhevsky、Sutskever 与 Hinton，NIPS 2012 完整会议 PDF。实线 ReLU 达到 25% 训练错误率的速度约为虚线 tanh 的六倍。这是四层 CIFAR 10 网络的实验，两种网络分别选择学习率，且没有使用正则化。它不等于完整 ImageNet 系统实测加速六倍。</figcaption></figure>
+<h3 class="accent blue">响应归一化沿通道进行</h3>
+<div class="equation" role="math" aria-label="bᵢ_(x,y) = aᵢ_(x,y) / (k + α Σ_(j=max(0,i−⌊n/2⌋))^(min(N−1,i+⌊n/2⌋)) (aʲ_(x,y))²)^β;   k = 2; n = 5; α = 10⁻⁴; β = 0.75">bᵢ_(x,y) = aᵢ_(x,y) / (k + α Σ_(j=max(0,i−⌊n/2⌋))^(min(N−1,i+⌊n/2⌋)) (aʲ_(x,y))²)^β;   k = 2; n = 5; α = 10⁻⁴; β = 0.75</div>
+<p>这里的 a 是 ReLU 之后的激活。分母在同一空间位置累加相邻通道的响应，较大的邻近响应会压低归一化输出。通道顺序没有先验含义，但在训练前固定。原公式是 α 乘求和，没有再除以 n。若某个库采用 α/n 的定义，复现时需要相应换算参数。</p>
+<p>该操作位于第 1、2 个卷积层之后，不减去局部均值。因此，它不同于先减均值的对比度归一化，也不同于跨 minibatch 的归一化。其作用需要结合这个架构中的实验来判断，不能据此推成所有 ReLU 网络的必要条件。</p>
+<h3 class="accent blue">池化选择保留下来的局部响应</h3>
+<div class="equation" role="math" aria-label="p[c,u,v] = max_(0≤a&lt;3, 0≤b&lt;3) h[c,2u+a,2v+b]">p[c,u,v] = max_(0≤a&lt;3, 0≤b&lt;3) h[c,2u+a,2v+b]</div>
+<p>网络使用 3 × 3 窗口、步长 2，相邻窗口发生重叠。作者比较的是 2 × 2 窗口、步长 2，并在其设置中保持等价输出尺寸。报告的收益只对应这一比较。池化会丢弃部分精确位置信息，因此不能视作没有代价的不变性。</p>
+<h3 class="accent orange">各项报告不是同一个全因子实验</h3>
+<div class="table-wrap"><table><caption>摘自第 3、4.1、7 节，第 3、4、6、8 页。错误率差值以百分点表示。</caption><thead><tr><th scope="col">改动</th><th scope="col">原文比较</th><th scope="col">报告的影响</th></tr></thead><tbody><tr><th scope="row">双 GPU 网络</th><td>前部卷积核较少的单 GPU 网络</td><td>Top 1 错误率降低 1.7 个百分点；top 5 降低 1.2</td></tr><tr><th scope="row">响应归一化</th><td>不使用该归一化</td><td>Top 1 错误率降低 1.4 个百分点；top 5 降低 1.2</td></tr><tr><th scope="row">重叠池化</th><td>窗口 3、步长 2 对比窗口 2、步长 2</td><td>Top 1 错误率降低 0.4 个百分点；top 5 降低 0.3</td></tr><tr><th scope="row">RGB PCA 增强</th><td>不使用 RGB 扰动</td><td>Top 1 错误率降低超过 1 个百分点</td></tr><tr><th scope="row">移除中间卷积层</th><td>完整深度网络</td><td>Top 1 表现下降约 2 个百分点</td></tr></tbody></table></div><p class="table-note">论文没有给出覆盖全部交互作用的联合消融矩阵，不能把各行差值直接相加来重建一个共同基线。</p>
+<p>GPU 比较还改变了容量与连接。脚注 2 明确指出，单 GPU 基线保留最后一个卷积层和全连接层的原始大小，并不是完整模型严格的一半。因此，这个结果不能单独衡量只更换硬件所带来的速度或精度变化。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-4" aria-labelledby="alexnet-2012-zh-page-4-heading"><header class="running"><h2 id="alexnet-2012-zh-page-4-heading">数据增强：不变性来自具体选择</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">预处理建立固定输入</h3>
+<p>先把图像短边缩放到 256 像素，再取中央 256 × 256 区域，并减去训练集像素均值。网络接收 RGB 值，而非手工设计的特征描述子。但这条流程仍然会在模型看到图像之前进行一次空间选择。</p>
+<h3 class="accent blue">裁剪是不同观察，不是独立样本</h3>
+<p>训练时随机抽取 224 × 224 图块，并进行水平翻转。作者将可能训练视图的扩充描述为 2,048 倍。这些视图共享原始照片与标签，统计信息高度相关，不能解释为独立样本数也增加了 2,048 倍。</p>
+<p>这项增强假定，适度平移与水平翻转通常保持类别不变。它是对当前数据集的近似。裁剪可能移走物体，某些任务中的变换也可能改变语义。因此，增强策略本身就定义了学习问题的一部分。</p>
+<h3 class="accent blue">预测时平均十个概率分布</h3>
+<div class="equation" role="math" aria-label="p̄(c|x) = (1/10) Σ_(t=1)^10 pθ(c|T_t(x))">p̄(c|x) = (1/10) Σ_(t=1)^10 pθ(c|T_t(x))</div>
+<p>测试视图由四个角与中央图块及其水平翻转组成。网络对十个图块的 softmax 概率取平均。这增加推理计算，但不是十套独立参数的模型集成，也不是先平均 logits 再做 softmax。</p>
+<h3 class="accent blue">PCA 扰动作用于整张图像</h3>
+<div class="equation" role="math" aria-label="ΔI = [p₁,p₂,p₃] [α₁λ₁, α₂λ₂, α₃λ₃]ᵀ;   α_i ∼ Normal(0,0.1²);   I′_(x,y) = I_(x,y) + ΔI">ΔI = [p₁,p₂,p₃] [α₁λ₁, α₂λ₂, α₃λ₃]ᵀ;   α_i ∼ Normal(0,0.1²);   I′_(x,y) = I_(x,y) + ΔI</div>
+<p>p 与 λ 分别来自训练集 RGB 像素协方差矩阵的特征向量和特征值。每次使用一张图像时，各 α 只采样一次，并由该图像的全部像素共享；下次使用该图像时重新采样。PDF 公式乘的是 λ，而不是 λ 的平方根。</p>
+<p>这一低维扰动近似照明强度与颜色的变化。同一 RGB 偏移应用于所有位置，因此不同于逐像素独立噪声。第 4.1 节报告 top 1 错误率降低超过一个百分点。增强在 CPU 上生成，同时 GPU 处理前一批数据，因此在该实现中大部分成本与训练重叠。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-5" aria-labelledby="alexnet-2012-zh-page-5-heading"><header class="running"><h2 id="alexnet-2012-zh-page-5-heading">优化与 dropout：具体改变了什么</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">目标函数提高正确标签的概率</h3>
+<div class="equation" role="math" aria-label="pθ(c|x) = exp(z_c)/Σ_(j=1)^1000 exp(z_j);   L_B(θ) = −(1/|B|) Σ_(i∈B) log pθ(y_i|x_i)">pθ(c|x) = exp(z_c)/Σ_(j=1)^1000 exp(z_j);   L_B(θ) = −(1/|B|) Σ_(i∈B) log pθ(y_i|x_i)</div>
+<p>第 3.5 节最大化正确类别的平均对数概率，与最小化上式的负值等价。类别标签通过反向传播监督全部有权重层。但训练目标下降并不能单独证明保留集错误率下降，所以还需要正则化与评测细节。</p>
+<h3 class="accent blue">原始 dropout 约定</h3>
+<div class="equation" role="math" aria-label="m_j ∼ Bernoulli(0.5);   h̃_j = m_j h_j during training;   h̃_j = 0.5 h_j at test time">m_j ∼ Bernoulli(0.5);   h̃_j = m_j h_j during training;   h̃_j = 0.5 h_j at test time</div>
+<p>Dropout 用于前两个全连接层。每次输入采样一个掩码，不同掩码共享底层权重。被丢弃的激活既不贡献前向值，也不贡献这条局部反向路径。它削弱特征对某一组固定搭档的依赖，但不等于分别训练所有子网络。</p>
+<p>测试时，原文保留全部单元，并把输出乘以 0.5。许多后来的实现改为训练时把保留激活除以保留概率，测试时不再缩放。混用两种约定会改变计算。原文将确定性测试缩放视作模型组合的近似，而不是整个非线性网络的精确等式。</p>
+<p>作者报告，不使用 dropout 时网络有明显过拟合，使用后收敛所需迭代次数约翻倍。这是在当前设置中，用更多优化工作换取更好的泛化，不能与竞赛时对多个完整 CNN 的预测取平均混为一谈。</p>
+<h3 class="accent blue">SGD 包含耦合的权重衰减</h3>
+<div class="equation" role="math" aria-label="g_i = (1/|D_i|) Σ_(x,y∈D_i) ∂ℓ(x,y;w_i)/∂w;   v_(i+1) = 0.9v_i − 0.0005εw_i − εg_i;   w_(i+1) = w_i + v_(i+1)">g_i = (1/|D_i|) Σ_(x,y∈D_i) ∂ℓ(x,y;w_i)/∂w;   v_(i+1) = 0.9v_i − 0.0005εw_i − εg_i;   w_(i+1) = w_i + v_(i+1)</div>
+<p>每批包含 128 个样本，动量为 0.9，权重衰减为 0.0005。衰减项与学习率 ε 一同进入速度更新，这不是现代解耦权重衰减优化器的定义。作者还观察到，小幅衰减降低了训练误差，其作用不只是缩小训练与测试之间的差距。</p>
+<h3 class="accent blue">初始化与学习率安排</h3>
+<div class="table-wrap"><table><caption>训练细节取自第 5 节，第 6、7 页。</caption><thead><tr><th scope="col">项目</th><th scope="col">原文设置</th></tr></thead><tbody><tr><th scope="row">权重</th><td>正态分布，均值 0，标准差 0.01</td></tr><tr><th scope="row">Conv 2、Conv 4、Conv 5、FC 6、FC 7 的偏置</th><td>1</td></tr><tr><th scope="row">其余偏置</th><td>0</td></tr><tr><th scope="row">初始学习率</th><td>0.01，所有层相同</td></tr><tr><th scope="row">学习率调整</th><td>验证表现停止改善时除以 10；共降低 3 次</td></tr><tr><th scope="row">训练时长</th><td>约 90 轮；训练 5 至 6 天，采用 2 块 GTX 580 GPU，各 3 GB</td></tr></tbody></table></div>
+<p>部分隐藏层的正偏置，使早期训练更容易出现正的 ReLU 输入。学习率依据验证表现手动调整。论文给出了这些数值，但没有给出逐次运行的完整优化日志。精确复现需要的信息多于这些标量超参数。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-6" aria-labelledby="alexnet-2012-zh-page-6-heading"><header class="running"><h2 id="alexnet-2012-zh-page-6-heading">实验依据：两届竞赛与不同模型集合</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">ILSVRC 2010 测试标签可用</h3>
+<div class="table-wrap"><table><caption>原文 Table 1 · 第 7 页 · ILSVRC 2010 测试集。全部数值均为错误率。</caption><thead><tr><th scope="col">模型</th><th scope="col">Top 1 测试错误率</th><th scope="col">Top 5 测试错误率</th></tr></thead><tbody><tr><th scope="row">Sparse coding [2]</th><td>47.1%</td><td>28.2%</td></tr><tr><th scope="row">SIFT + FVs [24]</th><td>45.7%</td><td>25.7%</td></tr><tr><th scope="row">CNN</th><td>37.5%</td><td>17.0%</td></tr></tbody></table></div><p class="table-note">稀疏编码与 Fisher vector 结果为原文引用的历史基线，本次没有重新运行这些实验。</p>
+<p>相对 25.7%，CNN 的 top 5 错误率降低 8.7 个百分点，相对错误率降低约 33.9%。两者是同一表格差异的不同表达，不能把 8.7 个百分点写成相对下降 8.7%。脚注 5 还给出，不进行十图块平均时，top 1 和 top 5 错误率分别为 39.0% 与 18.3%。</p>
+<div class="equation" role="math" aria-label="25.7 − 17.0 = 8.7 percentage points;   (25.7 − 17.0)/25.7 ≈ 33.9%;   18.3 − 17.0 = 1.3 percentage points">25.7 − 17.0 = 8.7 percentage points;   (25.7 − 17.0)/25.7 ≈ 33.9%;   18.3 − 17.0 = 1.3 percentage points</div>
+<h3 class="accent blue">ILSVRC 2012 区分验证集与测试集</h3>
+<div class="table-wrap"><table><caption>原文 Table 2 · 第 7 页 · ILSVRC 2012。原表空缺的结果仍标为未报告。</caption><thead><tr><th scope="col">模型</th><th scope="col">Top 1 验证</th><th scope="col">Top 5 验证</th><th scope="col">Top 5 测试</th></tr></thead><tbody><tr><th scope="row">SIFT + FVs [7]</th><td>未报告</td><td>未报告</td><td>26.2%</td></tr><tr><th scope="row">1 CNN</th><td>40.7%</td><td>18.2%</td><td>未报告</td></tr><tr><th scope="row">5 CNNs</th><td>38.1%</td><td>16.4%</td><td>16.4%</td></tr><tr><th scope="row">1 CNN*</th><td>39.0%</td><td>16.6%</td><td>未报告</td></tr><tr><th scope="row">7 CNNs*</th><td>36.7%</td><td>15.4%</td><td>15.3%</td></tr></tbody></table></div><p class="table-note">星号表示该模型或模型集合包含在 ImageNet Fall 2011 上进行监督预训练的模型。七模型集成由两个预训练模型和另外五个 CNN 组成。</p>
+<p>标准单 CNN 的 top 5 验证错误率为 18.2%。五个类似 CNN 平均后，验证与测试均为 16.4%。另一个增加第六卷积层的模型，先在 15 million 张图像、22,000 类上训练，再在竞赛数据上微调，top 5 验证错误率为 16.6%。这里的预训练使用标签，不是讨论部分所说未使用的无监督预训练。</p>
+<p>获胜的七模型集成把两个上述预训练网络与另外五个 CNN 合并，验证错误率为 15.4%，测试错误率为 15.3%。第二名的 top 5 测试错误率为 26.2%。单网络结果、多视图预测和多网络集成是不同的比较单位。</p>
+<p>作者表示，在其经验中验证与测试错误率相差不超过约 0.1 个百分点。但这一观察不能补出原文没有报告的测试结果。表格仍保留原始划分，也在最醒目的数字旁保留额外数据与模型组合的信息。</p>
+<h3 class="accent blue">更大数据集使用另一套协议</h3>
+<p>在 ImageNet Fall 2009 集合上，原文报告 8.9 million 张图像、10,184 类，训练与测试各用一半图像。增加卷积层的模型得到 top 1 错误率 67.4%、top 5 错误率 40.9%，引用的此前结果为 78.1% 与 60.9%。实际划分与此前工作不同，也不是标准 ILSVRC 测试协议。</p>
+<h3 class="accent blue">定性样例提示表示的结构</h3>
+<p>Figure 3 展示方向选择性与颜色敏感的首层滤波器，第 6.1 节报告了受限 GPU 分组之间的特化。Figure 4 展示合理的备选标签，以及最终 4,096 维隐藏表示中的近邻。这些例子说明表示确实具有结构，但没有量化检索精度，也不能证明每个隐藏维度都对应一个人类语义。</p>
+</section>
+</div><footer class="page-foot"><span>6 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-7" aria-labelledby="alexnet-2012-zh-page-7-heading"><header class="running"><h2 id="alexnet-2012-zh-page-7-heading">成本：参数、算术量与实际用时</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">一个参数会被反复使用</h3>
+<div class="equation" role="math" aria-label="Parameters_conv = C_out(K²C_in/group + 1);   MACs_conv = H_outW_outK²(C_in/group)C_out;   Parameters_dense = D_inD_out + D_out">Parameters_conv = C_out(K²C_in/group + 1);   MACs_conv = H_outW_outK²(C_in/group)C_out;   Parameters_dense = D_inD_out + D_out</div>
+<p>下面是笔记独立完成的核算。它采用原文分组通道连接、图中的 55、27、13 空间网格，并假设最后一次 3 × 3、步长 2 的 valid 池化得到 6 × 6 网格。偏置计入参数，但不计入乘加次数。这是对原文架构的一组明确解释，不表示已经解决输入 padding 的复现歧义。</p>
+<div class="table-wrap"><table><caption>在上述尺寸假设下的独立计算。一次 MAC 指一次乘法及其累加，不是实测 profiler 记录。</caption><thead><tr><th scope="col">层</th><th scope="col">含偏置参数量</th><th scope="col">每个图块的 MAC 数</th></tr></thead><tbody><tr><th scope="row">Conv 1</th><td>34,944</td><td>105,415,200</td></tr><tr><th scope="row">Conv 2</th><td>307,456</td><td>223,948,800</td></tr><tr><th scope="row">Conv 3</th><td>885,120</td><td>149,520,384</td></tr><tr><th scope="row">Conv 4</th><td>663,936</td><td>112,140,288</td></tr><tr><th scope="row">Conv 5</th><td>442,624</td><td>74,760,192</td></tr><tr><th scope="row">FC 6</th><td>37,752,832</td><td>37,748,736</td></tr><tr><th scope="row">FC 7</th><td>16,781,312</td><td>16,777,216</td></tr><tr><th scope="row">FC 8</th><td>4,097,000</td><td>4,096,000</td></tr><tr><th scope="row">合计</th><td>60,965,224</td><td>724,406,816</td></tr></tbody></table></div><p class="table-note">运算量未计入 ReLU、归一化、池化、softmax、偏置加法、内存传输与反向传播。</p>
+<p>其中约 96.2% 的参数位于全连接层，而大部分乘加计算发生在卷积层。因此，一层可以占用较少参数存储，却需要大量计算。卷积层即使参数占比很小，移除后也可能显著影响表现。</p>
+<h3 class="accent blue">规模估计与实测不同</h3>
+<div class="equation" role="math" aria-label="60,965,224 × 4 bytes ≈ 243.9 MB;   724,406,816 × 10 ≈ 7.244 × 10⁹ MACs per image;   90 × 1.2 × 10⁶ / 128 ≈ 843,750 updates">60,965,224 × 4 bytes ≈ 243.9 MB;   724,406,816 × 10 ≈ 7.244 × 10⁹ MACs per image;   90 × 1.2 × 10⁶ / 128 ≈ 843,750 updates</div>
+<p>参数存储估计假设每个参数四字节，并采用十进制 MB。梯度、动量、激活与临时缓冲还会增加内存。十视图估计假定重复执行单图块计算、不共享计算；更新次数采用近似数据集大小与轮数。这些都不是实测延迟、完整显存预算或训练 FLOP 总量。</p>
+<h3 class="accent blue">原文的实际硬件报告</h3>
+<p>第 5 节报告，在两块各 3 GB 的 NVIDIA GTX 580 上训练约五至六天，约等于一次训练运行消耗十至十二个 GPU day。它不等于架构选择、失败运行、预训练与集成的全部研究成本。原文的计时信息不足以重建这些总量，也不足以精确给出每个竞赛方案的推理成本。</p>
+<p>主要约束是相互耦合的。更大网络需要更多存储与时间，正则化也可能增加迭代次数。第二块 GPU 可能使另一种模型成为可行方案，而不只是让相同模型跑得更快。因此，清晰的速度比较需要先固定模型与停止标准。</p>
+</section>
+</div><footer class="page-foot"><span>7 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<article class="sheet" id="alexnet-2012-zh-page-8" aria-labelledby="alexnet-2012-zh-page-8-heading"><header class="running"><h2 id="alexnet-2012-zh-page-8-heading">解释：论文证明到哪一步</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">变化来自可学习特征与可行规模</h3>
+<p>与 SIFT 加 Fisher vector 的比较，改变的是表示学习流程。监督目标现在同时调整图像特征提取器与分类器。更早的卷积网络已经具有局部性与共享结构；本论文把这些思想与更大的标注数据、计算规模及正则化组合，取得明显竞赛收益。不能据此把全部结果解释为本文发明了卷积或 ReLU。</p>
+<h3 class="accent blue">深度有依据，但机制尚未完全分离</h3>
+<p>作者报告，去掉一个中间卷积层会使 top 1 表现下降约两个百分点，支持这组深度在当前设置中有用。但比较没有同时固定感受野、优化、连接与算力开销。移除一层会一起改变多个属性，因此不能把结果解释成所有深度机制都已被单独验证。</p>
+<h3 class="accent orange">几种容易过度推导的结论</h3>
+<div class="table-wrap"><table><caption>解释边界。这些条目区分论文报告与更强的结论。</caption><thead><tr><th scope="col">说法</th><th scope="col">原文实际支持的范围</th></tr></thead><tbody><tr><th scope="row">15.3% 来自标准单 CNN</th><td>它属于包含额外监督预训练的 7 模型集成</td></tr><tr><th scope="row">ReLU 让 ImageNet 训练快 6 倍</th><td>Figure 1 的 6 倍阈值速度差来自较小的 CIFAR 10 网络</td></tr><tr><th scope="row">双 GPU 比较基线是网络的一半</th><td>单 GPU 比较仍保留最后卷积层与全连接层大小</td></tr><tr><th scope="row">所有实现细节都已确定</th><td>224 输入、55 网格与图注神经元数仍留下原文歧义</td></tr><tr><th scope="row">学到的近邻等于校准完成的检索系统</th><td>Figure 4 仅给出定性样例，没有检索基准</td></tr></tbody></table></div>
+<h3 class="accent blue">从证据中产生的后续问题</h3>
+<p>一项新的复现可以在固定参数量、模型连接与训练预算时，分离容量与通信的影响；也可以在达到相同验证质量时比较激活函数，同时测量处理样本数与实际时间。这些是由上述混杂因素引出的可检验问题，不是本笔记已经运行的实验。</p>
+<p>这篇论文更持久的论证是，当统计假设、优化、正则化与计算条件共同适配任务时，表示学习可以有效工作。数值证据仍局限于报告的数据集与协议。讨论中关于无监督学习和视频的期待，是作者在 2012 年提出的后续方向，并非这些表格已经证明的结果。 作者代码链接指向历史项目归档，本次没有运行其代码，也没有验证完整可执行环境。</p>
+</section>
+</div><footer class="page-foot"><span>8 / 8</span><span>2012 年完整九页会议论文 PDF</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#alexnet-2012-en-page-1">1 · The problem: enough capacity, enough structure</a></li><li><a href="#alexnet-2012-en-page-2">2 · The architecture: connectivity before a layer list</a></li><li><a href="#alexnet-2012-en-page-3">3 · Fitting speed and local competition</a></li><li><a href="#alexnet-2012-en-page-4">4 · Data augmentation: the invariances are chosen</a></li><li><a href="#alexnet-2012-en-page-5">5 · Optimization and dropout: what actually changes</a></li><li><a href="#alexnet-2012-en-page-6">6 · The evidence: two competitions, several model sets</a></li><li><a href="#alexnet-2012-en-page-7">7 · Cost: parameters, arithmetic and elapsed time</a></li><li><a href="#alexnet-2012-en-page-8">8 · Interpretation: what the paper establishes</a></li></ol></nav>
+<div class="bibliography"><p>Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton</p><p>Advances in Neural Information Processing Systems 25 (NIPS 2012) · Full nine page proceedings PDF, 2012</p><p><a href="https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf">Official full proceedings paper</a>
+ · <a href="https://code.google.com/archive/p/cuda-convnet/">Author code</a>
+</p></div>
+<article class="sheet" id="alexnet-2012-en-page-1" aria-labelledby="alexnet-2012-en-page-1-heading"><header class="running"><h2 id="alexnet-2012-en-page-1-heading">The problem: enough capacity, enough structure</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">A result produced by a system</h3>
+<p>The paper asks whether a large convolutional network can learn useful visual representations directly from labelled images. Its answer depends on several parts working together. Convolution limits the hypothesis space. GPUs make a larger model trainable. ReLUs make fitting faster. Augmentation and dropout limit overfitting. The benchmark result measures this combined system. It does not isolate one universal cause.</p>
+<p>The full conference PDF is the source for this note. Its abstract reports 37.5% top 1 error, 17.0% top 5 error and about 650,000 neurons. The proceedings landing page instead lists 39.7%, 18.9% and 500,000 neurons. These records differ, so the complete PDF governs the analysis and tables here. The often quoted 15.3% result belongs to the ILSVRC 2012 competition ensemble. It is a different evaluation setting.</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">The data define the question</h3>
+<div class="table-wrap"><table><caption>Dataset context from Section 2, p. 2. Counts are reported approximations.</caption><thead><tr><th scope="col">Source context</th><th scope="col">Images and labels</th><th scope="col">Role</th></tr></thead><tbody><tr><th scope="row">ImageNet overall</th><td>Over 15 million images; about 22,000 categories</td><td>Larger collection, not the standard competition split</td></tr><tr><th scope="row">ILSVRC training</th><td>About 1.2 million images; 1,000 classes</td><td>Supervised fitting</td></tr><tr><th scope="row">ILSVRC validation</th><td>50,000 images</td><td>Model choices and reported validation errors</td></tr><tr><th scope="row">ILSVRC test</th><td>150,000 images</td><td>Held out evaluation; availability differs by year</td></tr></tbody></table></div>
+<p>A large collection does not remove the need for assumptions. The authors motivate convolution through local pixel dependencies and approximately stationary image statistics. A filter can reuse one local feature at many positions. This reduces the number of unrelated decisions that learning must infer from the finite dataset. It does not make object recognition invariant to every viewpoint or background.</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">A metric is a precise event</h3>
+<div class="equation" role="math" aria-label="err_top1 = (1/M) Σ_i 1[argmax_c pθ(c|x_i) ≠ y_i];   err_top5 = (1/M) Σ_i 1[y_i ∉ Top5(pθ(·|x_i))]">err_top1 = (1/M) Σ_i 1[argmax_c pθ(c|x_i) ≠ y_i];   err_top5 = (1/M) Σ_i 1[y_i ∉ Top5(pθ(·|x_i))]</div>
+<p>Top 5 error asks whether the correct class is absent from the five highest ranked labels. It is not the mean error across five predictions. The metric also does not measure localization, calibration or robustness. A lower competition error therefore answers a narrower question than general visual understanding.</p>
+</section>
+<section class="callout orange">
+<h3 class="accent orange">The boundary of the reading</h3>
+<p>The complete nine page PDF was read, including its notes and references. All four source figures were visually checked. This note reproduces the architecture and activation plots because they support direct technical discussion. It does not independently reread every cited work or establish the reader’s completion of any reading pass.</p>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-2" aria-labelledby="alexnet-2012-en-page-2-heading"><header class="running"><h2 id="alexnet-2012-en-page-2-heading">The architecture: connectivity before a layer list</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original two GPU convolutional architecture with five convolutional and three fully connected layers"><img src="assets/source-architecture.png" alt="Original two GPU convolutional architecture with five convolutional and three fully connected layers" loading="lazy"></button><figcaption><strong>Source Figure 2 · p. 5。</strong> Krizhevsky, Sutskever and Hinton, NIPS 2012, full proceedings PDF. The upper and lower streams reside on different GPUs. Cross connections at selected layers make this one connected network. The 224 input label and the first 55 spatial grid are retained as printed. Their reproduction ambiguity is discussed below.</figcaption></figure>
+<h3 class="accent blue">Eight learned layers</h3>
+<p>The network contains five convolutional layers and three fully connected layers. Normalization and pooling add operations but not additional learned weight layers in this count. ReLUs supply hidden nonlinearities. The final classifier produces a distribution over 1,000 classes through softmax. Section 3.5 describes the connections; Figure 2 displays their division across devices.</p>
+<div class="table-wrap"><table><caption>Architecture from Sections 3.2 and 3.5, pp. 3 to 5. Filter depth already reflects restricted connectivity.</caption><thead><tr><th scope="col">Layer</th><th scope="col">Filter or width</th><th scope="col">Input connectivity</th><th scope="col">Following operations</th></tr></thead><tbody><tr><th scope="row">Conv 1</th><td>96 × (11 × 11 × 3), stride 4</td><td>All 3 RGB channels</td><td>ReLU; response normalization; max pooling</td></tr><tr><th scope="row">Conv 2</th><td>256 × (5 × 5 × 48)</td><td>Previous maps on the same GPU</td><td>ReLU; response normalization; max pooling</td></tr><tr><th scope="row">Conv 3</th><td>384 × (3 × 3 × 256)</td><td>All previous maps across both GPUs</td><td>ReLU</td></tr><tr><th scope="row">Conv 4</th><td>384 × (3 × 3 × 192)</td><td>Previous maps on the same GPU</td><td>ReLU</td></tr><tr><th scope="row">Conv 5</th><td>256 × (3 × 3 × 192)</td><td>Previous maps on the same GPU</td><td>ReLU; max pooling</td></tr><tr><th scope="row">FC 6</th><td>4,096 outputs</td><td>All previous activations</td><td>ReLU; dropout</td></tr><tr><th scope="row">FC 7</th><td>4,096 outputs</td><td>All previous activations</td><td>ReLU; dropout</td></tr><tr><th scope="row">FC 8</th><td>1,000 outputs</td><td>All previous activations</td><td>Class probabilities from softmax</td></tr></tbody></table></div>
+<h3 class="accent blue">A GPU split changes the graph</h3>
+<p>Layers 2, 4 and 5 only see the preceding maps on their own GPU. Layer 3 sees both groups. Fully connected layers also connect across the preceding representation. The two streams therefore exchange information, rather than train as independent classifiers. Restricted connections reduce communication and parameters at selected layers. They are part of the architecture as well as its implementation.</p>
+<h3 class="accent orange">The printed shapes do not fully specify padding</h3>
+<div class="equation" role="math" aria-label="H_out = floor((H_in + 2P − K)/S) + 1;   floor((224 − 11)/4) + 1 = 54;   55 × 55 × 96 = 290,400">H_out = floor((H_in + 2P − K)/S) + 1;   floor((224 − 11)/4) + 1 = 54;   55 × 55 × 96 = 290,400</div>
+<p>This ordinary convolution shape rule assumes symmetric padding and no dilation. The text and Figure 2 label the input as 224 × 224 × 3. The figure also labels the first convolutional grid as 55 × 55. With a kernel of 11 and stride of 4, an unpadded input of 224 produces 54 positions. Padding can change the result, but the PDF does not resolve the exact boundary convention. Silently replacing 224 by 227 would change the source record.</p>
+<p>The Figure 2 caption gives 253,440 first layer neurons. That does not equal the product of its drawn 55 × 55 × 96 shape. The abstract’s approximately 650,000 neurons is consequently a scale description here. It is not treated as a fully reconciled exact sum. The subsequent arithmetic states its shape assumptions explicitly.</p>
+<h3 class="accent blue">A local operator with shared weights</h3>
+<div class="equation" role="math" aria-label="z[o,u,v] = b[o] + Σ_(c∈G(o)) Σ_a Σ_b W[o,c,a,b] x[c,Su+a−P,Sv+b−P]">z[o,u,v] = b[o] + Σ_(c∈G(o)) Σ_a Σ_b W[o,c,a,b] x[c,Su+a−P,Sv+b−P]</div>
+<p>The input channel set G(o) depends on the output group. A spatial location changes which input patch is read. It does not select a different kernel. This distinction explains why the same layer can have relatively few parameters while applying those parameters many times.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-3" aria-labelledby="alexnet-2012-en-page-3-heading"><header class="running"><h2 id="alexnet-2012-en-page-3-heading">Fitting speed and local competition</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">ReLU changes a local derivative</h3>
+<div class="equation" role="math" aria-label="ReLU(z) = max(0,z);   d ReLU(z)/dz = 1 for z &gt; 0, and 0 for z &lt; 0;   d tanh(z)/dz = 1 − tanh²(z)">ReLU(z) = max(0,z);   d ReLU(z)/dz = 1 for z &gt; 0, and 0 for z &lt; 0;   d tanh(z)/dz = 1 − tanh²(z)</div>
+<p>A positive ReLU has derivative one. A tanh unit has a small derivative when its magnitude is near saturation. This local mechanism can make gradient based fitting faster. It does not prevent a negative ReLU from receiving zero local sensitivity. It also does not by itself prove a test error improvement. The paper separates faster fitting from regularization.</p>
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original CIFAR 10 training error curves for ReLU and tanh"><img src="assets/source-relu.png" alt="Original CIFAR 10 training error curves for ReLU and tanh" loading="lazy"></button><figcaption><strong>Source Figure 1 · p. 3。</strong> Krizhevsky, Sutskever and Hinton, NIPS 2012, full proceedings PDF. The solid ReLU curve reaches 25% training error about six times faster than the dashed tanh curve. This is a four layer CIFAR 10 experiment with separately chosen learning rates and no regularization. It is not a measured sixfold speedup of the full ImageNet system.</figcaption></figure>
+<h3 class="accent blue">Response normalization acts across channels</h3>
+<div class="equation" role="math" aria-label="bᵢ_(x,y) = aᵢ_(x,y) / (k + α Σ_(j=max(0,i−⌊n/2⌋))^(min(N−1,i+⌊n/2⌋)) (aʲ_(x,y))²)^β;   k = 2; n = 5; α = 10⁻⁴; β = 0.75">bᵢ_(x,y) = aᵢ_(x,y) / (k + α Σ_(j=max(0,i−⌊n/2⌋))^(min(N−1,i+⌊n/2⌋)) (aʲ_(x,y))²)^β;   k = 2; n = 5; α = 10⁻⁴; β = 0.75</div>
+<p>Here a is the activation after ReLU. The denominator combines neighboring channel maps at the same spatial location. Large nearby responses suppress the normalized response. The map order is arbitrary but fixed before learning. The source uses α times the sum, without division by n. A library implementation that instead scales by α/n needs a corresponding parameter conversion.</p>
+<p>This operation follows convolutional layers 1 and 2. It does not subtract a local mean. It is therefore different from mean centered contrast normalization and from normalization over a minibatch. Its relevance is empirical in this architecture. The paper reports improvements, rather than a general requirement for every ReLU network.</p>
+<h3 class="accent blue">Pooling changes which local responses survive</h3>
+<div class="equation" role="math" aria-label="p[c,u,v] = max_(0≤a&lt;3, 0≤b&lt;3) h[c,2u+a,2v+b]">p[c,u,v] = max_(0≤a&lt;3, 0≤b&lt;3) h[c,2u+a,2v+b]</div>
+<p>The network uses a pooling window of 3 × 3 with stride 2. Adjacent windows overlap. The comparison uses a 2 × 2 window with stride 2 and equivalent output dimensions in the authors’ setup. The reported benefit concerns this comparison. Pooling can discard exact position information, so it does not produce cost free invariance.</p>
+<h3 class="accent orange">The individual reports are not one factorial experiment</h3>
+<div class="table-wrap"><table><caption>Selected reports from Sections 3, 4.1 and 7, pp. 3, 4, 6 and 8. Error differences are expressed as percentage points.</caption><thead><tr><th scope="col">Change</th><th scope="col">Source comparison</th><th scope="col">Reported effect</th></tr></thead><tbody><tr><th scope="row">Two GPU network</th><td>One GPU network with fewer early filters</td><td>Top 1 error lower by 1.7 percentage points; top 5 by 1.2</td></tr><tr><th scope="row">Response normalization</th><td>Without this normalization</td><td>Top 1 error lower by 1.4 percentage points; top 5 by 1.2</td></tr><tr><th scope="row">Overlapping pooling</th><td>Window 3, stride 2 versus window 2, stride 2</td><td>Top 1 error lower by 0.4 percentage points; top 5 by 0.3</td></tr><tr><th scope="row">RGB PCA augmentation</th><td>Without the RGB perturbation</td><td>Top 1 error lower by over 1 percentage point</td></tr><tr><th scope="row">Removing a middle convolutional layer</th><td>Full depth network</td><td>Top 1 performance worse by about 2 percentage points</td></tr></tbody></table></div><p class="table-note">The paper does not provide a joint ablation matrix with all interactions. The rows cannot be added to reconstruct a single baseline.</p>
+<p>The GPU comparison also changes capacity and connectivity. Footnote 2 says that the one GPU baseline keeps the final convolutional layer and the fully connected layers at their original size. It is not literally half of the full model. The result therefore cannot isolate a hardware only speed or accuracy effect.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-4" aria-labelledby="alexnet-2012-en-page-4-heading"><header class="running"><h2 id="alexnet-2012-en-page-4-heading">Data augmentation: the invariances are chosen</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">Preprocessing establishes a fixed input</h3>
+<p>The shorter side of each image is resized to 256 pixels. A central 256 × 256 region is then retained. The training set mean is subtracted from pixel values. The network receives RGB values rather than a handcrafted feature descriptor. This pipeline still makes a spatial selection before the learned model sees the image.</p>
+<h3 class="accent blue">A crop is an observation, not a new independent image</h3>
+<p>Training draws random 224 × 224 patches and applies horizontal reflection. The authors describe a 2,048 fold expansion in possible training views. These views share an original photograph and label, so their statistical information is strongly dependent. The number does not establish 2,048 times as many independent examples.</p>
+<p>The intended assumption is that modest translation and horizontal reflection usually preserve the category. This is an approximation about the selected dataset. A crop can remove an object, and a transformation can alter meaning in another task. The augmentation policy is consequently part of the learning problem.</p>
+<h3 class="accent blue">Prediction averages ten probabilities</h3>
+<div class="equation" role="math" aria-label="p̄(c|x) = (1/10) Σ_(t=1)^10 pθ(c|T_t(x))">p̄(c|x) = (1/10) Σ_(t=1)^10 pθ(c|T_t(x))</div>
+<p>The test views are the four corners and center, together with their reflections. The network averages softmax probabilities across these ten patches. This is additional inference computation. It is not a ten model parameter ensemble, and it is not an average of logits before softmax.</p>
+<h3 class="accent blue">PCA perturbation acts on the image as a whole</h3>
+<div class="equation" role="math" aria-label="ΔI = [p₁,p₂,p₃] [α₁λ₁, α₂λ₂, α₃λ₃]ᵀ;   α_i ∼ Normal(0,0.1²);   I′_(x,y) = I_(x,y) + ΔI">ΔI = [p₁,p₂,p₃] [α₁λ₁, α₂λ₂, α₃λ₃]ᵀ;   α_i ∼ Normal(0,0.1²);   I′_(x,y) = I_(x,y) + ΔI</div>
+<p>The vectors p and values λ are eigenvectors and eigenvalues of the RGB pixel covariance over the training set. Each α is sampled once per image presentation and shared by every pixel in that image. It is resampled when that image is used again. The PDF multiplies by λ, not its square root.</p>
+<p>This low dimensional perturbation approximates changes in illumination intensity and color. It differs from independent pixel noise because the same RGB shift is applied everywhere. Section 4.1 reports a top 1 error reduction of more than one percentage point. The augmentation runs on the CPU while the GPU processes the preceding batch, which hides much of its cost in this implementation.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-5" aria-labelledby="alexnet-2012-en-page-5-heading"><header class="running"><h2 id="alexnet-2012-en-page-5-heading">Optimization and dropout: what actually changes</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">The objective rewards the correct label</h3>
+<div class="equation" role="math" aria-label="pθ(c|x) = exp(z_c)/Σ_(j=1)^1000 exp(z_j);   L_B(θ) = −(1/|B|) Σ_(i∈B) log pθ(y_i|x_i)">pθ(c|x) = exp(z_c)/Σ_(j=1)^1000 exp(z_j);   L_B(θ) = −(1/|B|) Σ_(i∈B) log pθ(y_i|x_i)</div>
+<p>Section 3.5 maximizes the average log probability of the correct label. Minimizing the negative form above is equivalent. The class labels supply supervision to all learned layers through backpropagation. A lower training objective alone does not establish lower held out error, which is why the regularization and evaluation details matter.</p>
+<h3 class="accent blue">The original dropout convention</h3>
+<div class="equation" role="math" aria-label="m_j ∼ Bernoulli(0.5);   h̃_j = m_j h_j during training;   h̃_j = 0.5 h_j at test time">m_j ∼ Bernoulli(0.5);   h̃_j = m_j h_j during training;   h̃_j = 0.5 h_j at test time</div>
+<p>Dropout is applied to the first two fully connected layers. Each presentation samples a mask and shares the underlying weights with all other masks. Dropped activations contribute neither their forward values nor their local backward path. This discourages reliance on one fixed set of companion features. It does not train each sampled subnetwork independently.</p>
+<p>At test time the paper retains all units and multiplies their outputs by 0.5. Many later implementations instead divide surviving activations by the keep probability during training and use no test scaling. Mixing these conventions changes the computation. The paper calls deterministic test scaling an approximation to model combination, rather than an exact identity for this nonlinear network.</p>
+<p>The authors report substantial overfitting without dropout. They also report roughly twice as many iterations to convergence with it. This exchanges additional optimization work for better generalization in their setting. It is separate from averaging several fully trained CNNs at competition time.</p>
+<h3 class="accent blue">SGD includes coupled weight decay</h3>
+<div class="equation" role="math" aria-label="g_i = (1/|D_i|) Σ_(x,y∈D_i) ∂ℓ(x,y;w_i)/∂w;   v_(i+1) = 0.9v_i − 0.0005εw_i − εg_i;   w_(i+1) = w_i + v_(i+1)">g_i = (1/|D_i|) Σ_(x,y∈D_i) ∂ℓ(x,y;w_i)/∂w;   v_(i+1) = 0.9v_i − 0.0005εw_i − εg_i;   w_(i+1) = w_i + v_(i+1)</div>
+<p>The batch contains 128 examples. Momentum is 0.9 and weight decay is 0.0005. The decay term enters the velocity update with the learning rate ε. It is not a statement about a modern decoupled decay optimizer. The authors also observe lower training error from this small decay, so its reported effect is broader than suppressing a train to test gap.</p>
+<h3 class="accent blue">Initialization and schedule</h3>
+<div class="table-wrap"><table><caption>Learning details from Section 5, pp. 6 and 7.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">Source setting</th></tr></thead><tbody><tr><th scope="row">Weights</th><td>Normal distribution, mean 0, standard deviation 0.01</td></tr><tr><th scope="row">Biases in Conv 2, Conv 4, Conv 5, FC 6 and FC 7</th><td>1</td></tr><tr><th scope="row">Other biases</th><td>0</td></tr><tr><th scope="row">Initial learning rate</th><td>0.01, shared across layers</td></tr><tr><th scope="row">Learning rate changes</th><td>Learning rate divided by 10 after validation improvement stalls; 3 reductions</td></tr><tr><th scope="row">Training duration</th><td>About 90 epochs; 5 to 6 days on 2 GTX 580 GPUs, 3 GB each</td></tr></tbody></table></div>
+<p>Positive biases in selected hidden layers make positive ReLU inputs more likely early in training. The learning rate schedule is adjusted manually from validation behavior. The paper gives these values but does not provide a complete run by run optimization log. Exact reproduction requires more than these scalar hyperparameters.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-6" aria-labelledby="alexnet-2012-en-page-6-heading"><header class="running"><h2 id="alexnet-2012-en-page-6-heading">The evidence: two competitions, several model sets</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">ILSVRC 2010 has public test labels</h3>
+<div class="table-wrap"><table><caption>Source Table 1 · p. 7 · ILSVRC 2010 test set. All values are error rates.</caption><thead><tr><th scope="col">Model</th><th scope="col">Top 1 test error</th><th scope="col">Top 5 test error</th></tr></thead><tbody><tr><th scope="row">Sparse coding [2]</th><td>47.1%</td><td>28.2%</td></tr><tr><th scope="row">SIFT + FVs [24]</th><td>45.7%</td><td>25.7%</td></tr><tr><th scope="row">CNN</th><td>37.5%</td><td>17.0%</td></tr></tbody></table></div><p class="table-note">The sparse coding and Fisher vector results are the historical baselines cited in the source. They are not new replications.</p>
+<p>The CNN improves top 5 error by 8.7 percentage points relative to 25.7%. The relative error reduction is about 33.9%. These are two different ways to express the same table difference. Neither is an 8.7% relative change. Footnote 5 also reports 39.0% top 1 and 18.3% top 5 error without averaging ten patches.</p>
+<div class="equation" role="math" aria-label="25.7 − 17.0 = 8.7 percentage points;   (25.7 − 17.0)/25.7 ≈ 33.9%;   18.3 − 17.0 = 1.3 percentage points">25.7 − 17.0 = 8.7 percentage points;   (25.7 − 17.0)/25.7 ≈ 33.9%;   18.3 − 17.0 = 1.3 percentage points</div>
+<h3 class="accent blue">ILSVRC 2012 separates validation and test</h3>
+<div class="table-wrap"><table><caption>Source Table 2 · p. 7 · ILSVRC 2012. Missing cells remain unreported.</caption><thead><tr><th scope="col">Model</th><th scope="col">Top 1 validation</th><th scope="col">Top 5 validation</th><th scope="col">Top 5 test</th></tr></thead><tbody><tr><th scope="row">SIFT + FVs [7]</th><td>Not reported</td><td>Not reported</td><td>26.2%</td></tr><tr><th scope="row">1 CNN</th><td>40.7%</td><td>18.2%</td><td>Not reported</td></tr><tr><th scope="row">5 CNNs</th><td>38.1%</td><td>16.4%</td><td>16.4%</td></tr><tr><th scope="row">1 CNN*</th><td>39.0%</td><td>16.6%</td><td>Not reported</td></tr><tr><th scope="row">7 CNNs*</th><td>36.7%</td><td>15.4%</td><td>15.3%</td></tr></tbody></table></div><p class="table-note">An asterisk marks a model set involving supervised pretraining on the ImageNet Fall 2011 release. The seven model ensemble contains two pretrained models and the five other CNNs.</p>
+<p>The standard single CNN has 18.2% top 5 validation error. Averaging five similar CNNs gives 16.4% on validation and test. A larger model with a sixth convolutional layer is first trained on 15 million images in 22,000 categories and then fine tuned on the competition data. Its top 5 validation error is 16.6%. This pretraining uses labels. It is distinct from the unsupervised pretraining that the discussion says was not used.</p>
+<p>The winning seven model ensemble combines two of those pretrained networks with five other CNNs. Its validation error is 15.4% and test error is 15.3%. The second placed competition entry has 26.2% top 5 test error. A single network result, a multi view prediction and a multiple network ensemble are different units of comparison.</p>
+<p>The authors say validation and test differed by at most about 0.1 percentage points in their experience. That observation does not make an unreported test cell available. The table keeps the original split labels. It also keeps extra data and model combination visible beside the headline result.</p>
+<h3 class="accent blue">The larger dataset result has another protocol</h3>
+<p>On the ImageNet Fall 2009 collection, the paper reports 8.9 million images and 10,184 categories. Half the images are used for training and half for testing. The extra convolutional layer model obtains 67.4% top 1 and 40.9% top 5 error, compared with cited values of 78.1% and 60.9%. The exact split differs from earlier work, so this is not the standard ILSVRC test protocol.</p>
+<h3 class="accent blue">Qualitative images suggest a representation</h3>
+<p>Figure 3 shows orientation selective and color sensitive first layer filters. Section 6.1 reports specialization between the restricted GPU groups. Figure 4 shows plausible alternative labels and neighbors in the final 4,096 dimensional hidden representation. These examples illustrate learned structure. They do not quantify retrieval accuracy or prove that every hidden coordinate has one human semantic meaning.</p>
+</section>
+</div><footer class="page-foot"><span>6 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-7" aria-labelledby="alexnet-2012-en-page-7-heading"><header class="running"><h2 id="alexnet-2012-en-page-7-heading">Cost: parameters, arithmetic and elapsed time</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">A parameter can be used more than once</h3>
+<div class="equation" role="math" aria-label="Parameters_conv = C_out(K²C_in/group + 1);   MACs_conv = H_outW_outK²(C_in/group)C_out;   Parameters_dense = D_inD_out + D_out">Parameters_conv = C_out(K²C_in/group + 1);   MACs_conv = H_outW_outK²(C_in/group)C_out;   Parameters_dense = D_inD_out + D_out</div>
+<p>The following calculation is an original accounting exercise. It uses the printed grouped channel connections, the figure’s spatial grids of 55, 27 and 13, and a 6 × 6 final pooled grid from a valid 3 × 3 pooling window with stride 2. Biases count as parameters but not as multiply accumulate operations. This is one explicit interpretation of the printed architecture, not a claim that the unresolved input padding has been reproduced.</p>
+<div class="table-wrap"><table><caption>Original arithmetic under the stated shapes. MAC means one multiply and its accumulation. This is not a measured profiler trace.</caption><thead><tr><th scope="col">Layer</th><th scope="col">Parameters including biases</th><th scope="col">MACs per crop</th></tr></thead><tbody><tr><th scope="row">Conv 1</th><td>34,944</td><td>105,415,200</td></tr><tr><th scope="row">Conv 2</th><td>307,456</td><td>223,948,800</td></tr><tr><th scope="row">Conv 3</th><td>885,120</td><td>149,520,384</td></tr><tr><th scope="row">Conv 4</th><td>663,936</td><td>112,140,288</td></tr><tr><th scope="row">Conv 5</th><td>442,624</td><td>74,760,192</td></tr><tr><th scope="row">FC 6</th><td>37,752,832</td><td>37,748,736</td></tr><tr><th scope="row">FC 7</th><td>16,781,312</td><td>16,777,216</td></tr><tr><th scope="row">FC 8</th><td>4,097,000</td><td>4,096,000</td></tr><tr><th scope="row">Total</th><td>60,965,224</td><td>724,406,816</td></tr></tbody></table></div><p class="table-note">The operation count omits ReLU, normalization, pooling, softmax, biases, memory movement and backward propagation.</p>
+<p>About 96.2% of these parameters belong to the fully connected layers. Most multiply accumulate work instead occurs in convolution. This explains why a layer can be cheap in parameter storage yet expensive to evaluate. It also explains why removing a convolutional layer can matter even when parameter count changes little.</p>
+<h3 class="accent blue">A scale estimate is different from a measurement</h3>
+<div class="equation" role="math" aria-label="60,965,224 × 4 bytes ≈ 243.9 MB;   724,406,816 × 10 ≈ 7.244 × 10⁹ MACs per image;   90 × 1.2 × 10⁶ / 128 ≈ 843,750 updates">60,965,224 × 4 bytes ≈ 243.9 MB;   724,406,816 × 10 ≈ 7.244 × 10⁹ MACs per image;   90 × 1.2 × 10⁶ / 128 ≈ 843,750 updates</div>
+<p>The storage estimate assumes four bytes per parameter and uses decimal megabytes. Gradients, momentum, activations and temporary buffers add storage. The ten view estimate repeats the single crop arithmetic without sharing work. The update estimate uses approximate dataset size and epoch count. None of these estimates is a measured latency, a complete memory budget or a training FLOP total.</p>
+<h3 class="accent blue">The actual hardware report</h3>
+<p>Section 5 reports about five to six days on two NVIDIA GTX 580 GPUs with 3 GB each. That is roughly ten to twelve GPU days for one training run. It is not the total research cost of architecture selection, failed runs, pretraining and ensembles. The paper does not provide enough timings to reconstruct those totals or the exact inference cost of every competition entry.</p>
+<p>The main constraint is a coupled one. A larger network needs storage and time, while regularization can require more iterations. A second GPU can permit a different model, rather than merely execute the same model faster. Resource accounting therefore needs a fixed model and stopping rule before it supports a clean speed comparison.</p>
+</section>
+</div><footer class="page-foot"><span>7 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<article class="sheet" id="alexnet-2012-en-page-8" aria-labelledby="alexnet-2012-en-page-8-heading"><header class="running"><h2 id="alexnet-2012-en-page-8-heading">Interpretation: what the paper establishes</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">The change is in learned features and feasible scale</h3>
+<p>The comparison to SIFT plus Fisher vectors changes the representation pipeline. A supervised objective now adjusts the image feature extractor together with the classifier. Earlier convolutional networks already supplied locality and sharing. This paper combines those ideas with a scale of labelled data, computation and regularization that produces a large competition improvement. The source does not support attributing the whole result to inventing convolution or ReLU here.</p>
+<h3 class="accent blue">Depth has evidence, but the mechanism is not isolated</h3>
+<p>Removing a middle convolutional layer worsens top 1 performance by about two percentage points in the authors’ report. This supports the usefulness of the tested depth. It does not provide a matched comparison that holds receptive fields, optimization, connectivity and computation fixed. The removal changes several properties at once.</p>
+<h3 class="accent orange">Several tempting conclusions remain unsupported</h3>
+<div class="table-wrap"><table><caption>Interpretation boundaries. These statements separate source reports from broader claims.</caption><thead><tr><th scope="col">Claim</th><th scope="col">What the source actually supports</th></tr></thead><tbody><tr><th scope="row">15.3% belongs to one standard CNN</th><td>It belongs to a 7 model ensemble with extra supervised pretraining</td></tr><tr><th scope="row">ReLU makes ImageNet training 6 times faster</th><td>Figure 1 reports a 6 times threshold speed difference on a smaller CIFAR 10 network</td></tr><tr><th scope="row">The two GPU baseline is half the network</th><td>The final convolutional and fully connected sizes are preserved in the one GPU comparison</td></tr><tr><th scope="row">All useful implementation details are determined</th><td>The 224 input, 55 grid and caption neuron count leave unresolved source ambiguities</td></tr><tr><th scope="row">A learned nearest neighbor is a calibrated retrieval system</th><td>Figure 4 gives qualitative examples without a retrieval benchmark</td></tr></tbody></table></div>
+<h3 class="accent blue">Questions that follow from the evidence</h3>
+<p>A modern replication could separate capacity from communication by fixing parameter count, model connections and training budget. It could compare activation choices at equal validation quality and measure both examples processed and elapsed time. These are proposed tests motivated by the confounds above. They are not experiments performed in this note.</p>
+<p>The durable argument is that representation learning becomes effective when statistical assumptions, optimization, regularization and computation fit the task together. The numerical evidence is specific to the reported datasets and protocols. The paper’s expectations about unsupervised learning and video are future directions in its 2012 discussion, rather than outcomes established by these tables. The author code link points to the archived historical project. This reading did not execute that code or verify a complete working environment.</p>
+</section>
+</div><footer class="page-foot"><span>8 / 8</span><span>Full nine page proceedings PDF, 2012</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>
