@@ -1,8 +1,8 @@
 # Paper Notes
 
-The existing homepage Writing section links to the Paper Notes hub at `/writing/`. Each paper has a complete article at `/writing/papers/<slug>/`. The article has two language choices, 中文 and English. Every language version retains the full method, formulas, genuine figures, native tables and source attribution.
+The existing homepage Writing section links to the Paper Notes hub at `/writing/`. Each paper has a complete article at `/writing/papers/<slug>/`. English is the default. The article has two language choices, 中文 and English. Every language version retains the full method, formulas, genuine figures, native tables and source attribution.
 
-The formal full paper title appears once as the main article heading. There is no repeated title subtitle. Existing author-code links remain. The pages use the homepage palette, transparent content sections and responsive reading columns. Figures open at their original resolution.
+The formal full paper title appears once as the main article heading. There is no repeated title subtitle. Existing author-code links remain. The pages use the homepage palette, transparent content sections and a single reading column at a comfortable width. Figures open at their original resolution.
 
 ## Build and check
 
@@ -15,7 +15,7 @@ python3 -B writing/tools/build_paper_notes.py --content-dir /path/to/private-con
 
 The builder writes the hub, individual articles and the marked Paper Notes entry on the homepage. It preserves unrelated homepage content. Check mode only verifies that the generated files are current. A missing source figure, malformed table, missing readable `plain` formula, or incomplete translation stops the build. Language versions must preserve section and block coverage, figure files, mathematical statements and numeric table values.
 
-`render_paper.py` is the internal semantic block renderer. Shared styling and language behavior live in `writing/assets/paper-notes.css` and `paper-notes.js`. The language preference is remembered. An unsupported saved preference returns to Chinese. Existing homepage bookmarks such as `#paper-sd3` redirect to the corresponding article.
+`render_paper.py` is the internal semantic block renderer. Shared styling and language behavior live in `writing/assets/paper-notes.css` and `paper-notes.js`. The language preference is remembered under a new key, so the earlier Chinese default does not override English on migration. An unsupported saved preference returns to English. The builder versions CSS and JavaScript by content digest. Existing homepage bookmarks such as `#paper-sd3` redirect to the corresponding article.
 
 ## New papers
 

@@ -2,7 +2,7 @@
     const legacyPaper = window.location.hash.match(/^#paper-([a-z0-9]+(?:-[a-z0-9]+)*)$/i);
     if (legacyPaper) {
         const paperUrl = new URL(`writing/papers/${legacyPaper[1].toLowerCase()}/`, window.location.href);
-        paperUrl.searchParams.set("layout", "paper-notes");
+        paperUrl.searchParams.set("layout", "single-column-en");
         window.location.replace(paperUrl.href);
         return;
     }

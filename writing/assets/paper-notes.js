@@ -4,7 +4,7 @@
     const reader = document.querySelector("body.paper-notes-site [data-paper-reader]");
     if (!reader) return;
 
-    const storageKey = "kaijing-writing-note-language";
+    const storageKey = "kaijing-paper-note-language-v2";
     const languages = new Set(["zh", "en"]);
     const controls = [...reader.querySelectorAll("button[data-paper-language]")];
     const versions = [...reader.querySelectorAll("[data-paper-language-content]")];
@@ -17,7 +17,7 @@
     }
 
     function setLanguage(requestedLanguage, remember = true) {
-        const language = languages.has(requestedLanguage) ? requestedLanguage : "zh";
+        const language = languages.has(requestedLanguage) ? requestedLanguage : "en";
         reader.dataset.language = language;
         document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
         versions.forEach((element) => {
@@ -32,13 +32,13 @@
         if (remember) rememberLanguage(language);
     }
 
-    let initialLanguage = "zh";
+    let initialLanguage = "en";
     try {
         const storedLanguage = window.localStorage.getItem(storageKey);
         if (languages.has(storedLanguage)) {
             initialLanguage = storedLanguage;
         } else if (storedLanguage !== null) {
-            rememberLanguage("zh");
+            rememberLanguage("en");
         }
     } catch {}
     setLanguage(initialLanguage, false);

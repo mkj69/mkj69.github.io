@@ -3,6 +3,7 @@
 import argparse
 from datetime import date
 import html
+import hashlib
 from html.parser import HTMLParser
 import importlib.util
 import json
@@ -12,7 +13,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE_URL = "https://mkj69.github.io/"
-LAYOUT_QUERY = "?layout=paper-notes"
+LAYOUT_QUERY = "?layout=single-column-en"
 HOME_START = "<!-- PAPER_NOTES_LINK:START -->"
 HOME_END = "<!-- PAPER_NOTES_LINK:END -->"
 
@@ -79,28 +80,29 @@ def validate_pair(zh, en, paper):
 
 def languages():
     return ('<div class="paper-language-controls" role="group" aria-label="语言 / Language">'
-            '<button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="true">中文</button>'
-            '<button type="button" data-paper-language="en" lang="en" aria-pressed="false">English</button></div>')
+            '<button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button>'
+            '<button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div>')
 
 
 def language_text(zh, en, tag="span", class_name=""):
     style = ' class="' + esc(class_name) + '"' if class_name else ""
-    return (f'<{tag}{style} data-paper-language-content="zh" lang="zh-CN">{esc(zh)}</{tag}>'
-            f'<{tag}{style} data-paper-language-content="en" lang="en" hidden>{esc(en)}</{tag}>')
+    return (f'<{tag}{style} data-paper-language-content="zh" lang="zh-CN" hidden>{esc(zh)}</{tag}>'
+            f'<{tag}{style} data-paper-language-content="en" lang="en">{esc(en)}</{tag}>')
 
 
 def document(title, body, depth, canonical):
     prefix = "../" * depth
     assets = "assets/" if depth == 1 else "../../assets/"
+    revisions = {ext: hashlib.sha256((ROOT / 'writing' / 'assets' / ('paper-notes.' + ext)).read_bytes()).hexdigest()[:12] for ext in ('css', 'js')}
     font_links = "\n".join(re.findall(r'<link\b[^>]*href="https://fonts\.(?:googleapis|gstatic)\.com[^\"]*"[^>]*>', (ROOT / "index.html").read_text()))
-    return ('<!doctype html>\n<html lang="zh-CN">\n<head>\n<meta charset="utf-8">'
+    return ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>' + esc(title) + ' | Kaijing Ma</title>'
             '<link rel="canonical" href="' + esc(canonical) + '">'
             + font_links +
             '<link rel="icon" href="' + prefix + 'assets/favicon.svg" type="image/svg+xml">'
-            '<link rel="stylesheet" href="' + assets + 'paper-notes.css">'
-            '<script src="' + assets + 'paper-notes.js" defer></script>\n</head>\n'
+            '<link rel="stylesheet" href="' + assets + 'paper-notes.css?v=' + revisions['css'] + '">'
+            '<script src="' + assets + 'paper-notes.js?v=' + revisions['js'] + '" defer></script>\n</head>\n'
             '<body class="paper-notes-site"><div class="notes-site-shell">'
             '<header class="notes-site-header"><a class="site-brand" href="' + prefix + '">Kaijing Ma</a>'
             '<nav aria-label="Site navigation"><a href="' + ("./" if depth == 1 else "../../") + LAYOUT_QUERY + '">Paper Notes</a>'
@@ -122,7 +124,7 @@ def render_hub(papers):
                        + '">' + esc(source) + '</a></p><ul class="paper-topics" aria-label="Topics">' + topics
                        + '</ul></div><a class="paper-entry-link" href="papers/' + paper["slug"] + '/' + LAYOUT_QUERY + '">'
                        + language_text("论文精读", "Reading note") + ' <span aria-hidden="true">↗</span></a></article>')
-    body = ('<main class="paper-hub" data-paper-reader data-language="zh"><header class="notes-hero">'
+    body = ('<main class="paper-hub" data-paper-reader data-language="en"><header class="notes-hero">'
             '<p class="eyebrow">Writing / Research</p><h1 lang="en">Paper Notes</h1>'
             + language_text("每篇精读将问题、方法、公式与证据连起来。原图、数据表和局限保留在相应论证旁边。",
                             "Each note connects the question, method, and evidence. Figures, equations, and tables stay with the relevant argument.",
@@ -141,7 +143,7 @@ def render_language(data, paper, language, renderer, output):
     nav = "".join('<li><a href="#' + panel_id + '-page-' + str(i + 1) + '">' + str(i + 1) + ' · ' + esc(page["title"]) + '</a></li>'
                   for i, page in enumerate(data["pages"]))
     result = ['<section class="paper-language-panel" data-paper-language-content="' + language + '" lang="'
-              + ("zh-CN" if language == "zh" else "en") + '"' + (" hidden" if language == "en" else "") + '>',
+              + ("zh-CN" if language == "zh" else "en") + '"' + (" hidden" if language == "zh" else "") + '>',
               '<nav class="paper-contents" aria-label="' + ("本文目录" if language == "zh" else "On this page") + '"><ol>' + nav + '</ol></nav>',
               '<div class="bibliography"><p>' + esc(meta.get("authors", "")) + '</p><p>'
               + esc(meta.get("venue", "")) + ' · ' + esc(meta.get("version", "")) + '</p><p><a href="'
@@ -188,7 +190,7 @@ def render_language(data, paper, language, renderer, output):
 
 
 def render_paper(paper, zh, en, renderer, output):
-    body = ('<main class="paper-note-reader" data-paper-reader data-language="zh"><header class="notes-hero">'
+    body = ('<main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero">'
             '<p class="eyebrow">Paper Notes</p><h1 lang="en">' + esc(paper["paper_title"]) + '</h1></header>'
             '<div class="reader-toolbar"><a href="../../' + LAYOUT_QUERY + '">Paper Notes</a>' + languages() + '</div>'
             + render_language(zh, paper, "zh", renderer, output)
@@ -209,13 +211,13 @@ def home_link(count):
                                 <article class="writing-card">
                                     <div class="writing-card-lead">
                                         <div class="writing-card-meta"><span class="writing-card-index">08</span><span>Research reading notes</span></div>
-                                        <h3><a href="writing/?layout=paper-notes">Paper Notes</a></h3>
+                                        <h3><a href="writing/?layout=single-column-en">Paper Notes</a></h3>
                                     </div>
                                     <div class="writing-card-body">
                                         <p>Detailed readings of research papers. Each note connects methods, equations, figures, and evidence. Full Chinese and English versions are available.</p>
                                         <div class="writing-card-footer">
                                             <ul class="writing-tags" aria-label="Topics"><li>Paper reviews</li><li>Methods</li><li>Evidence</li></ul>
-                                            <div class="writing-links"><a href="writing/?layout=paper-notes">''' + str(count) + ''' reading notes <span aria-hidden="true">↗</span></a></div>
+                                            <div class="writing-links"><a href="writing/?layout=single-column-en">''' + str(count) + ''' reading notes <span aria-hidden="true">↗</span></a></div>
                                         </div>
                                     </div>
                                 </article>
