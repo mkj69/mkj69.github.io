@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE_URL = "https://mkj69.github.io/"
+LAYOUT_QUERY = "?layout=paper-notes"
 HOME_START = "<!-- PAPER_NOTES_LINK:START -->"
 HOME_END = "<!-- PAPER_NOTES_LINK:END -->"
 
@@ -102,7 +103,7 @@ def document(title, body, depth, canonical):
             '<script src="' + assets + 'paper-notes.js" defer></script>\n</head>\n'
             '<body class="paper-notes-site"><div class="notes-site-shell">'
             '<header class="notes-site-header"><a class="site-brand" href="' + prefix + '">Kaijing Ma</a>'
-            '<nav aria-label="Site navigation"><a href="' + ("./" if depth == 1 else "../../") + '">Paper Notes</a>'
+            '<nav aria-label="Site navigation"><a href="' + ("./" if depth == 1 else "../../") + LAYOUT_QUERY + '">Paper Notes</a>'
             '<a href="' + prefix + '#writing">Writing</a><a href="' + prefix + '">Home</a></nav></header>'
             + body + '<footer class="notes-site-footer"><span>Kaijing Ma</span><a href="' + prefix + '#writing">Writing &amp; Projects</a></footer>'
             '</div></body>\n</html>\n')
@@ -115,11 +116,11 @@ def render_hub(papers):
         topics = "".join("<li>" + esc(topic) + "</li>" for topic in paper.get("topics", []))
         entries.append('<article class="paper-entry"><span class="paper-number" aria-hidden="true">'
                        + str(number).zfill(2) + '</span><div class="paper-entry-main"><h2><a href="papers/'
-                       + paper["slug"] + '/" lang="en">' + esc(paper["paper_title"]) + '</a></h2>'
+                       + paper["slug"] + '/' + LAYOUT_QUERY + '" lang="en">' + esc(paper["paper_title"]) + '</a></h2>'
                        + language_text(paper["summary_zh"], paper["summary"], "p", "paper-summary")
                        + '<p class="paper-meta">' + esc(paper["authors"]) + ' · <a href="' + esc(paper["source_url"])
                        + '">' + esc(source) + '</a></p><ul class="paper-topics" aria-label="Topics">' + topics
-                       + '</ul></div><a class="paper-entry-link" href="papers/' + paper["slug"] + '/">'
+                       + '</ul></div><a class="paper-entry-link" href="papers/' + paper["slug"] + '/' + LAYOUT_QUERY + '">'
                        + language_text("论文精读", "Reading note") + ' <span aria-hidden="true">↗</span></a></article>')
     body = ('<main class="paper-hub" data-paper-reader data-language="zh"><header class="notes-hero">'
             '<p class="eyebrow">Writing / Research</p><h1 lang="en">Paper Notes</h1>'
@@ -189,7 +190,7 @@ def render_language(data, paper, language, renderer, output):
 def render_paper(paper, zh, en, renderer, output):
     body = ('<main class="paper-note-reader" data-paper-reader data-language="zh"><header class="notes-hero">'
             '<p class="eyebrow">Paper Notes</p><h1 lang="en">' + esc(paper["paper_title"]) + '</h1></header>'
-            '<div class="reader-toolbar"><a href="../../">Paper Notes</a>' + languages() + '</div>'
+            '<div class="reader-toolbar"><a href="../../' + LAYOUT_QUERY + '">Paper Notes</a>' + languages() + '</div>'
             + render_language(zh, paper, "zh", renderer, output)
             + render_language(en, paper, "en", renderer, output)
             + '<dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure">'
@@ -208,13 +209,13 @@ def home_link(count):
                                 <article class="writing-card">
                                     <div class="writing-card-lead">
                                         <div class="writing-card-meta"><span class="writing-card-index">08</span><span>Research reading notes</span></div>
-                                        <h3><a href="writing/">Paper Notes</a></h3>
+                                        <h3><a href="writing/?layout=paper-notes">Paper Notes</a></h3>
                                     </div>
                                     <div class="writing-card-body">
                                         <p>Detailed readings of research papers. Each note connects methods, equations, figures, and evidence. Full Chinese and English versions are available.</p>
                                         <div class="writing-card-footer">
                                             <ul class="writing-tags" aria-label="Topics"><li>Paper reviews</li><li>Methods</li><li>Evidence</li></ul>
-                                            <div class="writing-links"><a href="writing/">''' + str(count) + ''' reading notes <span aria-hidden="true">↗</span></a></div>
+                                            <div class="writing-links"><a href="writing/?layout=paper-notes">''' + str(count) + ''' reading notes <span aria-hidden="true">↗</span></a></div>
                                         </div>
                                     </div>
                                 </article>
