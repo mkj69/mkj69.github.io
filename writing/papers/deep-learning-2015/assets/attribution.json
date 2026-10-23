@@ -1,0 +1,43 @@
+{
+  "paper": "Deep learning",
+  "authors": [
+    "Yann LeCun",
+    "Yoshua Bengio",
+    "Geoffrey Hinton"
+  ],
+  "doi": "10.1038/nature14539",
+  "source_url": "https://www.cs.toronto.edu/~hinton/absps/NatureDeepReview.pdf",
+  "source_sha256": "18b910be375cd8c9358eb8868a65ff4c9cdcea643d62cefdc3d202c133ca5fc2",
+  "copyright": "2015 Macmillan Publishers Limited. All rights reserved.",
+  "scope": "Two bounded technical diagram excerpts accompany direct mathematical discussion. No general reuse license or publisher permission is asserted.",
+  "figures": [
+    {
+      "file": "source-chain-rule.png",
+      "figure": "1b",
+      "printed_page": 437,
+      "pdf_page": 2,
+      "crop_normalized": [
+        0.72,
+        0.32,
+        0.94,
+        0.49
+      ],
+      "render_dpi": 360,
+      "changes": "Diagram region cropped. Original labels and geometry retained."
+    },
+    {
+      "file": "source-recurrence.png",
+      "figure": "5",
+      "printed_page": 442,
+      "pdf_page": 7,
+      "crop_normalized": [
+        0.06,
+        0.067,
+        0.48,
+        0.174
+      ],
+      "render_dpi": 240,
+      "changes": "Diagram region cropped. Original labels and geometry retained."
+    }
+  ]
+}

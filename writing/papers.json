@@ -4,6 +4,29 @@
   "description": "Detailed reading notes on methods, evidence, and limits. Figures and tables stay close to the claims they support.",
   "papers": [
     {
+      "slug": "deep-learning-2015",
+      "short_title": "Deep learning",
+      "paper_title": "Deep learning",
+      "authors": "Yann LeCun, Yoshua Bengio, Geoffrey Hinton",
+      "published": "2026-10-22",
+      "summary": "Representation learning through gradients, spatial sharing and temporal sharing. Original derivations connect the mechanisms to evidence and limits.",
+      "summary_zh": "从梯度、空间共享与时间共享理解表征学习。独立推导将机制与证据、适用边界连起来。",
+      "topics": [
+        "Representation learning",
+        "Backpropagation",
+        "CNNs",
+        "RNNs"
+      ],
+      "source_url": "https://doi.org/10.1038/nature14539",
+      "source_label": "Nature 521 (2015)",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-2015/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",

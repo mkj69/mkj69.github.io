@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deep learning | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/deep-learning-2015/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+</head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Deep learning</h1></header><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#deep-learning-2015-zh-page-1">1 · 问题：究竟把什么变成可学习的？</a></li><li><a href="#deep-learning-2015-zh-page-2">2 · 反向传播：先得到导数，再更新参数</a></li><li><a href="#deep-learning-2015-zh-page-3">3 · 卷积：局部性、共享与信息损失</a></li><li><a href="#deep-learning-2015-zh-page-4">4 · 分布式编码：容量并不等于保证</a></li><li><a href="#deep-learning-2015-zh-page-5">5 · 循环：跨时间共享参数</a></li><li><a href="#deep-learning-2015-zh-page-6">6 · 证据、成本与推断边界</a></li><li><a href="#deep-learning-2015-zh-page-7">7 · 联系、勘误与回顾</a></li></ol></nav>
+<div class="bibliography"><p>Yann LeCun, Yoshua Bengio, Geoffrey Hinton</p><p>Nature 521, 436 to 444 (2015) · Publisher version, issue dated 28 May 2015</p><p><a href="https://www.cs.toronto.edu/~hinton/absps/NatureDeepReview.pdf">Author hosted full paper · DOI 10.1038/nature14539</a>
+</p></div>
+<article class="sheet" id="deep-learning-2015-zh-page-1" aria-labelledby="deep-learning-2015-zh-page-1-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-1-heading">问题：究竟把什么变成可学习的？</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">核心变化</h3>
+<p>综述连接了表征学习、卷积模型与循环模型。本笔记关注这条联系如何改变学习系统的设计。</p>
+<div class="equation" role="math" aria-label="Prediction = gθ(φψ(x));  both θ and ψ can receive gradients from the objective.">Prediction = gθ(φψ(x));  both θ and ψ can receive gradients from the objective.</div>
+<p>特征映射 φ 将输入变成表征，预测器 g 再利用它。特征映射固定时，优化只能改变预测器。两者都可训练时，误差还可以改变系统向预测器暴露哪些信息。这既改变参数数量，也改变搜索空间。</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">深度需要发挥具体作用</h3>
+<div class="equation" role="math" aria-label="aᴸ = fᴸ(Wᴸ fᴸ⁻¹(Wᴸ⁻¹ ⋯ f¹(W¹x + b¹) ⋯ + bᴸ⁻¹) + bᴸ)">aᴸ = fᴸ(Wᴸ fᴸ⁻¹(Wᴸ⁻¹ ⋯ f¹(W¹x + b¹) ⋯ + bᴸ⁻¹) + bᴸ)</div>
+<p>函数复合让后续计算可以利用中间结果。但深度本身不保证得到有用表征。如果所有激活都是线性的，多层仿射映射仍可合成一个仿射映射。非线性阶段改变了表达能力，数据、架构与优化仍决定最终学到什么函数。</p>
+</section>
+<section class="callout green">
+<h3 class="accent green">论证的检查路径</h3>
+<p>分析先从局部导数走到完整参数更新，再讨论空间共享、分布式编码与时间共享，最后区分数学容量和经验证据。下面的推导与小型计算是独立编写的解释，教学数值会明确标注。</p>
+</section>
+<section class="callout orange">
+<h3 class="accent orange">历史语境</h3>
+<p>逐层无监督预训练在 2006 年前后帮助重新激起了研究兴趣。2012 年 ImageNet 结果推动深度卷积模型获得关注。作者预期无监督学习、选择性注意与推理会变得更重要。这些判断属于 2015 年，提供了这里的问题背景，不能直接确定当前表现。</p>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-2" aria-labelledby="deep-learning-2015-zh-page-2-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-2-heading">反向传播：先得到导数，再更新参数</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="放大：Original chain rule diagram, Figure 1b, printed page 437"><img src="assets/source-chain-rule.png" alt="Original chain rule diagram, Figure 1b, printed page 437" loading="lazy"></button><figcaption><strong>Source Figure 1b · p. 437。</strong> LeCun、Bengio 与 Hinton，Nature 521（2015）。原图局部。图内链式法则正确，原文相邻图注的导数因子存在笔误。</figcaption></figure>
+<h3 class="accent blue">先固定局部计算的含义</h3>
+<div class="equation" role="math" aria-label="y = q(x);  z = r(y);  dz/dx = (dz/dy)(dy/dx)">y = q(x);  z = r(y);  dz/dx = (dz/dy)(dy/dx)</div>
+<p>x 的小变化先改变 y，y 的变化再改变 z，因此两次局部敏感度相乘。中间变量分别作为前一步的输出与后一步的输入。如果把第一个因子替换成 dz/dx，就会重复计入 x 到 y 的敏感度，不再表示这次复合。</p>
+<h3 class="accent blue">向量形式</h3>
+<div class="equation" role="math" aria-label="a⁰ = x;  zˡ = Wˡaˡ⁻¹ + bˡ;  aˡ = fˡ(zˡ);  E = ½‖aᴸ − y‖²">a⁰ = x;  zˡ = Wˡaˡ⁻¹ + bˡ;  aˡ = fˡ(zˡ);  E = ½‖aᴸ − y‖²</div>
+<p>目标为 y，上标 l 表示层。在这里的推导中，激活函数逐元素作用。令 δ 表示 E 对 z 的导数，就得到下面的递推。</p>
+<div class="equation" role="math" aria-label="δᴸ = (aᴸ − y) ⊙ fᴸ′(zᴸ)">δᴸ = (aᴸ − y) ⊙ fᴸ′(zᴸ)</div>
+<div class="equation" role="math" aria-label="δˡ = ((Wˡ⁺¹)ᵀδˡ⁺¹) ⊙ fˡ′(zˡ)">δˡ = ((Wˡ⁺¹)ᵀδˡ⁺¹) ⊙ fˡ′(zˡ)</div>
+<div class="equation" role="math" aria-label="∂E/∂Wˡ = δˡ(aˡ⁻¹)ᵀ;  ∂E/∂bˡ = δˡ">∂E/∂Wˡ = δˡ(aˡ⁻¹)ᵀ;  ∂E/∂bˡ = δˡ</div>
+<p>转置矩阵把下游敏感度传回对它有贡献的输入，逐元素乘积计入局部激活函数，外积再得到与权重同形状的矩阵。偏置以加法进入预激活，因此偏置梯度不需要再与激活做外积。</p>
+<h3 class="accent blue">一个数值核对</h3>
+<div class="table-wrap"><table><caption>独立构造的标量例子，不是论文实验结果。</caption><thead><tr><th scope="col">量</th><th scope="col">值</th><th scope="col">解释</th></tr></thead><tbody><tr><th scope="row">x, w, y</th><td>2, 0.5, 3</td><td>输入、权重、目标</td></tr><tr><th scope="row">a = wx；E = ½(a − y)²</th><td>1; 2</td><td>预测与损失</td></tr><tr><th scope="row">∂E/∂w = (a − y)x</th><td>−4</td><td>局部导数</td></tr><tr><th scope="row">η；w_new = w − η∂E/∂w</th><td>0.1; 0.9</td><td>学习率与更新后的权重</td></tr><tr><th scope="row">a_new；E_new</th><td>1.8; 0.72</td><td>一次更新后的预测与损失</td></tr></tbody></table></div>
+<p>反向传播计算导数，优化器决定如何使用导数。导数正确不保证大步长一定使目标下降。训练目标下降后，未见数据上的表现仍是另一个经验问题。</p>
+<h3 class="accent blue">从导数到随机梯度下降</h3>
+<div class="equation" role="math" aria-label="L_B(θ) = (1/|B|) Σ_(i∈B) ℓ_i(θ);  θ_new = θ − η∇L_B(θ)">L_B(θ) = (1/|B|) Σ_(i∈B) ℓ_i(θ);  θ_new = θ − η∇L_B(θ)</div>
+<p>小批量梯度对选中的样本取平均。均匀采样时，它估计数据集平均目标的梯度，不同批次会给这个估计带来波动。目标、采样方式与学习率仍然重要。测量泛化需要使用拟合数据之外的样本。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-3" aria-labelledby="deep-learning-2015-zh-page-3-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-3-heading">卷积：局部性、共享与信息损失</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">结构先验</h3>
+<p>卷积层在数组不同位置重复使用局部规则。当同一种局部模式可能在不同位置出现时，这种结构就有用。但它也排除了每个位置都需要独立参数的一些函数。因此，共享是一种关于有效结构的假设，并不是无代价地增加灵活性。</p>
+<div class="equation" role="math" aria-label="N_conv = kₕk𝑤C_inC_out + C_out;  N_dense = (HWC_in)D + D">N_conv = kₕk𝑤C_inC_out + C_out;  N_dense = (HWC_in)D + D</div>
+<div class="table-wrap"><table><caption>独立教学例子的参数计数。</caption><thead><tr><th scope="col">教学层</th><th scope="col">假设</th><th scope="col">可训练参数</th></tr></thead><tbody><tr><th scope="row">卷积</th><td>3 × 3 核；C_in = 3；C_out = 16</td><td>448</td></tr><tr><th scope="row">全连接</th><td>32 × 32 × 3 输入；D = 16</td><td>49,168</td></tr></tbody></table></div><p class="table-note">输出形状与表达能力不同。这里仅分析参数共享，不构成准确率或速度的受控比较。</p>
+<h3 class="accent blue">参数量与计算量不同</h3>
+<div class="equation" role="math" aria-label="MACs_conv ≈ H_outW_outkₕk𝑤C_inC_out">MACs_conv ≈ H_outW_outkₕk𝑤C_inC_out</div>
+<p>共享权重可以在许多空间位置重复使用，因此参数较少也可能对应很大的计算量。上式的乘加次数近似没有计入偏置、激活与访存。实际延迟还取决于数据布局、批量、实现和硬件利用率。</p>
+<h3 class="accent blue">感受野通过复合扩大</h3>
+<div class="equation" role="math" aria-label="r₀ = 1;  j₀ = 1;  r_l = r_(l−1) + (k_l − 1)j_(l−1);  j_l = s_lj_(l−1)">r₀ = 1;  j₀ = 1;  r_l = r_(l−1) + (k_l − 1)j_(l−1);  j_l = s_lj_(l−1)</div>
+<p>对没有空洞的普通一维堆叠，r 是感受野大小，j 是相邻感受野中心在输入坐标中的间距。两个核大小为三、步幅为一的层，得到大小为五的感受野。二维时可分别对两个坐标轴计算。填充会改变边界位置看到的数值。</p>
+<h3 class="accent blue">等变性与不变性不同</h3>
+<div class="equation" role="math" aria-label="Φ(Tx) = TΦ(x)   versus   Ψ(Tx) = Ψ(x)">Φ(Tx) = TΦ(x)   versus   Ψ(Tx) = Ψ(x)</div>
+<p>第一式保留了变换发生的位置关系，第二式让输出忽略这种变化。定位往往需要前者，类别标签可能对某些变换需要后者。严格的平移性质取决于边界、采样与步幅，池化并不能由此保证任意旋转或视角的不变性。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-4" aria-labelledby="deep-learning-2015-zh-page-4-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-4-heading">分布式编码：容量并不等于保证</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">组合数量</h3>
+<div class="equation" role="math" aria-label="n binary coordinates admit 2ⁿ distinct configurations.">n binary coordinates admit 2ⁿ distinct configurations.</div>
+<p>一个坐标可以参与许多不同配置，因此表征能够紧凑地表达组合。数量说明有多少编码可用，却没有确定一个未见编码应当对应什么标签。泛化还需要目标函数和学习器具有额外结构。</p>
+<div class="table-wrap"><table><caption>独立构造的歧义：两种规则都拟合已观测行。</caption><thead><tr><th scope="col">输入</th><th scope="col">加法规则 f</th><th scope="col">另一规则 g</th><th scope="col">教学例子中是否观测</th></tr></thead><tbody><tr><th scope="row">(0, 0)</th><td>0</td><td>0</td><td>是</td></tr><tr><th scope="row">(0, 1)</th><td>1</td><td>1</td><td>是</td></tr><tr><th scope="row">(1, 0)</th><td>1</td><td>1</td><td>是</td></tr><tr><th scope="row">(1, 1)</th><td>2</td><td>100</td><td>否</td></tr></tbody></table></div>
+<p>加法假设会选择一种从观测延伸的方式，查表规则则可以选择另一种。前三个输入上的完全一致无法区分它们。这个小例子把缺失的假设直接展示出来，更大的编码空间本身不能消除这种歧义。</p>
+<h3 class="accent blue">嵌入通过它的用途获得含义</h3>
+<div class="equation" role="math" aria-label="e_i = E onehot(i);  logits_i = We_i">e_i = E onehot(i);  logits_i = We_i</div>
+<p>从 E 中选出的列是输入符号的向量，下游计算再将它变成预测。因此，它的用途与预测问题及训练分布有关，单个分量未必对应一个人类概念。</p>
+<div class="equation" role="math" aria-label="E′ = AE;  W′ = WA⁻¹;  W′E′ = WE   for invertible A">E′ = AE;  W′ = WA⁻¹;  W′E′ = WE   for invertible A</div>
+<p>这个简单线性读出模型存在等价参数化。嵌入坐标经过可逆变换后，每个 logit 仍可不变，但某些变换会改变欧氏距离。因此，坐标与可视化需要结合模型解释。二维投影本身不能证明唯一的语义几何。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-5" aria-labelledby="deep-learning-2015-zh-page-5-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-5-heading">循环：跨时间共享参数</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="放大：Original recurrent network and time unfolding diagram, Figure 5, printed page 442"><img src="assets/source-recurrence.png" alt="Original recurrent network and time unfolding diagram, Figure 5, printed page 442" loading="lazy"></button><figcaption><strong>Source Figure 5 · p. 442。</strong> LeCun、Bengio 与 Hinton，Nature 521（2015）。原图局部。展开后的各时间步共享 U、V 与 W。</figcaption></figure>
+<h3 class="accent blue">状态是一种重复计算</h3>
+<div class="equation" role="math" aria-label="h_t = f(Wh_(t−1) + Ux_t + b);  o_t = g(Vh_t + c)">h_t = f(Wh_(t−1) + Ux_t + b);  o_t = g(Vh_t + c)</div>
+<p>某个时间步的状态取决于前一状态和当前输入。展开后，这些依赖成为普通计算图。图随序列长度增长，但参数仍然共享。不同状态副本不等于不同的可训练矩阵。</p>
+<div class="equation" role="math" aria-label="∂E/∂W = Σ_t δ_t h_(t−1)ᵀ,  where δ_t = ∂E/∂z_t">∂E/∂W = Σ_t δ_t h_(t−1)ᵀ,  where δ_t = ∂E/∂z_t</div>
+<p>W 的每次使用都会贡献给同一个参数梯度，因此需要对共享矩阵的使用位置求和。某个状态的总 δ 包含它对后续计算的影响。如果把展开后的矩阵分别学习，就定义了另一个模型。</p>
+<h3 class="accent blue">时间上的归因为何困难</h3>
+<div class="equation" role="math" aria-label="J_t = ∂h_t/∂h_(t−1) = diag(f′(z_t))W">J_t = ∂h_t/∂h_(t−1) = diag(f′(z_t))W</div>
+<div class="equation" role="math" aria-label="∂h_T/∂h_t = J_TJ_(T−1) ⋯ J_(t+1)">∂h_T/∂h_t = J_TJ_(T−1) ⋯ J_(t+1)</div>
+<p>早期敏感度需要穿过雅可比矩阵乘积。范数界可以说明缩小或增大的可能性，但方向与相互作用也重要。单一特征值的口号不足以刻画非线性时变系统。序列长度改变了远距离依赖需要经过的因子数量。</p>
+<h3 class="accent blue">门控记忆路径</h3>
+<div class="equation" role="math" aria-label="c_t = f_t ⊙ c_(t−1) + i_t ⊙ g_t">c_t = f_t ⊙ c_(t−1) + i_t ⊙ g_t</div>
+<div class="equation" role="math" aria-label="∂c_t/∂c_(t−1) along the direct memory edge = diag(f_t)">∂c_t/∂c_(t−1) along the direct memory edge = diag(f_t)</div>
+<p>这个一般化门控单元具有直接的加法路径。遗忘门接近一时，该路径可以保留敏感度。但完整导数还包括经过门和隐藏状态的其他路径。这是一种传递信息的机制，并不能保证任意任务都能学到任意长的依赖。</p>
+<h3 class="accent blue">编码与生成</h3>
+<div class="equation" role="math" aria-label="p(y₁, …, y_T | x) = ∏_(t=1)^T p(y_t | y_&lt;t, x)">p(y₁, …, y_T | x) = ∏_(t=1)^T p(y_t | y_&lt;t, x)</div>
+<p>编码器可以向解码器提供关于 x 的信息。这个分解将生成定义为逐步建立条件分布。训练可以使用真实的前序词元，生成则依赖自己此前的选择，两种上下文可能不同。输出流畅并不能单独证明输入的每个相关细节都被保留。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-6" aria-labelledby="deep-learning-2015-zh-page-6-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-6-heading">证据、成本与推断边界</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent orange">综述不是一组新基准实验</h3>
+<div class="table-wrap"><table><caption>少量原文事实，不代表新的实验。</caption><thead><tr><th scope="col">原文背景</th><th scope="col">原文位置</th><th scope="col">限定</th></tr></thead><tbody><tr><th scope="row">GPU 训练提速：10 或 20 倍</th><td>p. 439</td><td>历史转述；这里没有匹配设置</td></tr><tr><th scope="row">ImageNet：约 1 百万张图；1,000 类</th><td>p. 440</td><td>数据集背景，不是准确率表</td></tr></tbody></table></div>
+<p>数值要支持比较，首先需要测量协议。速度比需要基线、硬件、实现、精度、批量和停止条件。错误率需要数据划分与指标定义。缺少这些条件时，历史数值可以提供阅读背景，却不足以支持新的性能预测。</p>
+<h3 class="accent blue">一个有用的成本分解</h3>
+<div class="equation" role="math" aria-label="Training work ≈ updates × examples per update × work per example">Training work ≈ updates × examples per update × work per example</div>
+<p>这个分解区分了参数量无法替代的三个量。表征可能紧凑，激活却仍很大。共享权重可能被重复应用许多次。循环序列可能增加保存状态或重计算的需求。因此，内存、算术、通信和延迟需要分别核算。</p>
+<h3 class="accent blue">优化判断需要假设</h3>
+<p>综述在讨论大型网络时，更强调鞍点而非较差局部极小值。这个判断的适用范围很重要。</p>
+<p>非凸目标可以包含不同类型的驻点。梯度为零不能识别全局最小值，负曲率方向可以帮助区分鞍点和局部最小值。某些训练得到好解，也不能证明所有架构或初始化都有相同的损失地形。一般性保证需要先定义目标函数类别，再给出适用于该类别的论证。</p>
+<h3 class="accent blue">表征只保留某些信息</h3>
+<p>预测目标奖励对该预测有用的信息，可能不会约束其他差别。因此，分类、定位、重建与生成可能偏好不同的中间表征。一个重要问题是：输入中的哪些变化应当改变输出？这把架构的不变性与具体任务联系起来。</p>
+<h3 class="accent blue">无标签学习与行动学习</h3>
+<p>重建或预测目标可以在没有人工类别标签的情况下产生训练信号。这改变了监督信号的来源，却没有消除目标选择。会主动选择观测的智能体又引入一层依赖：行动影响后续能获得什么信息。因此，完整分析还要包含观测策略及其反馈，而不只是表征。</p>
+</section>
+</div><footer class="page-foot"><span>6 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-zh-page-7" aria-labelledby="deep-learning-2015-zh-page-7-heading"><header class="running"><h2 id="deep-learning-2015-zh-page-7-heading">联系、勘误与回顾</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">三种复用方式</h3>
+<div class="table-wrap"><table><caption>本笔记建立的解释性比较。</caption><thead><tr><th scope="col">机制</th><th scope="col">复用什么</th><th scope="col">仍需什么证据</th></tr></thead><tbody><tr><th scope="row">复合</th><td>中间计算</td><td>有用的任务结构</td></tr><tr><th scope="row">卷积</th><td>跨位置的局部参数化规则</td><td>恰当的空间假设</td></tr><tr><th scope="row">循环</th><td>跨时间的状态变换</td><td>可学习的时间依赖</td></tr></tbody></table></div>
+<p>这些机制回答不同问题。复合组织计算，共享限制哪些参数可以独立变化，目标决定哪些误差产生信号，优化决定信号如何改变参数，泛化则关注拟合观测以外的行为。清楚的阅读需要连接这些角色，同时保留它们各自的含义。</p>
+<h3 class="accent orange">一处书目链接更正</h3>
+<p>参考文献 102 的链接指向了另一篇图像描述论文。与 Vinyals、Toshev、Bengio、Erhan 对应的是 arXiv:1411.4555，原印刷链接 arXiv:1502.03044 属于 Xu 等人。</p>
+<h3 class="accent green">带答案的回顾问题</h3>
+<p>反向传播提供什么？它提供既定目标沿计算图的导数，不会替代目标、学习率或评估分布的选择。</p>
+<p>参数共享为什么可能有帮助？它让多个观测共同约束同一条规则。好处取决于这条规则是否确实适合在这些观测之间共享。</p>
+<p>为什么编码空间大还不够？它只计算可能表征的数量，没有规定未见组合上的目标函数。前面的歧义表给出了明确反例。</p>
+<p>循环模型为什么能参数少而计算深？参数在每个时间步重复使用，展开后的依赖链仍随序列长度增长。</p>
+<p>一个定性输出能证明什么？它展示该例子上的行为。估计可靠性需要明确样本与指标，解释机制则需要关于计算过程的额外证据。</p>
+<h3 class="accent blue">来源与范围</h3>
+<p>已核对作者网站托管的完整出版 PDF，包括正文、图页与参考文献。参考文献检查涉及条目身份和部分链接，不代表独立通读所有被引论文。笔记补充了推导和独立教学例子，不据此判断当前模型排名。</p>
+</section>
+</div><footer class="page-foot"><span>7 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#deep-learning-2015-en-page-1">1 · The question: what becomes learnable?</a></li><li><a href="#deep-learning-2015-en-page-2">2 · Backpropagation: a derivative, then an update</a></li><li><a href="#deep-learning-2015-en-page-3">3 · Convolution: locality, sharing and information loss</a></li><li><a href="#deep-learning-2015-en-page-4">4 · Distributed codes: capacity is not a guarantee</a></li><li><a href="#deep-learning-2015-en-page-5">5 · Recurrence: shared parameters across time</a></li><li><a href="#deep-learning-2015-en-page-6">6 · Evidence, cost and the limits of inference</a></li><li><a href="#deep-learning-2015-en-page-7">7 · Relationships, corrections and recall</a></li></ol></nav>
+<div class="bibliography"><p>Yann LeCun, Yoshua Bengio, Geoffrey Hinton</p><p>Nature 521, 436 to 444 (2015) · Publisher version, issue dated 28 May 2015</p><p><a href="https://www.cs.toronto.edu/~hinton/absps/NatureDeepReview.pdf">Author hosted full paper · DOI 10.1038/nature14539</a>
+</p></div>
+<article class="sheet" id="deep-learning-2015-en-page-1" aria-labelledby="deep-learning-2015-en-page-1-heading"><header class="running"><h2 id="deep-learning-2015-en-page-1-heading">The question: what becomes learnable?</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">The central change</h3>
+<p>The review connects representation learning with convolutional and recurrent models. The question for this note is how that connection changes the design of a learning system.</p>
+<div class="equation" role="math" aria-label="Prediction = gθ(φψ(x));  both θ and ψ can receive gradients from the objective.">Prediction = gθ(φψ(x));  both θ and ψ can receive gradients from the objective.</div>
+<p>A feature map φ turns an input into a representation. A predictor g then uses that representation. When the feature map is fixed, optimization can only change the predictor. When both are trainable, an error can change which information the system exposes to the predictor. This is a change in the search space, as well as a change in the number of parameters.</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">Depth needs a role</h3>
+<div class="equation" role="math" aria-label="aᴸ = fᴸ(Wᴸ fᴸ⁻¹(Wᴸ⁻¹ ⋯ f¹(W¹x + b¹) ⋯ + bᴸ⁻¹) + bᴸ)">aᴸ = fᴸ(Wᴸ fᴸ⁻¹(Wᴸ⁻¹ ⋯ f¹(W¹x + b¹) ⋯ + bᴸ⁻¹) + bᴸ)</div>
+<p>Composition lets an intermediate result be reused by a later computation. Depth alone does not ensure a useful representation. If every activation is linear, successive affine maps collapse into a single affine map. Nonlinear stages change that expressivity. Data, architecture and optimization still determine which function is learned.</p>
+</section>
+<section class="callout green">
+<h3 class="accent green">How the argument will be examined</h3>
+<p>The analysis proceeds from a local derivative to a complete parameter update. It then considers spatial sharing, distributed codes and temporal sharing. The final sections separate mathematical capacity from empirical evidence. The derivations and small calculations below are original explanations. Constructed numbers are labelled explicitly.</p>
+</section>
+<section class="callout orange">
+<h3 class="accent orange">The historical frame</h3>
+<p>Layerwise unsupervised pretraining helped renew interest around 2006. The 2012 ImageNet result made deep convolutional models prominent. The authors expected unsupervised learning, selective attention and reasoning to become more important. These are 2015 judgments. They motivate questions here rather than establish current performance.</p>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-2" aria-labelledby="deep-learning-2015-en-page-2-heading"><header class="running"><h2 id="deep-learning-2015-en-page-2-heading">Backpropagation: a derivative, then an update</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original chain rule diagram, Figure 1b, printed page 437"><img src="assets/source-chain-rule.png" alt="Original chain rule diagram, Figure 1b, printed page 437" loading="lazy"></button><figcaption><strong>Source Figure 1b · p. 437。</strong> LeCun, Bengio and Hinton, Nature 521 (2015). Diagram excerpt. The diagram gives the correct chain rule; the adjoining source caption has a derivative typo.</figcaption></figure>
+<h3 class="accent blue">A local calculation fixes the meaning</h3>
+<div class="equation" role="math" aria-label="y = q(x);  z = r(y);  dz/dx = (dz/dy)(dy/dx)">y = q(x);  z = r(y);  dz/dx = (dz/dy)(dy/dx)</div>
+<p>A small change in x first changes y. That change in y then changes z. The two local sensitivities therefore multiply. The intermediate variable appears once as an output and once as an input. Replacing the first factor by dz/dx would repeat the x to y sensitivity and would no longer express this composition.</p>
+<h3 class="accent blue">The vector form</h3>
+<div class="equation" role="math" aria-label="a⁰ = x;  zˡ = Wˡaˡ⁻¹ + bˡ;  aˡ = fˡ(zˡ);  E = ½‖aᴸ − y‖²">a⁰ = x;  zˡ = Wˡaˡ⁻¹ + bˡ;  aˡ = fˡ(zˡ);  E = ½‖aᴸ − y‖²</div>
+<p>The target is y. The superscript l indexes layers. Each activation acts element by element in this derivation. Defining δ as the derivative of E with respect to z gives the following recurrence.</p>
+<div class="equation" role="math" aria-label="δᴸ = (aᴸ − y) ⊙ fᴸ′(zᴸ)">δᴸ = (aᴸ − y) ⊙ fᴸ′(zᴸ)</div>
+<div class="equation" role="math" aria-label="δˡ = ((Wˡ⁺¹)ᵀδˡ⁺¹) ⊙ fˡ′(zˡ)">δˡ = ((Wˡ⁺¹)ᵀδˡ⁺¹) ⊙ fˡ′(zˡ)</div>
+<div class="equation" role="math" aria-label="∂E/∂Wˡ = δˡ(aˡ⁻¹)ᵀ;  ∂E/∂bˡ = δˡ">∂E/∂Wˡ = δˡ(aˡ⁻¹)ᵀ;  ∂E/∂bˡ = δˡ</div>
+<p>The transpose routes downstream sensitivity back to the inputs that contributed to it. The elementwise product accounts for the local activation. The outer product then gives a matrix with the same shape as the weights. Bias gradients need no activation outer product because each bias enters its preactivation additively.</p>
+<h3 class="accent blue">A numerical consistency check</h3>
+<div class="table-wrap"><table><caption>Constructed scalar example. These values are not paper results.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Interpretation</th></tr></thead><tbody><tr><th scope="row">x, w, y</th><td>2, 0.5, 3</td><td>Input, weight, target</td></tr><tr><th scope="row">a = wx; E = ½(a − y)²</th><td>1; 2</td><td>Prediction and loss</td></tr><tr><th scope="row">∂E/∂w = (a − y)x</th><td>−4</td><td>Local derivative</td></tr><tr><th scope="row">η; w_new = w − η∂E/∂w</th><td>0.1; 0.9</td><td>Learning rate and updated weight</td></tr><tr><th scope="row">a_new; E_new</th><td>1.8; 0.72</td><td>Prediction and loss after one update</td></tr></tbody></table></div>
+<p>Backpropagation computes derivatives. An optimizer chooses how to use them. A correct derivative does not guarantee that a large step lowers the objective. A lower training objective also leaves a separate empirical question about performance on unseen data.</p>
+<h3 class="accent blue">From a derivative to SGD</h3>
+<div class="equation" role="math" aria-label="L_B(θ) = (1/|B|) Σ_(i∈B) ℓ_i(θ);  θ_new = θ − η∇L_B(θ)">L_B(θ) = (1/|B|) Σ_(i∈B) ℓ_i(θ);  θ_new = θ − η∇L_B(θ)</div>
+<p>A minibatch gradient averages the selected examples. With uniform sampling, it estimates the gradient of the dataset mean. Different batches introduce variation into that estimate. The objective, sampling scheme and learning rate still matter. Measuring generalization requires examples outside the data used for fitting.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-3" aria-labelledby="deep-learning-2015-en-page-3-heading"><header class="running"><h2 id="deep-learning-2015-en-page-3-heading">Convolution: locality, sharing and information loss</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">A structural prior</h3>
+<p>A convolutional layer reuses a local rule across an array. This is useful when the same local pattern can matter at different positions. It also excludes functions that need unrelated parameters at every position. Sharing is therefore an assumption about useful structure, rather than a free increase in flexibility.</p>
+<div class="equation" role="math" aria-label="N_conv = kₕk𝑤C_inC_out + C_out;  N_dense = (HWC_in)D + D">N_conv = kₕk𝑤C_inC_out + C_out;  N_dense = (HWC_in)D + D</div>
+<div class="table-wrap"><table><caption>Parameter arithmetic for a constructed example.</caption><thead><tr><th scope="col">Constructed layer</th><th scope="col">Assumptions</th><th scope="col">Trainable parameters</th></tr></thead><tbody><tr><th scope="row">Convolution</th><td>3 × 3 kernel; C_in = 3; C_out = 16</td><td>448</td></tr><tr><th scope="row">Dense</th><td>32 × 32 × 3 input; D = 16</td><td>49,168</td></tr></tbody></table></div><p class="table-note">Output shapes and expressivity differ. This calculation isolates parameter sharing. It is not a controlled accuracy or speed comparison.</p>
+<h3 class="accent blue">Parameters and computation are different counts</h3>
+<div class="equation" role="math" aria-label="MACs_conv ≈ H_outW_outkₕk𝑤C_inC_out">MACs_conv ≈ H_outW_outkₕk𝑤C_inC_out</div>
+<p>A shared weight can be used at many spatial locations. Fewer parameters can therefore coexist with substantial computation. The approximate multiply accumulate count above omits biases, activation work and memory traffic. Latency also depends on layout, batching, implementation and hardware utilization.</p>
+<h3 class="accent blue">Receptive fields grow through composition</h3>
+<div class="equation" role="math" aria-label="r₀ = 1;  j₀ = 1;  r_l = r_(l−1) + (k_l − 1)j_(l−1);  j_l = s_lj_(l−1)">r₀ = 1;  j₀ = 1;  r_l = r_(l−1) + (k_l − 1)j_(l−1);  j_l = s_lj_(l−1)</div>
+<p>For an ordinary one dimensional stack without dilation, r is the receptive field size and j is the spacing between neighboring receptive field centers in input coordinates. Two kernels of size three with stride one give a receptive field of five. In two dimensions, the same calculation applies to each axis. Padding changes which boundary values are observed.</p>
+<h3 class="accent blue">Equivariance differs from invariance</h3>
+<div class="equation" role="math" aria-label="Φ(Tx) = TΦ(x)   versus   Ψ(Tx) = Ψ(x)">Φ(Tx) = TΦ(x)   versus   Ψ(Tx) = Ψ(x)</div>
+<p>The first relation preserves where a transformation went. The second removes that change from the output. Localization often needs the first property. A category label may benefit from the second for selected transformations. Exact translation statements depend on boundaries, sampling and stride. Pooling does not establish invariance to arbitrary rotations or viewpoints.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-4" aria-labelledby="deep-learning-2015-en-page-4-heading"><header class="running"><h2 id="deep-learning-2015-en-page-4-heading">Distributed codes: capacity is not a guarantee</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">A combinatorial count</h3>
+<div class="equation" role="math" aria-label="n binary coordinates admit 2ⁿ distinct configurations.">n binary coordinates admit 2ⁿ distinct configurations.</div>
+<p>A coordinate can participate in many different configurations. That gives a representation a compact way to express combinations. The count says how many codes are available. It does not identify the correct label for an unseen code. Generalization requires additional structure in the target function and in the learner.</p>
+<div class="table-wrap"><table><caption>A constructed ambiguity. Both rules fit the observed rows.</caption><thead><tr><th scope="col">Input</th><th scope="col">Additive rule f</th><th scope="col">Alternative rule g</th><th scope="col">Observed in the example</th></tr></thead><tbody><tr><th scope="row">(0, 0)</th><td>0</td><td>0</td><td>Yes</td></tr><tr><th scope="row">(0, 1)</th><td>1</td><td>1</td><td>Yes</td></tr><tr><th scope="row">(1, 0)</th><td>1</td><td>1</td><td>Yes</td></tr><tr><th scope="row">(1, 1)</th><td>2</td><td>100</td><td>No</td></tr></tbody></table></div>
+<p>An additive assumption selects one extension of the observations. A lookup rule can select another. Perfect agreement on the first three inputs cannot distinguish them. This small example makes the missing assumption explicit. A larger code space alone does not resolve it.</p>
+<h3 class="accent blue">An embedding is learned through its use</h3>
+<div class="equation" role="math" aria-label="e_i = E onehot(i);  logits_i = We_i">e_i = E onehot(i);  logits_i = We_i</div>
+<p>The column selected from E is a vector for an input symbol. A downstream computation converts it into a prediction. Its usefulness is therefore tied to the prediction problem and the training distribution. A component need not correspond to a single human concept.</p>
+<div class="equation" role="math" aria-label="E′ = AE;  W′ = WA⁻¹;  W′E′ = WE   for invertible A">E′ = AE;  W′ = WA⁻¹;  W′E′ = WE   for invertible A</div>
+<p>This simple linear readout has equivalent parameterizations. An invertible change of embedding coordinates can leave every logit unchanged. Some such changes alter Euclidean distances. Coordinates and plots therefore need interpretation in the context of the model. A two dimensional visualization alone cannot prove a unique semantic geometry.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-5" aria-labelledby="deep-learning-2015-en-page-5-heading"><header class="running"><h2 id="deep-learning-2015-en-page-5-heading">Recurrence: shared parameters across time</h2></header><div class="page-columns">
+<section class="column">
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original recurrent network and time unfolding diagram, Figure 5, printed page 442"><img src="assets/source-recurrence.png" alt="Original recurrent network and time unfolding diagram, Figure 5, printed page 442" loading="lazy"></button><figcaption><strong>Source Figure 5 · p. 442。</strong> LeCun, Bengio and Hinton, Nature 521 (2015). Original diagram excerpt. U, V and W are shared across the unfolded time steps.</figcaption></figure>
+<h3 class="accent blue">A state is a repeated computation</h3>
+<div class="equation" role="math" aria-label="h_t = f(Wh_(t−1) + Ux_t + b);  o_t = g(Vh_t + c)">h_t = f(Wh_(t−1) + Ux_t + b);  o_t = g(Vh_t + c)</div>
+<p>The state at a time step depends on the preceding state and the current input. Unrolling exposes these dependencies as an ordinary computation graph. The graph grows with sequence length. The parameter set remains shared. A separate copy of the state is a different object from a separate trainable matrix.</p>
+<div class="equation" role="math" aria-label="∂E/∂W = Σ_t δ_t h_(t−1)ᵀ,  where δ_t = ∂E/∂z_t">∂E/∂W = Σ_t δ_t h_(t−1)ᵀ,  where δ_t = ∂E/∂z_t</div>
+<p>Each use of W contributes to the same parameter gradient. The sum is over uses of a shared matrix. The total δ at a state includes its effects on later computations. Treating the unrolled matrices as independently learned would define a different model.</p>
+<h3 class="accent blue">Why temporal credit can be difficult</h3>
+<div class="equation" role="math" aria-label="J_t = ∂h_t/∂h_(t−1) = diag(f′(z_t))W">J_t = ∂h_t/∂h_(t−1) = diag(f′(z_t))W</div>
+<div class="equation" role="math" aria-label="∂h_T/∂h_t = J_TJ_(T−1) ⋯ J_(t+1)">∂h_T/∂h_t = J_TJ_(T−1) ⋯ J_(t+1)</div>
+<p>Early sensitivity passes through a product of Jacobians. Norm bounds can explain shrinking or growing sensitivity. Their directions and interactions also matter. A single eigenvalue slogan does not fully characterize a nonlinear time varying system. Sequence length changes the number of factors through which a distant dependency must pass.</p>
+<h3 class="accent blue">A gated memory path</h3>
+<div class="equation" role="math" aria-label="c_t = f_t ⊙ c_(t−1) + i_t ⊙ g_t">c_t = f_t ⊙ c_(t−1) + i_t ⊙ g_t</div>
+<div class="equation" role="math" aria-label="∂c_t/∂c_(t−1) along the direct memory edge = diag(f_t)">∂c_t/∂c_(t−1) along the direct memory edge = diag(f_t)</div>
+<p>This generic gated cell has a direct additive path. A forget gate near one can preserve sensitivity along that path. The full derivative also includes paths through the gates and hidden states. This is a mechanism for carrying information, rather than a guarantee that a task will learn arbitrarily long dependencies.</p>
+<h3 class="accent blue">Encoding and generation</h3>
+<div class="equation" role="math" aria-label="p(y₁, …, y_T | x) = ∏_(t=1)^T p(y_t | y_&lt;t, x)">p(y₁, …, y_T | x) = ∏_(t=1)^T p(y_t | y_&lt;t, x)</div>
+<p>An encoder can supply information about x to a decoder. The factorization defines generation one conditional distribution at a time. Training can condition on observed earlier tokens. Generation conditions on its own earlier choices. These contexts can differ. A fluent output does not by itself establish that every relevant input detail was retained.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-6" aria-labelledby="deep-learning-2015-en-page-6-heading"><header class="running"><h2 id="deep-learning-2015-en-page-6-heading">Evidence, cost and the limits of inference</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent orange">The review is not a new benchmark</h3>
+<div class="table-wrap"><table><caption>Selected source facts. No new experiment is implied.</caption><thead><tr><th scope="col">Reported context</th><th scope="col">Source location</th><th scope="col">Qualification</th></tr></thead><tbody><tr><th scope="row">GPU training speedup: 10 or 20 times</th><td>p. 439</td><td>Historical report; no matched setup here</td></tr><tr><th scope="row">ImageNet: about 1 million images; 1,000 classes</th><td>p. 440</td><td>Dataset context; not an accuracy table</td></tr></tbody></table></div>
+<p>A numerical claim needs a measurement protocol before it supports a comparison. A speed ratio needs a baseline, hardware, implementation, precision, batch size and stopping condition. An error rate needs a dataset split and metric definition. Without those conditions, a historical number can orient a reading without supporting a new performance prediction.</p>
+<h3 class="accent blue">A useful cost decomposition</h3>
+<div class="equation" role="math" aria-label="Training work ≈ updates × examples per update × work per example">Training work ≈ updates × examples per update × work per example</div>
+<p>This decomposition separates three quantities that a parameter count cannot replace. A representation may be compact while activations remain large. A shared weight can be applied many times. A recurrent sequence can increase stored state or recomputation. Memory, arithmetic, communication and latency therefore need separate accounting.</p>
+<h3 class="accent blue">Optimization claims need assumptions</h3>
+<p>The review emphasizes saddle points over poor local minima in large networks. The scope of that argument matters.</p>
+<p>A nonconvex objective can contain stationary points of different kinds. A zero gradient does not identify a global minimum. A negative curvature direction can help distinguish a saddle from a local minimum. The existence of good training solutions also does not prove that every architecture or initialization has the same landscape. A general guarantee requires a stated class of objectives and an argument for that class.</p>
+<h3 class="accent blue">A representation preserves some information</h3>
+<p>A prediction objective rewards information useful for that prediction. It may leave other distinctions unconstrained. Classification, localization, reconstruction and generation can therefore favor different intermediate representations. A useful question is which changes in the input should alter the output. This connects architectural invariances to the actual task.</p>
+<h3 class="accent blue">Learning without labels and learning to act</h3>
+<p>A reconstruction or prediction objective can obtain a training signal without a manually supplied category label. That changes where supervision comes from. It does not remove the choice of objective. An agent that selects observations adds another dependency: its actions affect which information becomes available. A complete analysis then includes the observation policy and its feedback, as well as the representation.</p>
+</section>
+</div><footer class="page-foot"><span>6 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<article class="sheet" id="deep-learning-2015-en-page-7" aria-labelledby="deep-learning-2015-en-page-7-heading"><header class="running"><h2 id="deep-learning-2015-en-page-7-heading">Relationships, corrections and recall</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent blue">Three forms of reuse</h3>
+<div class="table-wrap"><table><caption>Interpretive comparison developed in this note.</caption><thead><tr><th scope="col">Mechanism</th><th scope="col">What is reused</th><th scope="col">What still needs evidence</th></tr></thead><tbody><tr><th scope="row">Composition</th><td>Intermediate computations</td><td>Useful task structure</td></tr><tr><th scope="row">Convolution</th><td>A local parameterized rule across positions</td><td>Appropriate spatial assumptions</td></tr><tr><th scope="row">Recurrence</th><td>A state transition across time</td><td>Learnable temporal dependencies</td></tr></tbody></table></div>
+<p>These mechanisms answer different questions. Composition organizes a computation. Sharing restricts which parameters can vary independently. An objective determines which errors generate a signal. Optimization determines how that signal changes parameters. Generalization concerns behavior beyond the observations used for fitting. A clear reading keeps these roles connected without merging them.</p>
+<h3 class="accent orange">A bibliographic correction</h3>
+<p>Reference 102 links to the wrong captioning paper. The matching Vinyals, Toshev, Bengio and Erhan paper is arXiv:1411.4555. The printed destination, arXiv:1502.03044, belongs to Xu and colleagues.</p>
+<h3 class="accent green">Questions with substantive answers</h3>
+<p>What does backpropagation supply? It supplies derivatives of a defined objective through a computation graph. It does not choose the objective, the learning rate or the evaluation distribution.</p>
+<p>Why can parameter sharing help? It makes multiple observations constrain the same rule. The benefit depends on whether that rule should actually be shared across those observations.</p>
+<p>Why is a large code space insufficient? It counts possible representations. It does not specify the target function on unseen combinations. The ambiguity table gives an explicit counterexample.</p>
+<p>Why can a recurrent model have few parameters and a deep computation? Its parameters are reused at every step. The unrolled dependency chain still grows with sequence length.</p>
+<p>What does a qualitative output establish? It shows behavior on that example. Estimating reliability needs a defined sample and metric. Explaining a mechanism requires additional evidence about the computation.</p>
+<h3 class="accent blue">Source and scope</h3>
+<p>The full author hosted publisher PDF was checked, including the main text, figure pages and bibliography. The bibliography was inspected for identity and selected links. This does not constitute independent reading of all cited work. This note adds derivations and constructed examples. It makes no claim about current model rankings.</p>
+</section>
+</div><footer class="page-foot"><span>7 / 7</span><span>Publisher version, issue dated 28 May 2015</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>
