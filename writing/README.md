@@ -1,14 +1,24 @@
-# Detailed paper notes
+# Paper Notes
 
-The complete Chinese and English notes live directly in the existing homepage Writing section. Each expandable note contains semantic HTML, readable equations, native data tables and local figure assets. Chinese, English and parallel views share the same article. Figures open at their original resolution.
+The existing homepage Writing section links to the Paper Notes hub at `/writing/`. Each paper has a complete article at `/writing/papers/<slug>/`. The article has two language choices, 中文 and English. Every language version retains the full method, formulas, genuine figures, native tables and source attribution.
 
-The content source is a JSON reading sheet kept outside this public checkout. It contains paper metadata and ordered pages, columns and blocks. The renderer accepts headings, paragraphs, lists, formulas with a readable `plain` representation, code, tables and figures. Figure captions retain their original paper labels and source context. Missing figure files, malformed tables or missing readable equations stop generation.
+The formal full paper title appears once as the main article heading. There is no repeated title subtitle. Existing author-code links remain. The pages use the homepage palette, transparent content sections and responsive reading columns. Figures open at their original resolution.
+
+## Build and check
+
+The source JSON stays outside this public checkout. It contains metadata and ordered pages, columns and semantic blocks. Each paper needs matching `<slug>-content.json` and `<slug>-content-en.json` files. Their `title` fields match the formal `paper_title` in `writing/papers.json`; `subtitle` is empty. Metadata includes a verified `source_url`, source version, authors and an optional author-code URL.
 
 ```sh
-python3 writing/tools/build_inline_papers.py --content-dir /path/to/private-content
-python3 writing/tools/build_inline_papers.py --content-dir /path/to/private-content --check
+python3 -B writing/tools/build_paper_notes.py --content-dir /path/to/private-content
+python3 -B writing/tools/build_paper_notes.py --content-dir /path/to/private-content --check
 ```
 
-The private content directory contains matching `paper-slug-content.json` and `paper-slug-content-en.json` files. Both languages must cover the same pages and blocks, with unchanged figures, equations and table numbers. The public manifest contains only approved paper identities and summaries. The build replaces only the marked paper entries inside the existing Writing section. Reading queues, personal annotations, source documents, credentials and drafts remain outside this repository. A completed reading note does not imply that the reader has finished reading the paper.
+The builder writes the hub, individual articles and the marked Paper Notes entry on the homepage. It preserves unrelated homepage content. Check mode only verifies that the generated files are current. A missing source figure, malformed table, missing readable `plain` formula, or incomplete translation stops the build. Language versions must preserve section and block coverage, figure files, mathematical statements and numeric table values.
 
-Publication uses checked public research material and the user's authorized paper notes. Paper authors retain ownership of original figures. Preserve source, version, figure labels and any applicable attribution. Do not infer paper-figure permissions from a code repository's software license. If a future source or figure cannot be checked, keep the affected article as a draft and record the gap.
+`render_paper.py` is the internal semantic block renderer. Shared styling and language behavior live in `writing/assets/paper-notes.css` and `paper-notes.js`. The language preference is remembered. An unsupported saved preference returns to Chinese. Existing homepage bookmarks such as `#paper-sd3` redirect to the corresponding article.
+
+## New papers
+
+Add approved public bibliographic metadata and Chinese/English summaries to `writing/papers.json`. Set `url` to `https://mkj69.github.io/writing/papers/<slug>/` and place genuine figure assets in `writing/papers/<slug>/assets/`. Store the complete language source files in the private content directory, then build and check. The paper order follows the manifest.
+
+The public manifest contains only approved paper identities and summaries. Reading queues, private annotations, source documents, credentials and drafts remain outside this repository. A generated note does not imply that the reader has completed the paper. Publication uses the user's authorized public research notes and required source assets. Source versions, figure labels and applicable attribution remain attached to the material.

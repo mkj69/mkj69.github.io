@@ -1,4 +1,10 @@
 (() => {
+    const legacyPaper = window.location.hash.match(/^#paper-([a-z0-9]+(?:-[a-z0-9]+)*)$/i);
+    if (legacyPaper) {
+        const paperUrl = new URL(`writing/papers/${legacyPaper[1].toLowerCase()}/`, window.location.href);
+        window.location.replace(paperUrl.href);
+        return;
+    }
     const views = ["about", "education", "news", "publications", "experience", "writing"];
     const viewSet = new Set(views);
     const navigationLinks = [...document.querySelectorAll(".quick-nav a[href^='#']")];
@@ -15,10 +21,6 @@
 
     function viewFromLocation() {
         const requestedView = window.location.hash.slice(1).toLowerCase();
-        const requestedTarget = document.getElementById(requestedView);
-        if (requestedTarget && requestedTarget.closest("#writing details[data-paper-note]")) {
-            return "writing";
-        }
         return viewSet.has(requestedView) ? requestedView : "about";
     }
 
