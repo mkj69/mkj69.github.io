@@ -50,6 +50,29 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "backpropagation-1986",
+      "short_title": "Backpropagation",
+      "paper_title": "Learning representations by back-propagating errors",
+      "authors": "David E. Rumelhart, Geoffrey E. Hinton, Ronald J. Williams",
+      "published": "2026-10-24",
+      "summary": "Hidden units receive a learning signal through the chain rule. Exact gradient derivations connect symmetry detection, distributed representations and recurrent weight sharing to their evidence and limits.",
+      "summary_zh": "通过链式法则为隐藏单元建立学习信号。梯度推导把对称性检测、分布式表征与循环网络权重共享连到原始证据及其边界。",
+      "topics": [
+        "Representation learning",
+        "Backpropagation",
+        "Distributed representations",
+        "Recurrent networks"
+      ],
+      "source_url": "https://doi.org/10.1038/323533a0",
+      "source_label": "Nature 323, 533–536 (1986)",
+      "url": "https://mkj69.github.io/writing/papers/backpropagation-1986/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
