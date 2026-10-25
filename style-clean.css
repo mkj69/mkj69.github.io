@@ -792,6 +792,12 @@ body[data-direction="backward"] .section-block:not([style]) {
     --group-line: rgba(57, 120, 111, 0.2);
 }
 
+.writing-group-interview {
+    --group-accent: #466f58;
+    --group-accent-deep: #385a47;
+    --group-line: rgba(70, 111, 88, 0.22);
+}
+
 .writing-group-head {
     display: grid;
     grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
