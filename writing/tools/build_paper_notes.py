@@ -65,6 +65,8 @@ def validate_pair(zh, en, paper):
                     raise ValueError("Bilingual block types differ")
                 if zb["type"] == "figure" and zb["src"] != eb["src"]:
                     raise ValueError("Both languages must retain the same actual figure")
+                if zb["type"] == "figure" and any(zb.get(key) != eb.get(key) for key in ("source_url", "license_url")):
+                    raise ValueError("Bilingual figure source and license links differ")
                 if zb["type"] == "formula" and (zb.get("plain"), zb.get("latex")) != (eb.get("plain"), eb.get("latex")):
                     raise ValueError("The mathematical statement differs between languages")
                 if zb["type"] == "table":
@@ -183,8 +185,12 @@ def render_language(data, paper, language, renderer, output):
             result.append('</section>')
         result.append('</div><footer class="page-foot"><span>' + str(index) + ' / ' + str(len(data["pages"]))
                       + '</span><span>' + esc(meta.get("version", "")) + '</span></footer></article>')
-    credit = ("原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。" if language == "zh" else
-              "Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.")
+    if paper.get("source_kind") == "book_chapter":
+        credit = ("原图与来源数据来自所引书籍章节。解释与推导属于阅读笔记，新增例子另行标明。版本、页码和图表编号随正文标明。" if language == "zh" else
+                  "Original figures and source data come from the cited book chapter. Explanations and derivations are reading notes. Added examples are identified separately. Source versions, pages and figure labels appear beside the material.")
+    else:
+        credit = ("原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。" if language == "zh" else
+                  "Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.")
     result.append('<p class="edition">' + credit + '</p></section>')
     return "\n".join(result)
 

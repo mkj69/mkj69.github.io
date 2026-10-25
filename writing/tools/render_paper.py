@@ -54,8 +54,19 @@ def block_html(block, output):
         if path.is_absolute() or '..' in path.parts or not (output.parent / path).is_file():
             raise ValueError('Figure asset must exist beside the article: ' + src)
         alt = block.get('alt') or block.get('label') or block.get('caption', '')
+        attribution = ''
+        if block.get('attribution'):
+            attribution += ' ' + prose(block['attribution'])
+        for key, label in (('source_url', block.get('source_label', 'Source')),
+                           ('license_url', block.get('license_label', 'License'))):
+            if block.get(key):
+                if not safe_url(block[key]):
+                    raise ValueError('Figure attribution links must use public HTTPS: ' + key)
+                attribution += ' <a href="' + esc(block[key]) + '">' + prose(label) + '</a>.'
+        if block.get('changes'):
+            attribution += ' ' + prose(block['changes'])
         return ('<figure><button class="figure-open" type="button" aria-label="放大：' + esc(alt) + '">'
                 '<img src="' + esc(src) + '" alt="' + esc(alt) + '" loading="lazy"></button>'
                 '<figcaption><strong>' + prose(block.get('label', '原论文图')) + '。</strong> '
-                + prose(block.get('caption', '')) + '</figcaption></figure>')
+                + prose(block.get('caption', '')) + attribution + '</figcaption></figure>')
     raise ValueError('Unsupported content block: ' + kind)

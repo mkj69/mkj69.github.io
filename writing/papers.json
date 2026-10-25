@@ -73,6 +73,31 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "deep-learning-book-2016-ch1",
+      "short_title": "Deep Learning, Chapter 1",
+      "paper_title": "Deep Learning",
+      "authors": "Ian Goodfellow, Yoshua Bengio, Aaron Courville",
+      "published": "2026-10-25",
+      "source_kind": "book_chapter",
+      "reading_unit": "Chapter 1: Introduction, pages 1 to 26",
+      "summary": "Chapter 1 only. Original derivations examine representation geometry, information loss, composition, depth conventions and learning costs. The rest of the book remains outside this note.",
+      "summary_zh": "仅覆盖第1章，印刷页1至26。独立推导考察表征几何、信息损失、函数复合、深度口径与学习成本，书中其余章节不在本篇覆盖范围内。",
+      "topics": [
+        "Representation learning",
+        "Function composition",
+        "Computational depth",
+        "Learning costs"
+      ],
+      "source_url": "https://www.deeplearningbook.org/contents/intro.html",
+      "source_label": "MIT Press (2016), Chapter 1: Introduction, pages 1 to 26",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch1/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
