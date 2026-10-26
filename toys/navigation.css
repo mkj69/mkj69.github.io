@@ -1,0 +1,13 @@
+/* The shared navigation also accommodates the separate Toys collection. */
+@media (min-width: 881px) and (max-width: 1160px) {
+    .site-header {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px 24px;
+    }
+
+    .quick-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
