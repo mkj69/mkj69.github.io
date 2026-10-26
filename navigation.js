@@ -90,7 +90,7 @@
 
     function handleWheel(event) {
         if (event.defaultPrevented || event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
-            || document.body.dataset.motion === "off" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            || document.body.dataset.searchOpen === "true" || document.body.dataset.motion === "off" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
 

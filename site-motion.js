@@ -125,34 +125,6 @@
         indicator.style.setProperty('--marker-width', `${Math.max(14, a.width - 20)}px`);
     }
 
-    const map = document.querySelector('.universe-map');
-    const nodes = [...document.querySelectorAll('.universe-node')];
-    const paths = [...document.querySelectorAll('.universe-connections path')];
-    nodes.forEach((node, index) => {
-        node.style.setProperty('--node-x', `${Number(node.dataset.x)}%`);
-        node.style.setProperty('--node-y', `${Number(node.dataset.y)}%`);
-        const highlight = () => {
-            paths.forEach((path, pathIndex) => path.classList.toggle('is-highlighted', index === 0 || pathIndex === index - 1));
-        };
-        const clear = () => paths.forEach(path => path.classList.remove('is-highlighted'));
-        node.addEventListener('pointerenter', highlight);
-        node.addEventListener('pointerleave', clear);
-        node.addEventListener('focus', highlight);
-        node.addEventListener('blur', clear);
-    });
-    if (map) {
-        const positions = [[34, 13], [62, 22], [39, 79], [66, 86], [9, 52], [93, 48], [49, 6], [54, 91]];
-        positions.forEach(([x, y], index) => {
-            const star = document.createElement('span');
-            star.className = 'universe-star';
-            star.textContent = index % 3 ? '✧' : '✦';
-            star.style.left = `${x}%`;
-            star.style.top = `${y}%`;
-            star.setAttribute('aria-hidden', 'true');
-            map.append(star);
-        });
-    }
-
     const footer = document.querySelector('.site-footer');
     if (footer) {
         footer.classList.add('has-surprise');
@@ -204,7 +176,7 @@
     finePointer.addEventListener('change', resetPointer);
 
     const seen = new WeakSet();
-    const revealTargets = [...document.querySelectorAll('.intro-copy > p, .portrait-cell > a, .universe-heading, .universe-map, .education-item, .publication-table tr, .experience-table tr, .writing-card, .toy-card')];
+    const revealTargets = [...document.querySelectorAll('.about-copy > p, .about-note, .portrait-cell > a, .education-item, .publication-table tr, .experience-table tr, .writing-card, .toy-card')];
     if ('IntersectionObserver' in window && typeof Element.prototype.animate === 'function') {
         const reveal = new IntersectionObserver(entries => {
             entries.filter(entry => entry.isIntersecting).forEach((entry, index) => {
