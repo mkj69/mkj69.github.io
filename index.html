@@ -10,6 +10,7 @@
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style-clean.css?v=20260929-portrait-crop">
     <link rel="stylesheet" href="toys/navigation.css?v=20261026">
+    <link rel="stylesheet" href="site-motion.css?v=20261026-universe">
 </head>
 <body id="top" data-view="about">
     <div class="background-charms" aria-hidden="true">
@@ -57,7 +58,9 @@
                         <a href="#experience">Experience</a>
                         <a href="#writing">Writing</a>
                         <a href="toys/">Toys</a>
+                        <span class="nav-indicator" aria-hidden="true"></span>
                     </nav>
+                    <button id="motion-toggle" type="button" title="Pause animations" aria-label="Pause animations" aria-pressed="false">Motion on</button>
                     <h1>
                         <span class="latin-name">Kaijing Ma</span> <span class="cn-name">「麻开菁」</span>
                     </h1>
@@ -130,6 +133,29 @@
                                 </a>
                             </p>
                             </div>
+                        </td>
+                    </tr>
+                    <tr class="cosmic-row">
+                        <td colspan="2">
+                            <section class="research-universe" aria-labelledby="research-universe-heading">
+                                <div class="universe-heading">
+                                    <h2 id="research-universe-heading">Research universe</h2>
+                                    <p>A few questions I keep returning to.</p>
+                                </div>
+                                <div class="universe-map">
+                                    <svg class="universe-connections" viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
+                                        <path d="M500 160 Q345 85 190 80"/>
+                                        <path d="M500 160 Q650 80 800 76.8"/>
+                                        <path d="M500 160 Q340 245 180 243.2"/>
+                                        <path d="M500 160 Q655 245 810 240"/>
+                                    </svg>
+                                    <a class="universe-node universe-center" data-orbit="center" data-x="50" data-y="50" href="#about">Kaijing</a>
+                                    <a class="universe-node" data-orbit="reasoning" data-x="19" data-y="25" href="https://mkj69.github.io/flow_of_thoughs/">Reasoning</a>
+                                    <a class="universe-node" data-orbit="agents" data-x="80" data-y="24" href="https://mkj69.github.io/long-horizon-agents/">Agents</a>
+                                    <a class="universe-node" data-orbit="steerability" data-x="18" data-y="76" href="https://mkj69.github.io/steerability/">Steerability</a>
+                                    <a class="universe-node" data-orbit="learning" data-x="81" data-y="75" href="https://mkj69.github.io/weak_to_strong/">Learning</a>
+                                </div>
+                            </section>
                         </td>
                     </tr>
                 </table>
@@ -798,7 +824,7 @@
 <section class="writing-group writing-group-papers" aria-labelledby="paper-notes-heading">
                             <div class="writing-group-head">
                                 <div><span class="writing-group-number">04</span><h3 id="paper-notes-heading">Paper Notes</h3></div>
-                                <p>完整论文精读与中英文版本。方法、公式、原图和实验数据保留在同一条论证中。</p>
+                                <p>Detailed paper readings in English and Chinese. Methods, equations, original figures, and experimental evidence follow one connected argument.</p>
                             </div>
                             <div class="writing-grid">
                                 <article class="writing-card">
@@ -821,7 +847,7 @@
 <section class="writing-group writing-group-interview" aria-labelledby="interview-prep-heading">
                             <div class="writing-group-head">
                                 <div><span class="writing-group-number">05</span><h3 id="interview-prep-heading">Interview Prep</h3></div>
-                                <p>Research Scientist 面试准备笔记。中文讲原理、英文练作答，内置主动回忆与间隔重复。</p>
+                                <p>Research scientist interview notes. Chinese explanations build understanding, while English answers support practice. Active recall and spaced repetition are built in.</p>
                             </div>
                             <div class="writing-grid">
                                 <article class="writing-card">
@@ -856,7 +882,8 @@
             </td>
         </tr>
     </table>
-    <script src="navigation.js?v=20261022-single-column-en"></script>
+    <script src="navigation.js?v=20261026-universe"></script>
+    <script src="site-motion.js?v=20261026-universe" defer></script>
 </body>
 </html>
 

@@ -19,6 +19,8 @@
     let wheelResetTimer = 0;
     let transitionLocked = false;
     let transitionTimer = 0;
+    let lastWheelTime = 0;
+    let gestureConsumed = false;
 
     function viewFromLocation() {
         const requestedView = window.location.hash.slice(1).toLowerCase();
@@ -87,16 +89,28 @@
     }
 
     function handleWheel(event) {
-        if (event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        if (event.defaultPrevented || event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+            || document.body.dataset.motion === "off" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
 
+        const now = performance.now();
+        const freshGesture = now - lastWheelTime > 240;
+        lastWheelTime = now;
+        if (freshGesture) {
+            gestureConsumed = false;
+            wheelDistance = 0;
+        }
         const direction = Math.sign(event.deltaY);
         if (!direction || !pageBoundaryReached(direction)) {
             wheelDistance = 0;
             wheelDirection = 0;
+            // Reaching a boundary during a scroll never consumes its momentum as a page turn.
+            gestureConsumed = true;
             return;
         }
+
+        if (gestureConsumed) return;
 
         const currentIndex = views.indexOf(currentView);
         const canMove = direction > 0 ? currentIndex < views.length - 1 : currentIndex > 0;
@@ -119,7 +133,8 @@
             wheelDirection = direction;
         }
 
-        wheelDistance += Math.abs(event.deltaY);
+        const deltaScale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+        wheelDistance += Math.abs(event.deltaY) * deltaScale;
         window.clearTimeout(wheelResetTimer);
         wheelResetTimer = window.setTimeout(() => {
             wheelDistance = 0;
@@ -128,6 +143,7 @@
 
         if (wheelDistance >= wheelThreshold) {
             wheelDistance = 0;
+            gestureConsumed = true;
             moveToAdjacentView(direction);
         }
     }
