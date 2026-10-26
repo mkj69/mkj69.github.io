@@ -98,6 +98,31 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "deep-learning-book-2016-ch2",
+      "short_title": "Deep Learning, Chapter 2",
+      "paper_title": "Deep Learning",
+      "authors": "Ian Goodfellow, Yoshua Bengio, Aaron Courville",
+      "published": "2026-10-26",
+      "source_kind": "book_chapter",
+      "reading_unit": "Chapter 2: Linear Algebra, pages 29 to 50",
+      "summary": "Chapter 2 only. Linear systems, norms, spectral geometry and the pseudoinverse lead to a complete PCA reconstruction argument. Worked arithmetic separates rank, approximation error and centering assumptions.",
+      "summary_zh": "仅覆盖第2章，印刷页29至50。从线性系统、范数、谱几何与伪逆推导 PCA 重建目标，借独立算例区分秩、近似误差和中心化假设。",
+      "topics": [
+        "Linear algebra",
+        "Matrix decompositions",
+        "Pseudoinverse",
+        "PCA"
+      ],
+      "source_url": "https://www.deeplearningbook.org/contents/linear_algebra.html",
+      "source_label": "MIT Press (2016), Chapter 2: Linear Algebra, pages 29 to 50",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch2/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deep Learning | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch2/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+</head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Deep Learning</h1></header><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#deep-learning-book-2016-ch2-zh-page-1">1 · 范围、对象与信息丢失问题</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-2">2 · 乘法表示复合，广播则是一种约定</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-3">3 · 秩区分可达性与唯一性</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-4">4 · 范数定义误差几何</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-5">5 · 结构矩阵保留不同性质</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-6">6 · 特征向量的解释依赖明确条件</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-7">7 · SVD区分输入方向与输出方向</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-8">8 · 伪逆选择最小范数最小二乘解</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-9">9 · 迹描述总能量，行列式描述体积</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-10">10 · PCA先为固定解码器求编码</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-11">11 · PCA随后保留最大的谱能量</a></li><li><a href="#deep-learning-book-2016-ch2-zh-page-12">12 · 中心化、完整数值例子与实践边界</a></li></ol></nav>
+<div class="bibliography"><p>Ian Goodfellow, Yoshua Bengio, Aaron Courville</p><p>MIT Press, 2016 · Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</p><p><a href="https://www.deeplearningbook.org/contents/linear_algebra.html">Official complete Chapter 2 HTML</a>
+</p></div>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-1" aria-labelledby="deep-learning-book-2016-ch2-zh-page-1-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-1-heading">范围、对象与信息丢失问题</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">本章围绕映射及其约束展开</h3>
+<p>本单元覆盖2016年官方在线版本第2章 Linear Algebra，印刷页码29至50页。已读取2.1至2.12的全部正文。范围不等于整本书，第1章已有单独笔记，后续章节及本章引用的外部文献不在本次覆盖内。</p>
+<p>本笔记的问题主线是线性映射保留、消除或放大了什么。形状决定运算是否合法，秩决定哪些信息能够恢复，正交性控制几何关系，谱分解揭示各个方向的缩放。PCA最终在明确的重构目标下选择需要保留的方向。</p>
+<p>定义与公式编号注明原章依据。下文的证明、反例、数值表和成本核算均为笔记独立推导，原图另行标识。它们不是实验测量，也不是全章翻译。本章的PCA是数学推导示例，并没有实证基准或消融实验。</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">对象、索引与方向</h3>
+<div class="table-wrap"><table><caption>符号依据2.1节，第29至32页。映射解释是本笔记的组织视角。</caption><thead><tr><th scope="col">对象</th><th scope="col">形状与含义</th><th scope="col">关键区别</th></tr></thead><tbody><tr><th scope="row">标量</th><td>a ∈ ℝ</td><td>一个坐标</td></tr><tr><th scope="row">列向量</th><td>x ∈ ℝⁿ</td><td>xᵀ为行向量</td></tr><tr><th scope="row">矩阵</th><td>A ∈ ℝᵐˣⁿ</td><td>m个输出坐标和n个输入坐标</td></tr><tr><th scope="row">张量</th><td>多个索引轴</td><td>本章用张量表示具有一般轴数的数组</td></tr></tbody></table></div>
+<p>原章用x_S表示指定条目，x_−S表示补集条目。A_i,:表示行，A_:,j表示列。这些约定有助于区分坐标选择和矩阵乘法。转置交换索引与形状，并不计算逆矩阵。</p>
+<figure><button class="figure-open" type="button" aria-label="放大：原书三乘二矩阵及其二乘三转置矩阵的示意图。"><img src="assets/source-figure-2-1.png" alt="原书三乘二矩阵及其二乘三转置矩阵的示意图。" loading="lazy"></button><figcaption><strong>原书图 2.1 · 第31页。</strong> 完整原图将一个3乘2矩阵的行列交换。符号条目直接展示了索引反转，不涉及数值计算或速度比较。 Ian Goodfellow, Yoshua Bengio and Aaron Courville, MIT Press, 2016, Figure 2.1, p. 31. <a href="https://www.deeplearningbook.org/contents/linear_algebra.html#pf3">原书图2.1，第31页</a>. <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>. 完整原图的忠实渲染。图内内容与标签保持不变，去除图外页面内容。</figcaption></figure>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ ⇒ Aᵀ ∈ ℝⁿˣᵐ; (Aᵀ)ᵢⱼ=Aⱼᵢ.   A: ℝⁿ → ℝᵐ, x ↦ Ax.">A ∈ ℝᵐˣⁿ ⇒ Aᵀ ∈ ℝⁿˣᵐ; (Aᵀ)ᵢⱼ=Aⱼᵢ.   A: ℝⁿ → ℝᵐ, x ↦ Ax.</div>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-2" aria-labelledby="deep-learning-book-2016-ch2-zh-page-2-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-2-heading">乘法表示复合，广播则是一种约定</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">匹配的维度具有数学意义</h3>
+<p>2.1与2.2节第32至34页区分普通矩阵乘法、逐元素乘法和广播。如果B先将输入映射到中间空间，A再将中间空间映射到输出，那么AB先执行B。求和索引连接这两个空间。Hadamard积只乘对应坐标，不包含这一步中间求和。</p>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ, B ∈ ℝⁿˣᵖ ⇒ AB ∈ ℝᵐˣᵖ; (AB)ᵢⱼ=Σₖ₌₁ⁿ AᵢₖBₖⱼ.   (A⊙B)ᵢⱼ=AᵢⱼBᵢⱼ for equal shapes.">A ∈ ℝᵐˣⁿ, B ∈ ℝⁿˣᵖ ⇒ AB ∈ ℝᵐˣᵖ; (AB)ᵢⱼ=Σₖ₌₁ⁿ AᵢₖBₖⱼ.   (A⊙B)ᵢⱼ=AᵢⱼBᵢⱼ for equal shapes.</div>
+<p>独立例子取A=[[1,2],[0,1]]、B=[[2,0],[1,3]]。下表的三种运算均有定义，但结果不同。结合律仍允许将A(BC)改写成(AB)C，并不允许交换因子顺序。转置会反转因子顺序，这可以由逐元素求和中两个自由索引的交换推出。</p>
+<div class="table-wrap"><table><caption>笔记自设例子的精确算术，不是原章测量结果。</caption><thead><tr><th scope="col">运算</th><th scope="col">精确结果</th><th scope="col">含义</th></tr></thead><tbody><tr><th scope="row">AB</th><td>[[4,6],[1,3]]</td><td>先B后A</td></tr><tr><th scope="row">BA</th><td>[[2,4],[1,5]]</td><td>先A后B</td></tr><tr><th scope="row">A⊙B</th><td>[[2,0],[0,3]]</td><td>对应坐标相乘</td></tr></tbody></table></div>
+<div class="equation" role="math" aria-label="(AB)ᵀ=BᵀAᵀ; xᵀy=yᵀx for real vectors.   A(B+C)=AB+AC; A(BC)=(AB)C.">(AB)ᵀ=BᵀAᵀ; xᵀy=yᵀx for real vectors.   A(B+C)=AB+AC; A(BC)=(AB)C.</div>
+<h3 class="accent blue">偏置项需要轴约定</h3>
+<p>样本按行存储时，原章以C_ij=A_ij+b_j定义A+b，特征偏置在各行重复。显式写法为A+1_m bᵀ，其中b有n个条目。其他数组库可能采用不同的轴对齐和扩展规则，简写本身不能确定某个库的广播行为。</p>
+<div class="equation" role="math" aria-label="C=A+1ₘbᵀ; Cᵢⱼ=Aᵢⱼ+bⱼ, A ∈ ℝᵐˣⁿ, b ∈ ℝⁿ.   Dense AB: mnp multiplications and mp(n−1) additions for n≥1.">C=A+1ₘbᵀ; Cᵢⱼ=Aᵢⱼ+bⱼ, A ∈ ℝᵐˣⁿ, b ∈ ℝⁿ.   Dense AB: mnp multiplications and mp(n−1) additions for n≥1.</div>
+<p>运算次数是针对直接稠密算法的笔记核算，不包含访存、并行和数值格式。更合适的括号位置可改变中间矩阵大小与算术成本，而不改变精确实数结果；在浮点计算中，重新分组还可能改变舍入。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-3" aria-labelledby="deep-learning-book-2016-ch2-zh-page-3-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-3-heading">秩区分可达性与唯一性</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">逆矩阵意味着双向恢复</h3>
+<p>2.3与2.4节第34至37页将线性方程组写成Ax=b。每一行提供一个约束，每一列给出一个由x中对应系数控制的方向。b属于列空间时恰好可达。若A存在非零零空间向量，不同系数便可能产生相同目标。</p>
+<div class="equation" role="math" aria-label="Ax=Σⱼ xⱼA_:,ⱼ.   Ax=b is consistent ⇔ b∈col(A).   If Ax₀=b, all solutions are x=x₀+z with z∈null(A).">Ax=Σⱼ xⱼA_:,ⱼ.   Ax=b is consistent ⇔ b∈col(A).   If Ax₀=b, all solutions are x=x₀+z with z∈null(A).</div>
+<p>最后一句可以双向证明。加入零空间向量不会改变Ax，而任意两个解相减必在零空间中。因此实数线性方程组不可能恰有两个或三个不同的解：只要存在非零零空间方向，就存在整条仿射直线上的无穷多个解。</p>
+<div class="table-wrap"><table><caption>对原章张成空间论证的秩形式整理。仅有形状不等式并不充分。</caption><thead><tr><th scope="col">A ∈ ℝᵐˣⁿ的性质</th><th scope="col">秩的充要条件</th><th scope="col">含义</th></tr></thead><tbody><tr><th scope="row">每个b都有解</th><td>rank(A)=m，因此m≤n</td><td>满射</td></tr><tr><th scope="row">每个b至多一个解</th><td>rank(A)=n，因此n≤m</td><td>单射</td></tr><tr><th scope="row">每个b恰有一个解</th><td>m=n=rank(A)</td><td>普通逆矩阵存在</td></tr><tr><th scope="row">特定b有多个解</th><td>b∈col(A)且rank(A)&lt;n</td><td>解构成仿射族</td></tr></tbody></table></div>
+<h3 class="accent blue">精确可逆不等于稳定可恢复</h3>
+<div class="equation" role="math" aria-label="A=[[1,1],[2,2]].   col(A)=span{(1,2)ᵀ}; null(A)=span{(1,−1)ᵀ}.">A=[[1,1],[2,2]].   col(A)=span{(1,2)ᵀ}; null(A)=span{(1,−1)ᵀ}.</div>
+<p>在这个独立例子中，b=(3,6)ᵀ的解为x=(t,3−t)ᵀ，其中t可以是任意实数；目标(3,7)ᵀ则无解。两列两行并不能保证可逆。单位矩阵I_n保留所有向量，普通方阵逆满足A⁻¹A=AA⁻¹=I_n。</p>
+<p>原章提醒，显式构造逆矩阵通常不是数值求解的合适途径。独立补充是，利用分解求解可以避免构造不必要的稠密逆矩阵，但无法消除问题本身的病态性。逆公式说明解是什么，并不保证有限精度下的准确度。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-4" aria-labelledby="deep-learning-book-2016-ch2-zh-page-4-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-4-heading">范数定义误差几何</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">大小、夹角与有意选择的惩罚</h3>
+<p>2.5节第37至38页将范数定义为满足正定性、绝对齐次性和三角不等式的大小函数。将损失解释为距离时，这些条件很重要。平方欧氏长度很有用，但它本身不是范数，非零条目计数也不满足齐次性。</p>
+<div class="equation" role="math" aria-label="‖x‖ₚ=(Σᵢ|xᵢ|ᵖ)¹/ᵖ, p≥1; ‖x‖∞=maxᵢ|xᵢ|.   ‖A‖F²=ΣᵢⱼAᵢⱼ².   xᵀy=‖x‖₂‖y‖₂cosθ for nonzero x,y.">‖x‖ₚ=(Σᵢ|xᵢ|ᵖ)¹/ᵖ, p≥1; ‖x‖∞=maxᵢ|xᵢ|.   ‖A‖F²=ΣᵢⱼAᵢⱼ².   xᵀy=‖x‖₂‖y‖₂cosθ for nonzero x,y.</div>
+<div class="table-wrap"><table><caption>独立算术。此处范数应扩大2倍，最后两种量以不同方式违反这一缩放关系。</caption><thead><tr><th scope="col">量</th><th scope="col">x=(3,−4)ᵀ</th><th scope="col">将x乘以2后</th></tr></thead><tbody><tr><th scope="row">‖x‖₁</th><td>7</td><td>14</td></tr><tr><th scope="row">‖x‖₂</th><td>5</td><td>10</td></tr><tr><th scope="row">‖x‖∞</th><td>4</td><td>8</td></tr><tr><th scope="row">‖x‖₂²</th><td>25</td><td>100</td></tr><tr><th scope="row">非零条目数</th><td>2</td><td>2</td></tr></tbody></table></div>
+<div class="equation" role="math" aria-label="∇ₓ(½‖x‖₂²)=x.   ∇ₓ‖x‖₂=x/‖x‖₂ for x≠0.   ∂|t|={sign(t)} if t≠0, and ∂|t|=[−1,1] if t=0.">∇ₓ(½‖x‖₂²)=x.   ∇ₓ‖x‖₂=x/‖x‖₂ for x≠0.   ∂|t|={sign(t)} if t≠0, and ∂|t|=[−1,1] if t=0.</div>
+<p>平方长度的梯度在原点附近趋于零，而绝对值在零点具有非平凡的次梯度区间。这一区别有助于解释稀疏解，但L1惩罚并不总能恢复希望得到的支持集，特征相关性、损失曲率和惩罚强度也会影响结果。</p>
+<h3 class="accent blue">标量例子隔离稀疏机制</h3>
+<div class="equation" role="math" aria-label="arg min_t [½(t−a)²+λ|t|]=sign(a)·max(|a|−λ,0), λ≥0.   arg min_t [½(t−a)²+(λ/2)t²]=a/(1+λ).">arg min_t [½(t−a)²+λ|t|]=sign(a)·max(|a|−λ,0), λ≥0.   arg min_t [½(t−a)²+(λ/2)t²]=a/(1+λ).</div>
+<p>这个独立计算分别使用正值、负值和零点的次梯度条件。当a=0.3、λ=0.5时，第一个极小解为0，第二个为0.2。它解释了这一可分离二次问题中的阈值机制，并不证明任意神经网络训练都会达到稀疏全局最优。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-5" aria-labelledby="deep-learning-book-2016-ch2-zh-page-5-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-5-heading">结构矩阵保留不同性质</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">对角、对称与正交是不同性质</h3>
+<p>2.6节第38至40页介绍对角矩阵、对称矩阵、单位向量和正交性。对角结构限制坐标之间的混合；对称性要求矩阵等于自身转置；正交矩阵要求为方阵，行列向量都正交归一，只有垂直而长度任意的向量并不充分。</p>
+<div class="equation" role="math" aria-label="diag(v)x=v⊙x.   diag(v)⁻¹=diag(1/v₁,…,1/vₙ) when every vᵢ≠0.   QᵀQ=QQᵀ=I ⇒ Q⁻¹=Qᵀ.">diag(v)x=v⊙x.   diag(v)⁻¹=diag(1/v₁,…,1/vₙ) when every vᵢ≠0.   QᵀQ=QQᵀ=I ⇒ Q⁻¹=Qᵀ.</div>
+<p>对角乘法只需n次标量乘法，而直接稠密n乘n映射需要n²次。这是算术次数，不是实测加速比。矩形对角映射可以补零或丢弃坐标，不能具有普通的双侧逆。更低成本的表示也排除了许多可能的相互作用。</p>
+<div class="equation" role="math" aria-label="‖Qx‖₂²=xᵀQᵀQx=‖x‖₂².   (Qx)ᵀ(Qy)=xᵀy.   Q=[[0,−1],[1,0]] preserves lengths and rotates by 90°.">‖Qx‖₂²=xᵀQᵀQx=‖x‖₂².   (Qx)ᵀ(Qy)=xᵀy.   Q=[[0,−1],[1,0]] preserves lengths and rotates by 90°.</div>
+<p>正交映射保留长度、夹角和两点间距离，但仍可显著改变坐标。对称矩阵未必保留这些量，例如diag(2,1)是对称矩阵，却会伸长一个轴。对角矩阵也可以含零条目并丢失信息。</p>
+<h3 class="accent blue">子空间的正交归一基通常为矩形矩阵</h3>
+<div class="equation" role="math" aria-label="D ∈ ℝᵈˣᵏ, DᵀD=Iₖ, k&lt;d.   P=DDᵀ ⇒ Pᵀ=P, P²=P, rank(P)=k; generally P≠I_d.">D ∈ ℝᵈˣᵏ, DᵀD=Iₖ, k&lt;d.   P=DDᵀ ⇒ Pᵀ=P, P²=P, rank(P)=k; generally P≠I_d.</div>
+<p>D的列使编码c的长度得到保留，因为‖Dc‖₂=‖c‖₂。其转置压缩任意x，并消除垂直于col(D)的分量。重构矩阵P是投影，不是对整个ℝᵈ上压缩操作的逆。这一区别是PCA的核心约束。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-6" aria-labelledby="deep-learning-book-2016-ch2-zh-page-6-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-6-heading">特征向量的解释依赖明确条件</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">不变方向与对称情形</h3>
+<p>2.7节第40至42页用Av=λv定义非零特征向量。如果方阵具有完备的线性无关特征向量组，就可写成A=VΛV⁻¹。这是实质条件。实矩阵可能需要复特征向量，亏损矩阵即使在复数域上也可能没有完备特征向量组。</p>
+<div class="equation" role="math" aria-label="A=Aᵀ ∈ ℝⁿˣⁿ ⇒ A=QΛQᵀ, QᵀQ=I, Λ=diag(λ₁,…,λₙ), λᵢ∈ℝ.   Avᵢ=λᵢvᵢ.">A=Aᵀ ∈ ℝⁿˣⁿ ⇒ A=QΛQᵀ, QᵀQ=I, Λ=diag(λ₁,…,λₙ), λᵢ∈ℝ.   Avᵢ=λᵢvᵢ.</div>
+<figure><button class="figure-open" type="button" aria-label="放大：原书单位圆与变换后的椭圆，标有两个特征向量方向。"><img src="assets/source-figure-2-3.png" alt="原书单位圆与变换后的椭圆，标有两个特征向量方向。" loading="lazy"></button><figcaption><strong>原书图 2.3 · 第41页。</strong> 左图显示单位输入方向，右图显示这些方向经过具有两个正交归一特征向量的映射后的结果。特征方向所在直线保持不变，相应特征值决定缩放。这里是几何说明，不是基准实验，也不从图形位置推断精确特征值。 Ian Goodfellow, Yoshua Bengio and Aaron Courville, MIT Press, 2016, Figure 2.3, p. 41. <a href="https://www.deeplearningbook.org/contents/linear_algebra.html#pfd">原书图2.3，第41页</a>. <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>. 完整原图的忠实渲染。图内内容与标签保持不变，去除图外页面内容。</figcaption></figure>
+<h3 class="accent blue">二次型是特征值的加权平均</h3>
+<div class="equation" role="math" aria-label="x=Qz, ‖x‖₂=1 ⇒ Σᵢzᵢ²=1 and xᵀAx=Σᵢλᵢzᵢ².   minᵢλᵢ ≤ xᵀAx ≤ maxᵢλᵢ.">x=Qz, ‖x‖₂=1 ⇒ Σᵢzᵢ²=1 and xᵀAx=Σᵢλᵢzᵢ².   minᵢλᵢ ≤ xᵀAx ≤ maxᵢλᵢ.</div>
+<p>这个笔记推导解释了原章给出的Rayleigh极值：非负权重z_i²之和为1，在极端特征值对应的特征子空间中达到等号。对于实对称矩阵，正定意味着所有特征值为正，半正定允许零，分别等价于对所有非零x有xᵀAx&gt;0，以及对所有x有xᵀAx≥0。</p>
+<p>对称条件非常重要。非对称矩阵[[1,10],[0,1]]具有正特征值，但x=(1,−1)ᵀ时xᵀAx=−8。因此任意矩阵仅有正特征值，并不能证明二次型具有正曲率。这个反例由笔记补充。</p>
+<p>即使特征值互不相同，特征向量仍可改变符号；重特征值还允许在对应子空间内进行正交旋转。因此对特征值排序并不能使特征向量矩阵在字面上唯一。稳定的解释往往属于子空间或投影，而不是单个坐标的符号。</p>
+</section>
+</div><footer class="page-foot"><span>6 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-7" aria-labelledby="deep-learning-book-2016-ch2-zh-page-7-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-7-heading">SVD区分输入方向与输出方向</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">适用于矩形映射的分解</h3>
+<p>2.8节第42至43页给出任意实矩阵的奇异值分解。在完整分解约定下，U与V是方形正交矩阵，Σ是具有非负奇异值的矩形对角矩阵。V给出输入坐标，U给出输出坐标，奇异值连接两者，输入和输出方向不必相同。</p>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ; A=UΣVᵀ, U ∈ ℝᵐˣᵐ, V ∈ ℝⁿˣⁿ, Σ ∈ ℝᵐˣⁿ.   Avᵢ=σᵢuᵢ for σᵢ&gt;0.   σ₁≥σ₂≥…≥σ_min(m,n)≥0.">A ∈ ℝᵐˣⁿ; A=UΣVᵀ, U ∈ ℝᵐˣᵐ, V ∈ ℝⁿˣⁿ, Σ ∈ ℝᵐˣⁿ.   Avᵢ=σᵢuᵢ for σᵢ&gt;0.   σ₁≥σ₂≥…≥σ_min(m,n)≥0.</div>
+<div class="equation" role="math" aria-label="AᵀA=V(ΣᵀΣ)Vᵀ; AAᵀ=U(ΣΣᵀ)Uᵀ.   Nonzero eigenvalues of both products are σᵢ².   rank(A)=#{i:σᵢ&gt;0}.">AᵀA=V(ΣᵀΣ)Vᵀ; AAᵀ=U(ΣΣᵀ)Uᵀ.   Nonzero eigenvalues of both products are σᵢ².   rank(A)=#{i:σᵢ&gt;0}.</div>
+<p>第二组恒等式通过约去UᵀU或VᵀV直接得到。它也解释了AᵀA为什么半正定，因为xᵀAᵀAx=‖Ax‖₂²。输入空间中的零奇异方向恰好是A消除的信息，输出空间中的零方向则描述A永远无法到达的取值。</p>
+<h3 class="accent blue">小型矩形映射使几何关系清楚可见</h3>
+<div class="equation" role="math" aria-label="A=[[3,0,0],[0,1,0]].   U=I₂, V=I₃, Σ=A.   AᵀA=diag(9,1,0); AAᵀ=diag(9,1).">A=[[3,0,0],[0,1,0]].   U=I₂, V=I₃, Σ=A.   AᵀA=diag(9,1,0); AAᵀ=diag(9,1).</div>
+<div class="table-wrap"><table><caption>独立的精确SVD例子。零输入方向没有与之配对的非零输出奇异值。</caption><thead><tr><th scope="col">输入方向</th><th scope="col">输出</th><th scope="col">奇异缩放</th><th scope="col">含义</th></tr></thead><tbody><tr><th scope="row">(1,0,0)ᵀ</th><td>(3,0)ᵀ</td><td>3</td><td>第一坐标伸长</td></tr><tr><th scope="row">(0,1,0)ᵀ</th><td>(0,1)ᵀ</td><td>1</td><td>第二坐标保留</td></tr><tr><th scope="row">(0,0,1)ᵀ</th><td>(0,0)ᵀ</td><td>0</td><td>第三坐标丢失</td></tr></tbody></table></div>
+<p>对称不定矩阵的特征值可以为负，而奇异值仍非负。对于非对称矩阵，特征值大小不能完整描述放大效应。最大奇异值等于单位x上‖Ax‖₂的最大值。特征向量回答不变方向问题，奇异向量回答伸缩问题。</p>
+<div class="equation" role="math" aria-label="‖A‖₂=max_(‖x‖₂=1) ‖Ax‖₂=σ₁; ‖A‖F²=Σᵢσᵢ².   For symmetric A: singular values are |λᵢ|, with ordering adjusted.">‖A‖₂=max_(‖x‖₂=1) ‖Ax‖₂=σ₁; ‖A‖F²=Σᵢσᵢ².   For symmetric A: singular values are |λᵢ|, with ordering adjusted.</div>
+</section>
+</div><footer class="page-foot"><span>7 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-8" aria-labelledby="deep-learning-book-2016-ch2-zh-page-8-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-8-heading">伪逆选择最小范数最小二乘解</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">统一处理各种秩与形状</h3>
+<p>2.9节第43至44页利用SVD构造Moore Penrose伪逆：将非零奇异值取倒数，零保持为零。A⁺的形状为n乘m。当A是可逆方阵时，它等于普通逆，但不能恢复A已经消除的分量。</p>
+<div class="equation" role="math" aria-label="A=UΣVᵀ ⇒ A⁺=VΣ⁺Uᵀ; (Σ⁺)ᵢᵢ=1/σᵢ for σᵢ&gt;0, otherwise 0.   x*=A⁺b = arg min_(x∈arg min_z ‖Az−b‖₂) ‖x‖₂.">A=UΣVᵀ ⇒ A⁺=VΣ⁺Uᵀ; (Σ⁺)ᵢᵢ=1/σᵢ for σᵢ&gt;0, otherwise 0.   x*=A⁺b = arg min_(x∈arg min_z ‖Az−b‖₂) ‖x‖₂.</div>
+<p>独立推导是在y=Vᵀx、β=Uᵀb坐标下，将平方残差写成非零奇异方向上的(σ_i y_i−β_i)²之和，再加上不可达输出项。确定的坐标为β_i/σ_i。零空间坐标无法降低残差，因此令其为零使范数最小。这个证明同时覆盖不一致和秩亏系统。</p>
+<div class="equation" role="math" aria-label="AA⁺b = projection of b onto col(A).   All least squares minimizers: x=A⁺b+(I−A⁺A)w, w∈ℝⁿ.   Aᵀ(Ax*−b)=0.">AA⁺b = projection of b onto col(A).   All least squares minimizers: x=A⁺b+(I−A⁺A)w, w∈ℝⁿ.   Aᵀ(Ax*−b)=0.</div>
+<h3 class="accent blue">秩亏例子同时展示两类缺口</h3>
+<div class="equation" role="math" aria-label="A=[[1,1],[0,0]], b=(2,1)ᵀ.   A⁺=[[½,0],[½,0]], x*=(1,1)ᵀ, Ax*=(2,0)ᵀ.">A=[[1,1],[0,0]], b=(2,1)ᵀ.   A⁺=[[½,0],[½,0]], x*=(1,1)ᵀ, Ax*=(2,0)ᵀ.</div>
+<div class="table-wrap"><table><caption>独立的精确最小二乘计算。目标的第二坐标不在col(A)中，因此最小残差非零。</caption><thead><tr><th scope="col">候选x</th><th scope="col">‖Ax−b‖₂²</th><th scope="col">‖x‖₂²</th><th scope="col">解释</th></tr></thead><tbody><tr><th scope="row">(1,1)ᵀ</th><td>1</td><td>2</td><td>最小残差且范数最小</td></tr><tr><th scope="row">(2,0)ᵀ</th><td>1</td><td>4</td><td>残差相同而范数较大</td></tr><tr><th scope="row">(3,−1)ᵀ</th><td>1</td><td>10</td><td>残差相同而范数较大</td></tr><tr><th scope="row">(0,0)ᵀ</th><td>5</td><td>0</td><td>更小范数不能补偿更差残差</td></tr></tbody></table></div>
+<p>原章还给出α趋于零时(AᵀA+αI)⁻¹Aᵀ的极限。当α为有限正数时，奇异方向的增益是σ/(σ²+α)，而不是1/σ，此时得到正则化估计，并非精确伪逆。未正则化求解中的小非零奇异值会放大噪声，数值秩阈值则会改变保留哪些方向。</p>
+<div class="equation" role="math" aria-label="For invertible A, κ₂(A)=σmax/σmin.   A=diag(1,10⁻⁶): Δb=(0,10⁻⁶)ᵀ ⇒ Δx=(0,1)ᵀ.">For invertible A, κ₂(A)=σmax/σmin.   A=diag(1,10⁻⁶): Δb=(0,10⁻⁶)ᵀ ⇒ Δx=(0,1)ᵀ.</div>
+<p>这个条件数例子由笔记推导。右端项很小的扰动可以使解发生大得多的绝对变化。SVD揭示了机制，但分解本身不能修复缺失或测量不佳的信息。正则化引入了偏差与稳定性的选择，需要结合应用解释。</p>
+</section>
+</div><footer class="page-foot"><span>8 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-9" aria-labelledby="deep-learning-book-2016-ch2-zh-page-9-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-9-heading">迹描述总能量，行列式描述体积</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">可以循环置换，不能任意换序</h3>
+<p>2.10与2.11节第44至45页介绍迹和行列式。迹是方阵对角条目之和。Tr(AB)=Tr(BA)可通过交换两个有限求和得到，即使AB与BA的方阵大小不同也成立。更多因子只可在相应乘积有定义时循环置换。</p>
+<div class="equation" role="math" aria-label="A∈ℝᵐˣⁿ, B∈ℝⁿˣᵐ: Tr(AB)=ΣᵢⱼAᵢⱼBⱼᵢ=Tr(BA).   Tr(ABC)=Tr(BCA)=Tr(CAB).   ‖A‖F²=Tr(AᵀA)=Tr(AAᵀ).">A∈ℝᵐˣⁿ, B∈ℝⁿˣᵐ: Tr(AB)=ΣᵢⱼAᵢⱼBⱼᵢ=Tr(BA).   Tr(ABC)=Tr(BCA)=Tr(CAB).   ‖A‖F²=Tr(AᵀA)=Tr(AAᵀ).</div>
+<p>独立反例取A=[[1,0],[0,0]]、B=[[0,1],[0,0]]、C=[[0,0],[1,0]]，则Tr(ABC)=1而Tr(ACB)=0。迹不能使不交换的矩阵因子任意换序，PCA目标的化简需要遵守这一区别。</p>
+<h3 class="accent blue">保体积弱于保距离</h3>
+<div class="equation" role="math" aria-label="For square A: det(A)=Πᵢλᵢ; |det(A)|=Πᵢσᵢ.   |det(A)| is the volume scaling factor.   det(A)=0 ⇔ rank(A)&lt;n.">For square A: det(A)=Πᵢλᵢ; |det(A)|=Πᵢσᵢ.   |det(A)| is the volume scaling factor.   det(A)=0 ⇔ rank(A)&lt;n.</div>
+<div class="table-wrap"><table><caption>独立算术区分有向体积、绝对体积与度量几何。</caption><thead><tr><th scope="col">ℝ²中的映射</th><th scope="col">det(A)</th><th scope="col">奇异值</th><th scope="col">几何作用</th></tr></thead><tbody><tr><th scope="row">diag(2,½)</th><td>1</td><td>2, ½</td><td>保面积，但通常改变长度</td></tr><tr><th scope="row">diag(−1,1)</th><td>−1</td><td>1, 1</td><td>保面积与长度，反转方向</td></tr><tr><th scope="row">diag(1,0)</th><td>0</td><td>1, 0</td><td>面积坍缩到直线</td></tr></tbody></table></div>
+<p>迹和行列式概括映射的不同侧面。对称散布矩阵的迹将各方向能量相加，行列式则将方向缩放因子相乘，任何方向坍缩都会使其为零。两种统计量都不能单独确定每个方向及其对预测目标的重要性。</p>
+</section>
+</div><footer class="page-foot"><span>9 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-10" aria-labelledby="deep-learning-book-2016-ch2-zh-page-10-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-10-heading">PCA先为固定解码器求编码</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">目标函数规定什么信息重要</h3>
+<p>2.12节第45至50页在平方欧氏误差下推导线性重构。本笔记使用N个样本、d个特征和k个编码坐标，其中k&lt;d，对应原章的m、n、l。解码器D为d乘k且各列正交归一，并不是方形正交矩阵。</p>
+<div class="equation" role="math" aria-label="g(c)=Dc, D∈ℝᵈˣᵏ, DᵀD=Iₖ.   c*(x)=arg min_c ‖x−Dc‖₂².   X∈ℝᴺˣᵈ has x⁽ⁱ⁾ᵀ in row i.">g(c)=Dc, D∈ℝᵈˣᵏ, DᵀD=Iₖ.   c*(x)=arg min_c ‖x−Dc‖₂².   X∈ℝᴺˣᵈ has x⁽ⁱ⁾ᵀ in row i.</div>
+<p>原章公式2.54至2.67通过展开和求导处理该目标。一个等价的独立推导是配方：Dᵀx是解码子空间内的分量，而正交残差无法由c改变，因此固定D时编码最优解唯一。</p>
+<div class="equation" role="math" aria-label="‖x−Dc‖₂² = ‖c−Dᵀx‖₂² + xᵀ(I−DDᵀ)x.   Therefore c*=Dᵀx and r(x)=DDᵀx.">‖x−Dc‖₂² = ‖c−Dᵀx‖₂² + xᵀ(I−DDᵀ)x.   Therefore c*=Dᵀx and r(x)=DDᵀx.</div>
+<div class="equation" role="math" aria-label="x−DDᵀx ⟂ col(D); ‖x‖₂²=‖Dᵀx‖₂²+‖x−DDᵀx‖₂².   ∇c‖x−Dc‖₂²=2c−2Dᵀx; Hessian=2Iₖ.">x−DDᵀx ⟂ col(D); ‖x‖₂²=‖Dᵀx‖₂²+‖x−DDᵀx‖₂².   ∇c‖x−Dc‖₂²=2c−2Dᵀx; Hessian=2Iₖ.</div>
+<p>Hessian证明编码空间中存在严格极小点，但这并不能使所有解码矩阵的联合搜索变成无约束或凸问题。如果解码器列满秩却不要求正交归一，编码应满足c*=(DᵀD)⁻¹Dᵀx。因此简洁的编码器Dᵀ依赖约束，而非仅仅依赖线性解码。</p>
+<h3 class="accent blue">整体重构是对子空间的选择</h3>
+<div class="equation" role="math" aria-label="C=XD; X̂=CDᵀ=XDDᵀ.   J(D)=‖X−XDDᵀ‖F², subject to DᵀD=Iₖ.">C=XD; X̂=CDᵀ=XDDᵀ.   J(D)=‖X−XDDᵀ‖F², subject to DᵀD=Iₖ.</div>
+<p>这里C的每一行是一个编码，X̂=CDᵀ为解码数据。所有样本共享同一个解码器，因此逐个求出编码并不等于完成PCA，剩余问题是选择k维子空间。</p>
+</section>
+</div><footer class="page-foot"><span>10 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-11" aria-labelledby="deep-learning-book-2016-ch2-zh-page-11-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-11-heading">PCA随后保留最大的谱能量</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">从重构转为迹最大化</h3>
+<p>原章通过公式2.68至2.84证明k=1的情形，并说明多分量推广。下述独立证明直接覆盖一般k。令S=XᵀX、P=DDᵀ，利用对称性和幂等性可得‖X−XP‖F²=Tr(S)−Tr(DᵀSD)。被舍弃的常数表示输入平方大小的总量。</p>
+<div class="equation" role="math" aria-label="J(D)=Tr((I−P)S(I−P))=Tr(S)−Tr(SP)=Tr(S)−Tr(DᵀSD), P²=P=Pᵀ.">J(D)=Tr((I−P)S(I−P))=Tr(S)−Tr(SP)=Tr(S)−Tr(DᵀSD), P²=P=Pᵀ.</div>
+<div class="equation" role="math" aria-label="S=Q diag(λ₁,…,λ_d)Qᵀ, λ₁≥…≥λ_d≥0; Z=QᵀD, ZᵀZ=Iₖ.   Tr(DᵀSD)=Σⱼ λⱼwⱼ, wⱼ=Σₐ₌₁ᵏZⱼₐ².">S=Q diag(λ₁,…,λ_d)Qᵀ, λ₁≥…≥λ_d≥0; Z=QᵀD, ZᵀZ=Iₖ.   Tr(DᵀSD)=Σⱼ λⱼwⱼ, wⱼ=Σₐ₌₁ᵏZⱼₐ².</div>
+<p>权重满足0≤w_j≤1且总和为k。上界来自ZZᵀ是正交投影，其对角条目介于零和一之间。在这些条件下，加权和不超过最大的k个特征值之和，将D的列放在相应特征子空间内可达到上界。这个论证给出全局最优，不对某个迭代训练算法作保证。</p>
+<div class="equation" role="math" aria-label="D*=Q_:,1:k; min_D J(D)=Σⱼ₌ₖ₊₁ᵈ λⱼ=Σⱼ₌ₖ₊₁ᵈ σⱼ(X)².   Retained energy fraction=(Σⱼ₌₁ᵏλⱼ)/(Σⱼ₌₁ᵈλⱼ), when Tr(S)&gt;0.   σⱼ(X)=0 for j&gt;min(N,d).">D*=Q_:,1:k; min_D J(D)=Σⱼ₌ₖ₊₁ᵈ λⱼ=Σⱼ₌ₖ₊₁ᵈ σⱼ(X)².   Retained energy fraction=(Σⱼ₌₁ᵏλⱼ)/(Σⱼ₌₁ᵈλⱼ), when Tr(S)&gt;0.   σⱼ(X)=0 for j&gt;min(N,d).</div>
+<p>k=1时，该问题退化为‖d‖₂=1下的Rayleigh问题dᵀSd。一般k下，同一最优子空间的任意正交归一基都产生相同重构。若RᵀR=I_k，旋转D→DR会改变编码坐标，却保留DDᵀ。如果λ_k=λ_(k+1)，保留子空间边界的选择也可能不唯一。</p>
+<h3 class="accent blue">奇异值给出精确误差预算</h3>
+<p>对X作SVD X=UΣVᵀ，可从最大的右奇异向量得到同一D。保留一个分量会从残差中移除它的平方奇异值。这描述给定数据上的重构能量，并不能证明类别信息、因果性、稳健性或未见样本表现。若全部数据为零，任意合规D的残差都为零，而能量比例没有定义。</p>
+</section>
+</div><footer class="page-foot"><span>11 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-zh-page-12" aria-labelledby="deep-learning-book-2016-ch2-zh-page-12-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-zh-page-12-heading">中心化、完整数值例子与实践边界</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">以原点为基准的重构与方差目标不同</h3>
+<p>原章推导直接使用X，没有引入减均值，解码器通过原点进行重构。常见的中心化协方差解释需要额外步骤：令μ为样本均值，X_c=X−1_Nμᵀ，仿射重构为μ+DDᵀ(x−μ)。当N&gt;1时，X_cᵀX_c的特征向量也对角化样本协方差X_cᵀX_c/(N−1)。</p>
+<div class="equation" role="math" aria-label="XᵀX=X_cᵀX_c+Nμμᵀ.   Cov_sample=X_cᵀX_c/(N−1).   x̂_affine=μ+DDᵀ(x−μ).">XᵀX=X_cᵀX_c+Nμμᵀ.   Cov_sample=X_cᵀX_c/(N−1).   x̂_affine=μ+DDᵀ(x−μ).</div>
+<p>独立例子包含四个观察值：(3,10)、(−3,10)、(0,11)、(0,9)，均值为(0,10)。中心化后分别为(3,0)、(−3,0)、(0,1)、(0,−1)。下表列出比较一个保留方向所需的全部量。两种残差优化的是不同解码器族，因此不能当作算法基准的公平对照。</p>
+<div class="table-wrap"><table><caption>笔记自设数据集的精确算术，最后一个百分比经过舍入，不是原章实验结果。</caption><thead><tr><th scope="col">量</th><th scope="col">中心化仿射PCA</th><th scope="col">未中心化原点PCA</th></tr></thead><tbody><tr><th scope="row">散布矩阵</th><td>diag(18,2)</td><td>diag(18,402)</td></tr><tr><th scope="row">首要方向</th><td>(1,0)ᵀ</td><td>(0,1)ᵀ</td></tr><tr><th scope="row">平方大小总量</th><td>20</td><td>420</td></tr><tr><th scope="row">保留的平方大小</th><td>18</td><td>402</td></tr><tr><th scope="row">最小平方重构误差</th><td>2</td><td>18</td></tr><tr><th scope="row">保留比例</th><td>18/20 = 90%</td><td>402/420 ≈ 95.7143%</td></tr></tbody></table></div>
+<p>中心化PCA保留水平方向变化，将最后两个观察值重构为(0,10)，平方误差分别为1和1。未中心化PCA保留较大的竖直偏移，将前两个重构为(0,10)，平方误差分别为9和9。更高的保留比例可能主要反映均值，而不是任务关心的变化。</p>
+<h3 class="accent blue">成本与检查均有明确边界</h3>
+<div class="equation" role="math" aria-label="Direct dense encoding and decoding: O(dk) work per example.   Stored decoder and codes: dk+Nk numbers, versus Nd data numbers, excluding a mean and metadata.   Compression requires k(N+d)&lt;Nd under this accounting.">Direct dense encoding and decoding: O(dk) work per example.   Stored decoder and codes: dk+Nk numbers, versus Nd data numbers, excluding a mean and metadata.   Compression requires k(N+d)&lt;Nd under this accounting.</div>
+<p>存储比较同时计算共享解码器与全部编码，不包含数值精度变化、均值和元数据。计算非零奇异三元组的稠密SVD算术成本可为O(min(Nd²,N²d))，部分分解或迭代方法则有不同成本和收敛条件。构造XᵀX还会将非零奇异值比平方，可能恶化数值条件。这些是分析性结论，不是原书实测时间或内存结果。</p>
+<p>数学检查包括维度一致、DᵀD≈I、重构残差，以及保留能量加残差是否等于总能量。应用问题需要另行处理：特征缩放会改变目标，离群值可以主导平方误差，低方差方向仍可能包含标签信息。因此将PCA用于预测时，需要明确中心化与缩放规则、误差目标，并在训练重构之外进行评价。</p>
+<p>覆盖截至第2章第50页的最后一段。本笔记没有复现实验、收集新数据或分配资源。原图保留标签及来源页码，新增证明和算例只确立所声明的数学结论。助手完成这一单元不代表用户完成任何一遍阅读。</p>
+</section>
+</div><footer class="page-foot"><span>12 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<p class="edition">原图与来源数据来自所引书籍章节。解释与推导属于阅读笔记，新增例子另行标明。版本、页码和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#deep-learning-book-2016-ch2-en-page-1">1 · Scope, objects and the problem of lost information</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-2">2 · Multiplication is composition, while broadcasting is a convention</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-3">3 · Rank separates reachability from uniqueness</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-4">4 · Norms define the error geometry</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-5">5 · Structured matrices preserve different things</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-6">6 · Eigenvectors explain a map only under stated conditions</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-7">7 · SVD separates input directions from output directions</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-8">8 · The pseudoinverse chooses a minimum norm least squares solution</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-9">9 · Trace measures total energy, while determinant measures volume</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-10">10 · PCA first solves the code for a fixed decoder</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-11">11 · PCA then retains the largest spectral energies</a></li><li><a href="#deep-learning-book-2016-ch2-en-page-12">12 · Centering, a complete numerical example and practical limits</a></li></ol></nav>
+<div class="bibliography"><p>Ian Goodfellow, Yoshua Bengio, Aaron Courville</p><p>MIT Press, 2016 · Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</p><p><a href="https://www.deeplearningbook.org/contents/linear_algebra.html">Official complete Chapter 2 HTML</a>
+</p></div>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-1" aria-labelledby="deep-learning-book-2016-ch2-en-page-1-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-1-heading">Scope, objects and the problem of lost information</h2></header><div class="page-columns overview">
+<section class="column">
+<section class="callout pink">
+<h3 class="accent pink">A chapter about maps and their constraints</h3>
+<p>This unit covers Chapter 2, Linear Algebra, printed pages 29 to 50 of the official 2016 online edition. All sections from 2.1 through 2.12 were read. The whole book is not covered. Chapter 1 has a separate note. Later chapters and the external references cited by this chapter are outside this unit.</p>
+<p>The organizing question of this note is what a linear map preserves, removes or amplifies. Shape determines which operations exist. Rank determines what can be recovered. Orthogonality controls geometry. Spectral decompositions expose direction dependent scaling. PCA then chooses which directions to retain under one explicit reconstruction objective.</p>
+<p>Definitions and equation references identify chapter evidence. The proofs, counterexamples, numerical tables and cost accounting below are original note derivations unless a source figure is named. They are not experimental measurements or a translation of the chapter. The chapter contains a mathematical PCA example, rather than an empirical benchmark or ablation study.</p>
+</section>
+<section class="callout blue">
+<h3 class="accent blue">Objects, indices and orientation</h3>
+<div class="table-wrap"><table><caption>Notation guide based on Section 2.1, pp.29 to 32. The map interpretation is the note’s organizing view.</caption><thead><tr><th scope="col">Object</th><th scope="col">Shape and interpretation</th><th scope="col">Relevant distinction</th></tr></thead><tbody><tr><th scope="row">Scalar</th><td>a ∈ ℝ</td><td>A single coordinate</td></tr><tr><th scope="row">Column vector</th><td>x ∈ ℝⁿ</td><td>xᵀ is a row</td></tr><tr><th scope="row">Matrix</th><td>A ∈ ℝᵐˣⁿ</td><td>m output coordinates and n input coordinates</td></tr><tr><th scope="row">Tensor</th><td>Multiple indexed axes</td><td>The chapter uses tensor for an array with a general number of axes</td></tr></tbody></table></div>
+<p>The source uses x_S for selected entries and x_−S for the complementary entries. A_i,: is a row and A_:,j is a column. These conventions avoid confusing a coordinate selection with a matrix product. A transpose exchanges indices and dimensions. It does not calculate an inverse.</p>
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original transpose diagram for a three by two matrix and its two by three transpose."><img src="assets/source-figure-2-1.png" alt="Original transpose diagram for a three by two matrix and its two by three transpose." loading="lazy"></button><figcaption><strong>Book Figure 2.1 · p.31。</strong> The complete original diagram exchanges the rows and columns of a 3 by 2 matrix. Its symbolic entries make the index reversal visible. No numerical computation or speed comparison is shown. Ian Goodfellow, Yoshua Bengio and Aaron Courville, MIT Press, 2016, Figure 2.1, p. 31. <a href="https://www.deeplearningbook.org/contents/linear_algebra.html#pf3">Book Figure 2.1, p. 31</a>. <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>. Complete original figure rendered without changes to diagram content or labels. Surrounding page material excluded.</figcaption></figure>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ ⇒ Aᵀ ∈ ℝⁿˣᵐ; (Aᵀ)ᵢⱼ=Aⱼᵢ.   A: ℝⁿ → ℝᵐ, x ↦ Ax.">A ∈ ℝᵐˣⁿ ⇒ Aᵀ ∈ ℝⁿˣᵐ; (Aᵀ)ᵢⱼ=Aⱼᵢ.   A: ℝⁿ → ℝᵐ, x ↦ Ax.</div>
+</section>
+</section>
+</div><footer class="page-foot"><span>1 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-2" aria-labelledby="deep-learning-book-2016-ch2-en-page-2-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-2-heading">Multiplication is composition, while broadcasting is a convention</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Compatible dimensions carry mathematical meaning</h3>
+<p>Sections 2.1 and 2.2, pp.32 to 34, distinguish ordinary multiplication, elementwise multiplication and broadcasting. If B maps an input into an intermediate space and A maps that space into an output, AB applies B first. The summed index links the two spaces. A Hadamard product instead multiplies matching coordinates without that intermediate sum.</p>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ, B ∈ ℝⁿˣᵖ ⇒ AB ∈ ℝᵐˣᵖ; (AB)ᵢⱼ=Σₖ₌₁ⁿ AᵢₖBₖⱼ.   (A⊙B)ᵢⱼ=AᵢⱼBᵢⱼ for equal shapes.">A ∈ ℝᵐˣⁿ, B ∈ ℝⁿˣᵖ ⇒ AB ∈ ℝᵐˣᵖ; (AB)ᵢⱼ=Σₖ₌₁ⁿ AᵢₖBₖⱼ.   (A⊙B)ᵢⱼ=AᵢⱼBᵢⱼ for equal shapes.</div>
+<p>Independent example: A=[[1,2],[0,1]] and B=[[2,0],[1,3]]. The products below differ even though all three operations are defined. Associativity still permits regrouping A(BC)=(AB)C. It does not permit reordering factors. Transposition reverses their order, which follows by exchanging the two free indices in the entrywise sum.</p>
+<div class="table-wrap"><table><caption>Exact arithmetic for a note constructed example. No entries are measured chapter results.</caption><thead><tr><th scope="col">Operation</th><th scope="col">Exact result</th><th scope="col">What it represents</th></tr></thead><tbody><tr><th scope="row">AB</th><td>[[4,6],[1,3]]</td><td>B followed by A</td></tr><tr><th scope="row">BA</th><td>[[2,4],[1,5]]</td><td>A followed by B</td></tr><tr><th scope="row">A⊙B</th><td>[[2,0],[0,3]]</td><td>Coordinate products</td></tr></tbody></table></div>
+<div class="equation" role="math" aria-label="(AB)ᵀ=BᵀAᵀ; xᵀy=yᵀx for real vectors.   A(B+C)=AB+AC; A(BC)=(AB)C.">(AB)ᵀ=BᵀAᵀ; xᵀy=yᵀx for real vectors.   A(B+C)=AB+AC; A(BC)=(AB)C.</div>
+<h3 class="accent blue">A bias needs an axis convention</h3>
+<p>For examples stored as rows, the chapter defines A+b by C_ij=A_ij+b_j. A feature bias is repeated across rows. An explicit version is A+1_m bᵀ, where b has n entries. Other array libraries may align or expand axes differently. The compact notation alone does not establish a software library’s broadcasting behavior.</p>
+<div class="equation" role="math" aria-label="C=A+1ₘbᵀ; Cᵢⱼ=Aᵢⱼ+bⱼ, A ∈ ℝᵐˣⁿ, b ∈ ℝⁿ.   Dense AB: mnp multiplications and mp(n−1) additions for n≥1.">C=A+1ₘbᵀ; Cᵢⱼ=Aᵢⱼ+bⱼ, A ∈ ℝᵐˣⁿ, b ∈ ℝⁿ.   Dense AB: mnp multiplications and mp(n−1) additions for n≥1.</div>
+<p>The operation count is independent note accounting for the direct dense algorithm. It excludes memory traffic, parallelism and numerical format. A better parenthesization can change intermediate sizes and arithmetic cost without changing an exact real valued result. Floating point regrouping can also change rounding.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-3" aria-labelledby="deep-learning-book-2016-ch2-en-page-3-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-3-heading">Rank separates reachability from uniqueness</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">An inverse is a two sided recovery claim</h3>
+<p>Sections 2.3 and 2.4, pp.34 to 37, express a linear system as Ax=b. Each row is a constraint. Each column is a direction whose coefficient appears in x. The target b is reachable exactly when it belongs to the column space. Distinct coefficients can produce the same target when A has a nonzero null vector.</p>
+<div class="equation" role="math" aria-label="Ax=Σⱼ xⱼA_:,ⱼ.   Ax=b is consistent ⇔ b∈col(A).   If Ax₀=b, all solutions are x=x₀+z with z∈null(A).">Ax=Σⱼ xⱼA_:,ⱼ.   Ax=b is consistent ⇔ b∈col(A).   If Ax₀=b, all solutions are x=x₀+z with z∈null(A).</div>
+<p>The final statement follows in both directions. Adding a null vector preserves Ax. Subtracting any two solutions yields a null vector. It therefore explains why a real linear system cannot have exactly two or three distinct solutions: a nonzero null direction gives a full affine line of solutions.</p>
+<div class="table-wrap"><table><caption>Rank formulation of the chapter’s span argument. Shape inequalities alone are insufficient.</caption><thead><tr><th scope="col">Property for A ∈ ℝᵐˣⁿ</th><th scope="col">Necessary and sufficient rank condition</th><th scope="col">Interpretation</th></tr></thead><tbody><tr><th scope="row">Every b has a solution</th><td>rank(A)=m, hence m≤n</td><td>Surjective map</td></tr><tr><th scope="row">At most one solution for each b</th><td>rank(A)=n, hence n≤m</td><td>Injective map</td></tr><tr><th scope="row">Exactly one solution for every b</th><td>m=n=rank(A)</td><td>An ordinary inverse exists</td></tr><tr><th scope="row">A particular b has multiple solutions</th><td>b∈col(A) and rank(A)&lt;n</td><td>An affine family of solutions</td></tr></tbody></table></div>
+<h3 class="accent blue">Exact recovery does not imply stable recovery</h3>
+<div class="equation" role="math" aria-label="A=[[1,1],[2,2]].   col(A)=span{(1,2)ᵀ}; null(A)=span{(1,−1)ᵀ}.">A=[[1,1],[2,2]].   col(A)=span{(1,2)ᵀ}; null(A)=span{(1,−1)ᵀ}.</div>
+<p>In this independent example, b=(3,6)ᵀ has solutions x=(t,3−t)ᵀ for any real t. The target (3,7)ᵀ is inconsistent. Two columns and two rows do not guarantee invertibility. The identity matrix I_n preserves all vectors; an ordinary square inverse satisfies A⁻¹A=AA⁻¹=I_n.</p>
+<p>The source cautions that explicitly forming an inverse is usually a poor numerical route to a solve. Independent clarification: solving with a factorization avoids constructing an unnecessary dense inverse, but does not remove an ill conditioned problem. An inverse formula states what the solution is. It does not supply an accuracy guarantee at finite precision.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-4" aria-labelledby="deep-learning-book-2016-ch2-en-page-4-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-4-heading">Norms define the error geometry</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Size, angle and a deliberate choice of penalty</h3>
+<p>Section 2.5, pp.37 to 38, treats norms as size functions with definiteness, absolute homogeneity and the triangle inequality. These conditions matter when a loss is interpreted as distance. Squared Euclidean length is useful but is not itself a norm. Counting nonzero entries also fails the homogeneity requirement.</p>
+<div class="equation" role="math" aria-label="‖x‖ₚ=(Σᵢ|xᵢ|ᵖ)¹/ᵖ, p≥1; ‖x‖∞=maxᵢ|xᵢ|.   ‖A‖F²=ΣᵢⱼAᵢⱼ².   xᵀy=‖x‖₂‖y‖₂cosθ for nonzero x,y.">‖x‖ₚ=(Σᵢ|xᵢ|ᵖ)¹/ᵖ, p≥1; ‖x‖∞=maxᵢ|xᵢ|.   ‖A‖F²=ΣᵢⱼAᵢⱼ².   xᵀy=‖x‖₂‖y‖₂cosθ for nonzero x,y.</div>
+<div class="table-wrap"><table><caption>Independent arithmetic. A norm scales by 2 here. The last two quantities violate that scaling in different ways.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">x=(3,−4)ᵀ</th><th scope="col">After scaling x by 2</th></tr></thead><tbody><tr><th scope="row">‖x‖₁</th><td>7</td><td>14</td></tr><tr><th scope="row">‖x‖₂</th><td>5</td><td>10</td></tr><tr><th scope="row">‖x‖∞</th><td>4</td><td>8</td></tr><tr><th scope="row">‖x‖₂²</th><td>25</td><td>100</td></tr><tr><th scope="row">Nonzero count</th><td>2</td><td>2</td></tr></tbody></table></div>
+<div class="equation" role="math" aria-label="∇ₓ(½‖x‖₂²)=x.   ∇ₓ‖x‖₂=x/‖x‖₂ for x≠0.   ∂|t|={sign(t)} if t≠0, and ∂|t|=[−1,1] if t=0.">∇ₓ(½‖x‖₂²)=x.   ∇ₓ‖x‖₂=x/‖x‖₂ for x≠0.   ∂|t|={sign(t)} if t≠0, and ∂|t|=[−1,1] if t=0.</div>
+<p>The gradient of squared length shrinks to zero near the origin. The absolute value has a nontrivial subgradient interval at zero. This difference helps explain sparse solutions, but an L1 penalty does not always recover a desired support. Correlated features, loss curvature and penalty strength also matter.</p>
+<h3 class="accent blue">A scalar example isolates the mechanism</h3>
+<div class="equation" role="math" aria-label="arg min_t [½(t−a)²+λ|t|]=sign(a)·max(|a|−λ,0), λ≥0.   arg min_t [½(t−a)²+(λ/2)t²]=a/(1+λ).">arg min_t [½(t−a)²+λ|t|]=sign(a)·max(|a|−λ,0), λ≥0.   arg min_t [½(t−a)²+(λ/2)t²]=a/(1+λ).</div>
+<p>This independent calculation uses the positive, negative and zero cases of the subgradient condition. With a=0.3 and λ=0.5, the first minimizer is 0 and the second is 0.2. The example explains thresholding in this separable quadratic problem. It is not a proof that arbitrary neural network training reaches sparse global optima.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-5" aria-labelledby="deep-learning-book-2016-ch2-en-page-5-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-5-heading">Structured matrices preserve different things</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Diagonal, symmetric and orthogonal are distinct properties</h3>
+<p>Section 2.6, pp.38 to 40, introduces diagonal and symmetric matrices, unit vectors and orthogonality. Diagonal structure restricts how coordinates mix. Symmetry equates a matrix with its transpose. Orthogonality requires a square matrix with orthonormal rows and columns, not merely perpendicular vectors of arbitrary lengths.</p>
+<div class="equation" role="math" aria-label="diag(v)x=v⊙x.   diag(v)⁻¹=diag(1/v₁,…,1/vₙ) when every vᵢ≠0.   QᵀQ=QQᵀ=I ⇒ Q⁻¹=Qᵀ.">diag(v)x=v⊙x.   diag(v)⁻¹=diag(1/v₁,…,1/vₙ) when every vᵢ≠0.   QᵀQ=QQᵀ=I ⇒ Q⁻¹=Qᵀ.</div>
+<p>A diagonal multiplication uses n scalar products rather than n² for a direct dense n by n map. This is an arithmetic count, not a measured speedup. A rectangular diagonal map can append zeros or discard coordinates. It has no ordinary two sided inverse. The less costly representation also excludes many possible interactions.</p>
+<div class="equation" role="math" aria-label="‖Qx‖₂²=xᵀQᵀQx=‖x‖₂².   (Qx)ᵀ(Qy)=xᵀy.   Q=[[0,−1],[1,0]] preserves lengths and rotates by 90°.">‖Qx‖₂²=xᵀQᵀQx=‖x‖₂².   (Qx)ᵀ(Qy)=xᵀy.   Q=[[0,−1],[1,0]] preserves lengths and rotates by 90°.</div>
+<p>An orthogonal map preserves lengths, angles and pairwise distances. It can still change coordinates substantially. A symmetric matrix need not preserve any of those quantities: diag(2,1) is symmetric and stretches one axis. A diagonal matrix can have zero entries and lose information.</p>
+<h3 class="accent blue">An orthonormal basis for a subspace is rectangular</h3>
+<div class="equation" role="math" aria-label="D ∈ ℝᵈˣᵏ, DᵀD=Iₖ, k&lt;d.   P=DDᵀ ⇒ Pᵀ=P, P²=P, rank(P)=k; generally P≠I_d.">D ∈ ℝᵈˣᵏ, DᵀD=Iₖ, k&lt;d.   P=DDᵀ ⇒ Pᵀ=P, P²=P, rank(P)=k; generally P≠I_d.</div>
+<p>The columns of D preserve the length of a code c because ‖Dc‖₂=‖c‖₂. Its transpose compresses an arbitrary x and removes the component perpendicular to col(D). The reconstruction P is a projector, not an inverse of that compression on all of ℝᵈ. This distinction becomes the central constraint in PCA.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-6" aria-labelledby="deep-learning-book-2016-ch2-en-page-6-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-6-heading">Eigenvectors explain a map only under stated conditions</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Invariant directions and the symmetric case</h3>
+<p>Section 2.7, pp.40 to 42, defines a nonzero eigenvector by Av=λv. If a square matrix has a full independent eigenbasis, it admits A=VΛV⁻¹. This condition is substantive. A real matrix can need complex eigenvectors, and a defective matrix can lack a full eigenbasis even over the complex numbers.</p>
+<div class="equation" role="math" aria-label="A=Aᵀ ∈ ℝⁿˣⁿ ⇒ A=QΛQᵀ, QᵀQ=I, Λ=diag(λ₁,…,λₙ), λᵢ∈ℝ.   Avᵢ=λᵢvᵢ.">A=Aᵀ ∈ ℝⁿˣⁿ ⇒ A=QΛQᵀ, QᵀQ=I, Λ=diag(λ₁,…,λₙ), λᵢ∈ℝ.   Avᵢ=λᵢvᵢ.</div>
+<figure><button class="figure-open" type="button" aria-label="Enlarge: Original book unit circle and its transformed ellipse, with two eigenvector directions labeled."><img src="assets/source-figure-2-3.png" alt="Original book unit circle and its transformed ellipse, with two eigenvector directions labeled." loading="lazy"></button><figcaption><strong>Book Figure 2.3 · p.41。</strong> The left panel shows unit input directions. The right panel shows their images under a map with two orthonormal eigenvectors. The directions retain their lines while the associated eigenvalues set their scaling. This is a geometric illustration, with no benchmark data or exact numerical eigenvalues inferred here. Ian Goodfellow, Yoshua Bengio and Aaron Courville, MIT Press, 2016, Figure 2.3, p. 41. <a href="https://www.deeplearningbook.org/contents/linear_algebra.html#pfd">Book Figure 2.3, p. 41</a>. <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>. Complete original figure rendered without changes to diagram content or labels. Surrounding page material excluded.</figcaption></figure>
+<h3 class="accent blue">A quadratic form is a weighted average of eigenvalues</h3>
+<div class="equation" role="math" aria-label="x=Qz, ‖x‖₂=1 ⇒ Σᵢzᵢ²=1 and xᵀAx=Σᵢλᵢzᵢ².   minᵢλᵢ ≤ xᵀAx ≤ maxᵢλᵢ.">x=Qz, ‖x‖₂=1 ⇒ Σᵢzᵢ²=1 and xᵀAx=Σᵢλᵢzᵢ².   minᵢλᵢ ≤ xᵀAx ≤ maxᵢλᵢ.</div>
+<p>This note derivation explains the Rayleigh extremum stated in the chapter. The nonnegative weights z_i² sum to one. Equality is reached in an extreme eigenspace. For a real symmetric matrix, positive definiteness means every eigenvalue is positive, while positive semidefiniteness allows zeros. These are equivalent to xᵀAx&gt;0 for every nonzero x and xᵀAx≥0 for every x, respectively.</p>
+<p>The symmetry qualification is essential. The nonsymmetric matrix [[1,10],[0,1]] has positive eigenvalues, but x=(1,−1)ᵀ gives xᵀAx=−8. Positive eigenvalues alone therefore do not establish positive quadratic curvature for an arbitrary matrix. This is a counterexample added by the note.</p>
+<p>An eigenvector can change sign even when its eigenvalue is distinct. Repeated eigenvalues permit orthonormal rotations within their eigenspaces. Sorting eigenvalues therefore does not make the matrix of eigenvectors literally unique. Stable interpretation often belongs to a subspace or projector rather than the signs of individual coordinates.</p>
+</section>
+</div><footer class="page-foot"><span>6 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-7" aria-labelledby="deep-learning-book-2016-ch2-en-page-7-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-7-heading">SVD separates input directions from output directions</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">A decomposition that includes rectangular maps</h3>
+<p>Section 2.8, pp.42 to 43, gives the singular value decomposition for every real matrix. U and V are square orthogonal matrices in the full convention. Σ is a rectangular diagonal matrix with nonnegative singular values. V describes input coordinates, U describes output coordinates, and the singular values connect them. They need not be the same directions.</p>
+<div class="equation" role="math" aria-label="A ∈ ℝᵐˣⁿ; A=UΣVᵀ, U ∈ ℝᵐˣᵐ, V ∈ ℝⁿˣⁿ, Σ ∈ ℝᵐˣⁿ.   Avᵢ=σᵢuᵢ for σᵢ&gt;0.   σ₁≥σ₂≥…≥σ_min(m,n)≥0.">A ∈ ℝᵐˣⁿ; A=UΣVᵀ, U ∈ ℝᵐˣᵐ, V ∈ ℝⁿˣⁿ, Σ ∈ ℝᵐˣⁿ.   Avᵢ=σᵢuᵢ for σᵢ&gt;0.   σ₁≥σ₂≥…≥σ_min(m,n)≥0.</div>
+<div class="equation" role="math" aria-label="AᵀA=V(ΣᵀΣ)Vᵀ; AAᵀ=U(ΣΣᵀ)Uᵀ.   Nonzero eigenvalues of both products are σᵢ².   rank(A)=#{i:σᵢ&gt;0}.">AᵀA=V(ΣᵀΣ)Vᵀ; AAᵀ=U(ΣΣᵀ)Uᵀ.   Nonzero eigenvalues of both products are σᵢ².   rank(A)=#{i:σᵢ&gt;0}.</div>
+<p>The second pair of identities follows directly by cancelling UᵀU or VᵀV. It also explains why AᵀA is positive semidefinite: xᵀAᵀAx=‖Ax‖₂². Zero singular directions in input space are precisely the information that A removes. Zero output directions describe values that A can never reach.</p>
+<h3 class="accent blue">A small rectangular map makes the geometry explicit</h3>
+<div class="equation" role="math" aria-label="A=[[3,0,0],[0,1,0]].   U=I₂, V=I₃, Σ=A.   AᵀA=diag(9,1,0); AAᵀ=diag(9,1).">A=[[3,0,0],[0,1,0]].   U=I₂, V=I₃, Σ=A.   AᵀA=diag(9,1,0); AAᵀ=diag(9,1).</div>
+<div class="table-wrap"><table><caption>Independent exact SVD example. A zero input direction has no paired nonzero output singular value.</caption><thead><tr><th scope="col">Input direction</th><th scope="col">Output</th><th scope="col">Singular scaling</th><th scope="col">Meaning</th></tr></thead><tbody><tr><th scope="row">(1,0,0)ᵀ</th><td>(3,0)ᵀ</td><td>3</td><td>First coordinate expands</td></tr><tr><th scope="row">(0,1,0)ᵀ</th><td>(0,1)ᵀ</td><td>1</td><td>Second coordinate is retained</td></tr><tr><th scope="row">(0,0,1)ᵀ</th><td>(0,0)ᵀ</td><td>0</td><td>Third coordinate is lost</td></tr></tbody></table></div>
+<p>For a symmetric indefinite matrix, eigenvalues can be negative while singular values remain nonnegative. For a nonsymmetric matrix, eigenvalue magnitude does not fully characterize amplification. The largest singular value is the maximum of ‖Ax‖₂ over unit x. Eigenvectors answer an invariance question; singular vectors answer a stretching question.</p>
+<div class="equation" role="math" aria-label="‖A‖₂=max_(‖x‖₂=1) ‖Ax‖₂=σ₁; ‖A‖F²=Σᵢσᵢ².   For symmetric A: singular values are |λᵢ|, with ordering adjusted.">‖A‖₂=max_(‖x‖₂=1) ‖Ax‖₂=σ₁; ‖A‖F²=Σᵢσᵢ².   For symmetric A: singular values are |λᵢ|, with ordering adjusted.</div>
+</section>
+</div><footer class="page-foot"><span>7 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-8" aria-labelledby="deep-learning-book-2016-ch2-en-page-8-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-8-heading">The pseudoinverse chooses a minimum norm least squares solution</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">One statement covers every rank and shape</h3>
+<p>Section 2.9, pp.43 to 44, constructs the Moore Penrose pseudoinverse from the SVD. Each nonzero singular value is reciprocated and zeros remain zero. The resulting A⁺ has shape n by m. It agrees with the ordinary inverse when A is square and invertible. It does not restore a component that A erased.</p>
+<div class="equation" role="math" aria-label="A=UΣVᵀ ⇒ A⁺=VΣ⁺Uᵀ; (Σ⁺)ᵢᵢ=1/σᵢ for σᵢ&gt;0, otherwise 0.   x*=A⁺b = arg min_(x∈arg min_z ‖Az−b‖₂) ‖x‖₂.">A=UΣVᵀ ⇒ A⁺=VΣ⁺Uᵀ; (Σ⁺)ᵢᵢ=1/σᵢ for σᵢ&gt;0, otherwise 0.   x*=A⁺b = arg min_(x∈arg min_z ‖Az−b‖₂) ‖x‖₂.</div>
+<p>Independent derivation: in coordinates y=Vᵀx and β=Uᵀb, the squared residual is a sum of (σ_i y_i−β_i)² over nonzero singular directions, plus the unreachable output terms. Each determined coordinate is β_i/σ_i. Coordinates in null(A) do not reduce the residual, so setting them to zero minimizes the norm. This proof covers inconsistent and rank deficient systems together.</p>
+<div class="equation" role="math" aria-label="AA⁺b = projection of b onto col(A).   All least squares minimizers: x=A⁺b+(I−A⁺A)w, w∈ℝⁿ.   Aᵀ(Ax*−b)=0.">AA⁺b = projection of b onto col(A).   All least squares minimizers: x=A⁺b+(I−A⁺A)w, w∈ℝⁿ.   Aᵀ(Ax*−b)=0.</div>
+<h3 class="accent blue">A rank deficient example has both kinds of ambiguity</h3>
+<div class="equation" role="math" aria-label="A=[[1,1],[0,0]], b=(2,1)ᵀ.   A⁺=[[½,0],[½,0]], x*=(1,1)ᵀ, Ax*=(2,0)ᵀ.">A=[[1,1],[0,0]], b=(2,1)ᵀ.   A⁺=[[½,0],[½,0]], x*=(1,1)ᵀ, Ax*=(2,0)ᵀ.</div>
+<div class="table-wrap"><table><caption>Independent exact least squares calculation. The second target coordinate is outside col(A), so the minimum residual is nonzero.</caption><thead><tr><th scope="col">Candidate x</th><th scope="col">‖Ax−b‖₂²</th><th scope="col">‖x‖₂²</th><th scope="col">Interpretation</th></tr></thead><tbody><tr><th scope="row">(1,1)ᵀ</th><td>1</td><td>2</td><td>Minimum residual and minimum norm</td></tr><tr><th scope="row">(2,0)ᵀ</th><td>1</td><td>4</td><td>Same residual, larger norm</td></tr><tr><th scope="row">(3,−1)ᵀ</th><td>1</td><td>10</td><td>Same residual, larger norm</td></tr><tr><th scope="row">(0,0)ᵀ</th><td>5</td><td>0</td><td>Smaller norm does not compensate for worse residual</td></tr></tbody></table></div>
+<p>The chapter also gives a limit using (AᵀA+αI)⁻¹Aᵀ as α decreases to zero. At a finite positive α, a singular direction has gain σ/(σ²+α), rather than 1/σ. This is a regularized estimator, not the exact pseudoinverse. Small nonzero singular values amplify noise in the unregularized solve, while a numerical rank threshold changes which directions are retained.</p>
+<div class="equation" role="math" aria-label="For invertible A, κ₂(A)=σmax/σmin.   A=diag(1,10⁻⁶): Δb=(0,10⁻⁶)ᵀ ⇒ Δx=(0,1)ᵀ.">For invertible A, κ₂(A)=σmax/σmin.   A=diag(1,10⁻⁶): Δb=(0,10⁻⁶)ᵀ ⇒ Δx=(0,1)ᵀ.</div>
+<p>This conditioning example is note derived. A small right hand side perturbation can cause a much larger absolute change in the solution. SVD reveals the mechanism, but a decomposition does not repair missing or poorly measured information. Regularization introduces a bias and stability choice that needs an application specific rationale.</p>
+</section>
+</div><footer class="page-foot"><span>8 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-9" aria-labelledby="deep-learning-book-2016-ch2-en-page-9-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-9-heading">Trace measures total energy, while determinant measures volume</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Cyclic order can change, arbitrary order cannot</h3>
+<p>Sections 2.10 and 2.11, pp.44 to 45, introduce trace and determinant. Trace is the sum of diagonal entries of a square matrix. The identity Tr(AB)=Tr(BA) follows from exchanging two finite summations. It remains true when AB and BA have different square sizes. More factors can be cycled only when the resulting products are defined.</p>
+<div class="equation" role="math" aria-label="A∈ℝᵐˣⁿ, B∈ℝⁿˣᵐ: Tr(AB)=ΣᵢⱼAᵢⱼBⱼᵢ=Tr(BA).   Tr(ABC)=Tr(BCA)=Tr(CAB).   ‖A‖F²=Tr(AᵀA)=Tr(AAᵀ).">A∈ℝᵐˣⁿ, B∈ℝⁿˣᵐ: Tr(AB)=ΣᵢⱼAᵢⱼBⱼᵢ=Tr(BA).   Tr(ABC)=Tr(BCA)=Tr(CAB).   ‖A‖F²=Tr(AᵀA)=Tr(AAᵀ).</div>
+<p>Independent counterexample: A=[[1,0],[0,0]], B=[[0,1],[0,0]] and C=[[0,0],[1,0]] give Tr(ABC)=1 but Tr(ACB)=0. A trace does not make noncommuting matrix factors freely interchangeable. This distinction is used in the PCA objective reduction.</p>
+<h3 class="accent blue">Volume preservation is weaker than distance preservation</h3>
+<div class="equation" role="math" aria-label="For square A: det(A)=Πᵢλᵢ; |det(A)|=Πᵢσᵢ.   |det(A)| is the volume scaling factor.   det(A)=0 ⇔ rank(A)&lt;n.">For square A: det(A)=Πᵢλᵢ; |det(A)|=Πᵢσᵢ.   |det(A)| is the volume scaling factor.   det(A)=0 ⇔ rank(A)&lt;n.</div>
+<div class="table-wrap"><table><caption>Independent arithmetic separates signed volume, absolute volume and metric geometry.</caption><thead><tr><th scope="col">Map in ℝ²</th><th scope="col">det(A)</th><th scope="col">Singular values</th><th scope="col">Geometric effect</th></tr></thead><tbody><tr><th scope="row">diag(2,½)</th><td>1</td><td>2, ½</td><td>Area preserved, lengths generally changed</td></tr><tr><th scope="row">diag(−1,1)</th><td>−1</td><td>1, 1</td><td>Area and lengths preserved, orientation reversed</td></tr><tr><th scope="row">diag(1,0)</th><td>0</td><td>1, 0</td><td>Area collapses to a line</td></tr></tbody></table></div>
+<p>Trace and determinant summarize different aspects of a map. For a symmetric scatter matrix, trace adds directional energies. A determinant multiplies directional scale factors and becomes zero if any direction collapses. Neither statistic identifies each direction or its relevance to a prediction target.</p>
+</section>
+</div><footer class="page-foot"><span>9 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-10" aria-labelledby="deep-learning-book-2016-ch2-en-page-10-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-10-heading">PCA first solves the code for a fixed decoder</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">The objective specifies what information counts</h3>
+<p>Section 2.12, pp.45 to 50, derives linear reconstruction under squared Euclidean error. This note uses N examples, d features and k code coordinates, with k&lt;d. The source calls these dimensions m, n and l. The decoder D has shape d by k and orthonormal columns. It is not a square orthogonal matrix.</p>
+<div class="equation" role="math" aria-label="g(c)=Dc, D∈ℝᵈˣᵏ, DᵀD=Iₖ.   c*(x)=arg min_c ‖x−Dc‖₂².   X∈ℝᴺˣᵈ has x⁽ⁱ⁾ᵀ in row i.">g(c)=Dc, D∈ℝᵈˣᵏ, DᵀD=Iₖ.   c*(x)=arg min_c ‖x−Dc‖₂².   X∈ℝᴺˣᵈ has x⁽ⁱ⁾ᵀ in row i.</div>
+<p>The source’s equations 2.54 to 2.67 expand and differentiate this objective. An equivalent independent derivation completes a square. Dᵀx is the component inside the decoder subspace. The orthogonal residual cannot be changed by c, so there is one optimal code for a fixed D.</p>
+<div class="equation" role="math" aria-label="‖x−Dc‖₂² = ‖c−Dᵀx‖₂² + xᵀ(I−DDᵀ)x.   Therefore c*=Dᵀx and r(x)=DDᵀx.">‖x−Dc‖₂² = ‖c−Dᵀx‖₂² + xᵀ(I−DDᵀ)x.   Therefore c*=Dᵀx and r(x)=DDᵀx.</div>
+<div class="equation" role="math" aria-label="x−DDᵀx ⟂ col(D); ‖x‖₂²=‖Dᵀx‖₂²+‖x−DDᵀx‖₂².   ∇c‖x−Dc‖₂²=2c−2Dᵀx; Hessian=2Iₖ.">x−DDᵀx ⟂ col(D); ‖x‖₂²=‖Dᵀx‖₂²+‖x−DDᵀx‖₂².   ∇c‖x−Dc‖₂²=2c−2Dᵀx; Hessian=2Iₖ.</div>
+<p>The Hessian establishes a strict minimum in code space. It does not make the joint search over all decoder matrices unconstrained or convex. With a full column rank decoder without the orthonormal constraint, the code instead satisfies c*=(DᵀD)⁻¹Dᵀx. The convenient encoder Dᵀ therefore depends on the constraint, not just on linear decoding.</p>
+<h3 class="accent blue">Global reconstruction is a subspace choice</h3>
+<div class="equation" role="math" aria-label="C=XD; X̂=CDᵀ=XDDᵀ.   J(D)=‖X−XDDᵀ‖F², subject to DᵀD=Iₖ.">C=XD; X̂=CDᵀ=XDDᵀ.   J(D)=‖X−XDDᵀ‖F², subject to DᵀD=Iₖ.</div>
+<p>Here C contains one code per row and X̂=CDᵀ is the decoded data. The shared decoder must fit all examples, so minimizing each code separately does not complete PCA. The remaining problem chooses the k dimensional subspace.</p>
+</section>
+</div><footer class="page-foot"><span>10 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-11" aria-labelledby="deep-learning-book-2016-ch2-en-page-11-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-11-heading">PCA then retains the largest spectral energies</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">From reconstruction to a trace maximization</h3>
+<p>The chapter proves the case k=1 through equations 2.68 to 2.84 and states the extension to multiple components. The following independent proof covers general k directly. With S=XᵀX and P=DDᵀ, symmetry and idempotence give ‖X−XP‖F²=Tr(S)−Tr(DᵀSD). The discarded constant measures total squared input magnitude.</p>
+<div class="equation" role="math" aria-label="J(D)=Tr((I−P)S(I−P))=Tr(S)−Tr(SP)=Tr(S)−Tr(DᵀSD), P²=P=Pᵀ.">J(D)=Tr((I−P)S(I−P))=Tr(S)−Tr(SP)=Tr(S)−Tr(DᵀSD), P²=P=Pᵀ.</div>
+<div class="equation" role="math" aria-label="S=Q diag(λ₁,…,λ_d)Qᵀ, λ₁≥…≥λ_d≥0; Z=QᵀD, ZᵀZ=Iₖ.   Tr(DᵀSD)=Σⱼ λⱼwⱼ, wⱼ=Σₐ₌₁ᵏZⱼₐ².">S=Q diag(λ₁,…,λ_d)Qᵀ, λ₁≥…≥λ_d≥0; Z=QᵀD, ZᵀZ=Iₖ.   Tr(DᵀSD)=Σⱼ λⱼwⱼ, wⱼ=Σₐ₌₁ᵏZⱼₐ².</div>
+<p>The weights obey 0≤w_j≤1 and sum to k. The upper bound follows because ZZᵀ is an orthogonal projector and its diagonal entries lie between zero and one. Under these constraints the weighted sum cannot exceed the sum of the largest k eigenvalues. Placing the columns of D in their eigenspaces attains the bound. This argument identifies a global optimum without a claim about a particular iterative training algorithm.</p>
+<div class="equation" role="math" aria-label="D*=Q_:,1:k; min_D J(D)=Σⱼ₌ₖ₊₁ᵈ λⱼ=Σⱼ₌ₖ₊₁ᵈ σⱼ(X)².   Retained energy fraction=(Σⱼ₌₁ᵏλⱼ)/(Σⱼ₌₁ᵈλⱼ), when Tr(S)&gt;0.   σⱼ(X)=0 for j&gt;min(N,d).">D*=Q_:,1:k; min_D J(D)=Σⱼ₌ₖ₊₁ᵈ λⱼ=Σⱼ₌ₖ₊₁ᵈ σⱼ(X)².   Retained energy fraction=(Σⱼ₌₁ᵏλⱼ)/(Σⱼ₌₁ᵈλⱼ), when Tr(S)&gt;0.   σⱼ(X)=0 for j&gt;min(N,d).</div>
+<p>For k=1 this reduces to the Rayleigh problem dᵀSd with ‖d‖₂=1. For general k, every orthonormal basis of the same optimal subspace has the same reconstruction. A rotation D→DR with RᵀR=I_k changes the code coordinates while preserving DDᵀ. If λ_k=λ_(k+1), even the choice of the retained boundary subspace can be nonunique.</p>
+<h3 class="accent blue">The singular values provide an exact error budget</h3>
+<p>An SVD X=UΣVᵀ supplies the same D from the leading right singular vectors. Keeping a component removes its squared singular value from the residual. This is reconstruction energy on the given data. It does not establish class information, causality, robustness or performance on unseen samples. With all data zero, the residual is zero for every admissible D and the energy fraction is undefined.</p>
+</section>
+</div><footer class="page-foot"><span>11 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<article class="sheet" id="deep-learning-book-2016-ch2-en-page-12" aria-labelledby="deep-learning-book-2016-ch2-en-page-12-heading"><header class="running"><h2 id="deep-learning-book-2016-ch2-en-page-12-heading">Centering, a complete numerical example and practical limits</h2></header><div class="page-columns">
+<section class="column">
+<h3 class="accent pink">Origin based reconstruction and variance are different objectives</h3>
+<p>The source derivation uses X directly and does not introduce mean subtraction. Its decoder reconstructs through the origin. The common centered covariance interpretation needs an extra operation. With μ equal to the sample mean and X_c=X−1_Nμᵀ, an affine reconstruction is μ+DDᵀ(x−μ). Then the eigenvectors of X_cᵀX_c also diagonalize the sample covariance X_cᵀX_c/(N−1), for N&gt;1.</p>
+<div class="equation" role="math" aria-label="XᵀX=X_cᵀX_c+Nμμᵀ.   Cov_sample=X_cᵀX_c/(N−1).   x̂_affine=μ+DDᵀ(x−μ).">XᵀX=X_cᵀX_c+Nμμᵀ.   Cov_sample=X_cᵀX_c/(N−1).   x̂_affine=μ+DDᵀ(x−μ).</div>
+<p>Independent example: four observations are (3,10), (−3,10), (0,11) and (0,9). Their mean is (0,10). The centered observations are (3,0), (−3,0), (0,1) and (0,−1). The table gives all quantities needed to compare a single retained direction. The two residuals optimize different decoder families, so they are not a matched algorithm benchmark.</p>
+<div class="table-wrap"><table><caption>Exact arithmetic for the note constructed dataset. The final percentage is rounded. These are not original chapter experiment results.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">Centered affine PCA</th><th scope="col">Uncentered origin PCA</th></tr></thead><tbody><tr><th scope="row">Scatter matrix</th><td>diag(18,2)</td><td>diag(18,402)</td></tr><tr><th scope="row">Leading direction</th><td>(1,0)ᵀ</td><td>(0,1)ᵀ</td></tr><tr><th scope="row">Total squared magnitude</th><td>20</td><td>420</td></tr><tr><th scope="row">Retained squared magnitude</th><td>18</td><td>402</td></tr><tr><th scope="row">Minimum squared reconstruction error</th><td>2</td><td>18</td></tr><tr><th scope="row">Retained fraction</th><td>18/20 = 90%</td><td>402/420 ≈ 95.7143%</td></tr></tbody></table></div>
+<p>Centered PCA preserves the horizontal variation and reconstructs the last two observations at (0,10), with squared errors 1 and 1. Uncentered PCA preserves the large vertical offset and reconstructs the first two at (0,10), with squared errors 9 and 9. A larger retained fraction can describe the mean rather than the variation that matters for a task.</p>
+<h3 class="accent blue">Costs and checks have explicit boundaries</h3>
+<div class="equation" role="math" aria-label="Direct dense encoding and decoding: O(dk) work per example.   Stored decoder and codes: dk+Nk numbers, versus Nd data numbers, excluding a mean and metadata.   Compression requires k(N+d)&lt;Nd under this accounting.">Direct dense encoding and decoding: O(dk) work per example.   Stored decoder and codes: dk+Nk numbers, versus Nd data numbers, excluding a mean and metadata.   Compression requires k(N+d)&lt;Nd under this accounting.</div>
+<p>The storage comparison counts the shared decoder as well as all codes. It excludes precision changes, means and metadata. A dense SVD that computes the nonzero singular triplets can have arithmetic cost O(min(Nd²,N²d)); partial or iterative methods have different costs and convergence conditions. Forming XᵀX also squares the nonzero singular value ratio, which can worsen numerical conditioning. These are analytical observations, not measured runtime or memory results in the book.</p>
+<p>The mathematical checks are dimension consistency, DᵀD≈I, reconstruction residual, and agreement between retained energy plus residual and total energy. Application questions remain separate. Rescaling a feature changes the objective. An outlier can dominate squared error. A small variance direction can still contain the label. PCA therefore needs a stated centering and scaling policy, an error target and an evaluation beyond training reconstruction when used for prediction.</p>
+<p>Coverage ends at the final paragraph of Chapter 2, printed page 50. The note has no replicated experiments, new data collection or resource allocation. The original figures retain their labels and source pages. Added proofs and worked examples establish only the stated mathematical claims. Completion of this assistant prepared unit does not establish completion of any user reading pass.</p>
+</section>
+</div><footer class="page-foot"><span>12 / 12</span><span>Chapter 2 Linear Algebra only, printed pp. 29 to 50; official online edition</span></footer></article>
+<p class="edition">Original figures and source data come from the cited book chapter. Explanations and derivations are reading notes. Added examples are identified separately. Source versions, pages and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>
