@@ -1,5 +1,5 @@
 (() => {
-    const header = document.querySelector('.portfolio-page .site-header');
+    const header = document.querySelector('.portfolio-page .site-header, .toys-page .site-header');
     if (!header || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
 
     const make = (tag, className, value) => {
@@ -11,9 +11,14 @@
     const normalize = value => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const entries = [];
     const known = new Set();
-    function add(anchor, kind, description = '') {
-        const title = anchor.textContent.replace(/\s+/g, ' ').trim();
-        const url = new URL(anchor.href, window.location.href);
+    const onToys = document.body.classList.contains('toys-page');
+    const homeUrl = new URL(onToys ? '../' : './', window.location.href);
+    const toysUrl = new URL('toys/', homeUrl);
+    let indexLoading = true;
+    let indexIncomplete = false;
+    function add(anchor, kind, description = '', baseUrl = window.location.href) {
+        const title = anchor.textContent.replace(/\s+/g, ' ').trim().replace(/\s*↗$/, '');
+        const url = new URL(anchor.getAttribute('href'), baseUrl);
         if (!title || !['http:', 'https:'].includes(url.protocol)) return;
         const key = `${url.href}|${title}`;
         if (known.has(key)) return;
@@ -23,14 +28,20 @@
             searchKey: normalize(`${title} ${kind} ${description}`) });
     }
     document.querySelectorAll('.quick-nav a').forEach(anchor => add(anchor, anchor.hash ? 'Section' : 'Page'));
-    document.querySelectorAll('.publication-table .paper-title a').forEach(anchor => {
-        const row = anchor.closest('tr');
-        add(anchor, 'Publication', [...row.querySelectorAll('.paper-authors, .paper-meta')].map(el => el.textContent).join(' '));
-    });
-    document.querySelectorAll('.writing-card h3 a').forEach(anchor => {
-        const card = anchor.closest('.writing-card');
-        add(anchor, 'Writing', [...card.querySelectorAll('.writing-card-body > p, .writing-tags')].map(el => el.textContent).join(' '));
-    });
+    function indexPage(page, baseUrl) {
+        page.querySelectorAll('.publication-table .paper-title a').forEach(anchor => {
+            const row = anchor.closest('tr');
+            add(anchor, 'Publication', [...row.querySelectorAll('.paper-authors, .paper-meta')].map(el => el.textContent).join(' '), baseUrl);
+        });
+        page.querySelectorAll('.writing-card h3 a').forEach(anchor => {
+            const card = anchor.closest('.writing-card');
+            add(anchor, 'Writing', [...card.querySelectorAll('.writing-card-body > p, .writing-tags')].map(el => el.textContent).join(' '), baseUrl);
+        });
+        page.querySelectorAll('.toy-card h2 a').forEach(anchor => {
+            add(anchor, 'Toy', anchor.closest('.toy-card').querySelector('.toy-description')?.textContent || '', baseUrl);
+        });
+    }
+    indexPage(document, window.location.href);
 
     const trigger = make('button', 'portfolio-search-trigger');
     trigger.type = 'button';
@@ -66,6 +77,7 @@
     document.body.append(dialog);
 
     function render() {
+        const focusedHref = results.contains(document.activeElement) ? document.activeElement.href : null;
         const words = normalize(input.value.trim()).split(/\s+/).filter(Boolean);
         const matches = entries.filter(entry => words.every(word => entry.searchKey.includes(word)))
             .map((entry, order) => ({ entry, order, score: words.reduce((sum, word) => sum + (entry.titleKey.includes(word) ? 3 : 0), 0) }))
@@ -83,7 +95,14 @@
             results.append(item);
         });
         empty.hidden = matches.length > 0;
-        count.textContent = words.length ? `${matches.length} result${matches.length === 1 ? '' : 's'}` : 'Explore the site';
+        empty.textContent = indexLoading ? 'Loading the rest of the site…' : indexIncomplete
+            ? 'No matches on this page. The full site index is temporarily unavailable.' : 'No matches yet. Try a topic or a title.';
+        count.textContent = indexLoading ? 'Loading more entries…' : words.length
+            ? `${matches.length} result${matches.length === 1 ? '' : 's'}` : 'Explore the site';
+        if (focusedHref) {
+            const previous = [...results.querySelectorAll('a')].find(link => link.href === focusedHref);
+            (previous || input).focus({ preventScroll: true });
+        }
     }
     function open() {
         if (dialog.open) return;
@@ -127,4 +146,18 @@
             if (dialog.open) dialog.close(); else open();
         }
     });
+
+    // Both pages share the public index. Search terms stay in this browser.
+    const otherPage = onToys ? homeUrl : toysUrl;
+    fetch(otherPage.href, { credentials: 'omit' })
+        .then(response => {
+            if (!response.ok) throw new Error('Site index unavailable');
+            return response.text();
+        })
+        .then(source => indexPage(new DOMParser().parseFromString(source, 'text/html'), otherPage))
+        .catch(() => { indexIncomplete = true; })
+        .finally(() => {
+            indexLoading = false;
+            if (dialog.open) render();
+        });
 })();
