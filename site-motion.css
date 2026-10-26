@@ -156,10 +156,19 @@ body[data-view="about"] .cosmic-dust { opacity: .9; }
 }
 
 .portrait-cell > a {
-    border-radius: 43% 40% 42% 37%;
-    box-shadow: 0 14px 42px rgba(109,127,88,.07);
+    width: min(96%, 330px);
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
     transform: perspective(900px) rotateX(var(--portrait-rx,0deg)) rotateY(var(--portrait-ry,0deg));
     transition: transform 220ms ease-out, box-shadow 220ms ease;
+}
+
+.portrait {
+    object-fit: contain;
+    object-position: center bottom;
+    transform: none;
+    filter: none;
 }
 
 .portrait-greet {
@@ -493,6 +502,7 @@ html[data-motion="off"] { scroll-behavior: auto; }
     #motion-toggle::before { font-size: 13px; }
     .site-header h1 { margin-bottom: 2px; padding: 0 50px; }
     .portrait-cell { padding-bottom: 6px !important; }
+    .portrait-cell > a { width: min(88%, 270px); }
     .portrait-cell::before { width: 270px; top: 43%; }
     .portrait-cell::after { width: 294px; top: 43%; }
     .portrait-greet { margin-top: 18px; margin-bottom: 8px; }
