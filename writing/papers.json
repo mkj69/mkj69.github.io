@@ -123,6 +123,31 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "deep-learning-book-2016-ch3",
+      "short_title": "Deep Learning, Chapter 3",
+      "paper_title": "Deep Learning",
+      "authors": "Ian Goodfellow, Yoshua Bengio, Aaron Courville",
+      "published": "2026-10-27",
+      "source_kind": "book_chapter",
+      "reading_unit": "Chapter 3: Probability and Information Theory, pages 51 to 77",
+      "summary": "Chapter 3 only. Probability identities, distribution assumptions and information measures are checked through worked derivations. Density transformations and graphical factorizations connect normalization to model structure.",
+      "summary_zh": "仅覆盖第3章，印刷页51至77。通过独立推导与算例核对概率恒等式、分布条件和信息量，并用密度变换及图模型分解串联归一化与模型结构。",
+      "topics": [
+        "Probability",
+        "Information theory",
+        "Change of variables",
+        "Graphical models"
+      ],
+      "source_url": "https://www.deeplearningbook.org/contents/prob.html",
+      "source_label": "MIT Press (2016), Chapter 3: Probability and Information Theory, pages 51 to 77",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch3/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",

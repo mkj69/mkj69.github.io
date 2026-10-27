@@ -211,7 +211,7 @@ def home_link(count):
     return '''<section class="writing-group writing-group-papers" aria-labelledby="paper-notes-heading">
                             <div class="writing-group-head">
                                 <div><span class="writing-group-number">04</span><h3 id="paper-notes-heading">Paper Notes</h3></div>
-                                <p>完整论文精读与中英文版本。方法、公式、原图和实验数据保留在同一条论证中。</p>
+                                <p>Detailed paper readings in English and Chinese. Methods, equations, original figures, and experimental evidence follow one connected argument.</p>
                             </div>
                             <div class="writing-grid">
                                 <article class="writing-card">
