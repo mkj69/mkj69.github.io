@@ -148,6 +148,31 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "deep-learning-book-2016-ch4",
+      "short_title": "Deep Learning, Chapter 4",
+      "paper_title": "Deep Learning",
+      "authors": "Ian Goodfellow, Yoshua Bengio, Aaron Courville",
+      "published": "2026-10-28",
+      "source_kind": "book_chapter",
+      "reading_unit": "Chapter 4: Numerical Computation, pages 78 to 95",
+      "summary": "Chapter 4 only. Stable evaluation, conditioning and curvature connect gradient methods to constrained least squares. Worked derivations distinguish stationary points, valid KKT conditions and numerical guarantees.",
+      "summary_zh": "仅覆盖第4章，印刷页78至95。从稳定求值、条件数与曲率串联梯度方法和约束最小二乘，通过独立推导区分驻点、有效的 KKT 条件与数值保证。",
+      "topics": [
+        "Numerical stability",
+        "Conditioning",
+        "Optimization",
+        "Constrained least squares"
+      ],
+      "source_url": "https://www.deeplearningbook.org/contents/numerical.html",
+      "source_label": "MIT Press (2016), Chapter 4: Numerical Computation, pages 78 to 95",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch4/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
