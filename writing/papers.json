@@ -198,6 +198,31 @@
       "placement": "dedicated_paper_notes"
     },
     {
+      "slug": "deep-learning-book-2016-ch5-part2",
+      "short_title": "Deep Learning, Chapter 5, Part 2",
+      "paper_title": "Deep Learning",
+      "authors": "Ian Goodfellow, Yoshua Bengio, Aaron Courville",
+      "published": "2026-10-30",
+      "source_kind": "book_chapter",
+      "reading_unit": "Chapter 5: Machine Learning Basics, Sections 5.4 to 5.6. From Section 5.4 on page 120 through the prefix before Section 5.7 on page 137. Floated Algorithm 5.1 on page 121 belongs to Part 1.",
+      "summary": "Sections 5.4 to 5.6 only. Estimation error connects bias, variance and consistency to likelihood and Bayesian inference. Original derivations distinguish finite sample guarantees, asymptotic conditions and posterior prediction.",
+      "summary_zh": "仅覆盖第5.4至5.6节。从估计误差串联偏差、方差、一致性、似然与贝叶斯推断，通过独立推导区分有限样本保证、渐近条件与后验预测。",
+      "topics": [
+        "Statistical estimation",
+        "Bias and variance",
+        "Maximum likelihood",
+        "Bayesian inference"
+      ],
+      "source_url": "https://www.deeplearningbook.org/contents/ml.html",
+      "source_label": "MIT Press (2016), Chapter 5, Sections 5.4 to 5.6",
+      "url": "https://mkj69.github.io/writing/papers/deep-learning-book-2016-ch5-part2/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes"
+    },
+    {
       "slug": "sd3",
       "short_title": "SD3",
       "paper_title": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
