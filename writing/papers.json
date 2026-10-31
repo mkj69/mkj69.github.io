@@ -242,7 +242,14 @@
         "zh-CN",
         "en"
       ],
-      "placement": "dedicated_paper_notes"
+      "placement": "dedicated_paper_notes",
+      "annotated_reader": {
+        "url": "https://mkj69.github.io/writing/papers/sd3/annotated/",
+        "published": "2026-10-30",
+        "source_version": "arXiv:2403.03206v1",
+        "layout": "english-then-chinese",
+        "glossary_entries": 200
+      }
     },
     {
       "slug": "instaflow",

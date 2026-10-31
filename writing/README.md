@@ -22,3 +22,9 @@ The builder writes the hub, individual articles and the marked Paper Notes entry
 Add approved public bibliographic metadata and Chinese/English summaries to `writing/papers.json`. Set `url` to `https://mkj69.github.io/writing/papers/<slug>/` and place genuine figure assets in `writing/papers/<slug>/assets/`. Store the complete language source files in the private content directory, then build and check. The paper order follows the manifest.
 
 The public manifest contains only approved paper identities and summaries. Reading queues, private annotations, source documents, credentials and drafts remain outside this repository. A generated note does not imply that the reader has completed the paper. Publication uses the user's authorized public research notes and required source assets. Source versions, figure labels and applicable attribution remain attached to the material.
+
+## Annotated reading editions
+
+A paper may link to an additional reading edition through `annotated_reader.url` in its manifest entry. The URL must be the paper's canonical URL followed by `annotated/`. The hub and concept note retain this link when rebuilt. This does not add a duplicate paper to the hub count.
+
+The SD3 annotated edition provides an English-then-Chinese layout and contextual vocabulary tools. Its article lives at `papers/sd3/annotated/index.html`; image provenance is recorded in `assets/attribution.json` beside it. This edition is maintained independently of the concept-note renderer. Other papers retain their existing language defaults.

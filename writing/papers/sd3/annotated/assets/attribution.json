@@ -1,0 +1,151 @@
+{
+  "paper": "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis",
+  "authors": "Patrick Esser et al.",
+  "version": "arXiv:2403.03206v1",
+  "assets": [
+    {
+      "file": "assets/figure-01.png",
+      "sha256": "ddd40fc29d6b286d74f61eeb2576883ff07a38fe18c6582155e1ba06f9d2be40",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "1"
+    },
+    {
+      "file": "assets/figure-02.png",
+      "sha256": "90be21587fb077176d085ae52052a3c6a233515a6170c91c6b06fb2c759d5bc9",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "5"
+    },
+    {
+      "file": "assets/figure-03.png",
+      "sha256": "f2d2f35ad55b6920d838740428d47444223ac45757eb7b3bf932e91cfed37d87",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "7"
+    },
+    {
+      "file": "assets/figure-04.png",
+      "sha256": "a848581f8e22d188dd35e8d115b363ac8260f2947c899b3dbc23563d29823e8b",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "9"
+    },
+    {
+      "file": "assets/figure-05.png",
+      "sha256": "1d641868f2f7a40ba5eb63d22a01c1e18f41f0866759371651c24b827b434ee6",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "8"
+    },
+    {
+      "file": "assets/figure-06.png",
+      "sha256": "f8a7ca3941d73dc997001810641d6922d7d5d0962dde4fe554294f2abcf931bd",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "9"
+    },
+    {
+      "file": "assets/figure-07.png",
+      "sha256": "a423100cf633f1d599791dac55e6c4e475495867dea9ae8511d50f7a88dc743b",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "10"
+    },
+    {
+      "file": "assets/figure-08.png",
+      "sha256": "3d5917417ed2ab33ba47731a8fef3394e4d81bdb431cf7288cadf368c481b1e4",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "10"
+    },
+    {
+      "file": "assets/figure-09.png",
+      "sha256": "0cec16dd32b6767747b7cd84ad048433169c9eff65837b57cdd1f48fe2e4b54b",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "12"
+    },
+    {
+      "file": "assets/figure-10.png",
+      "sha256": "f67df71d4987aeeab5dd06b716228f4bb46e4d3b4a1cfafecb762103b7dddf51",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "12"
+    },
+    {
+      "file": "assets/figure-11.png",
+      "sha256": "41289ada2c471927f2e3016248da4741c955b06eaec0b375c8dac93537e7af84",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "18"
+    },
+    {
+      "file": "assets/figure-12.png",
+      "sha256": "c7e5ec9c64d427559227c8a25ca6f1141bcd33ba9a119e1af76cbea1d37ca5c9",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "19"
+    },
+    {
+      "file": "assets/figure-13.png",
+      "sha256": "6222b025f2133b9b9f848b3d075cfc54caf32e329e953f08bd745386cd8b0808",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "21"
+    },
+    {
+      "file": "assets/figure-14.png",
+      "sha256": "c762241e4f65202df1e8754312de33240b838d6c8da7c3c9173214d9bdb6df4a",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "22"
+    },
+    {
+      "file": "assets/figure-15.png",
+      "sha256": "c56df4c124919528a6ebd57b8032fafdd47c7bb2a1ecfcb4790a9cd918c42bd6",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "22"
+    },
+    {
+      "file": "assets/figure-16.png",
+      "sha256": "af9d029cb50d5be11abb57808fe97709f3a7ef4432054a735e0966f73aec676a",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "23"
+    },
+    {
+      "file": "assets/figure-17.png",
+      "sha256": "0611ff2b52915dbc1e83a00a4ad5298bbe338537b0288f272c8e298ec165ce31",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "24"
+    },
+    {
+      "file": "assets/figure-18.png",
+      "sha256": "3d2ac60ab8b5e12cfab337eff466a5b92057a6daf41bc9c54f06b012d41c2d33",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "25"
+    },
+    {
+      "file": "assets/figure-19.png",
+      "sha256": "b5dfec6973cc5291a698e5cee1f644af3a6fae4db6f68e468b27c7035591ab29",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "27"
+    },
+    {
+      "file": "assets/figure-20.png",
+      "sha256": "005b8aa7718ad57d4e021ff5381fbaf1656978822becad229b07a38e0bde4602",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "28"
+    },
+    {
+      "file": "assets/figure-21.png",
+      "sha256": "3096a1e9ba64954d2e462534aa74a5e7ecfafc674dd46f2d5b4ec3209d3b6f2c",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "13"
+    },
+    {
+      "file": "assets/figure-22.png",
+      "sha256": "84a24d19b97c9cc35d31bb58c21ada2f7e9319f6a84d2dca16f77f1c888623d6",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "14"
+    },
+    {
+      "file": "assets/figure-23.png",
+      "sha256": "f3cde0323f07de925a6eb638d65034b63b9c7e02f4760fd52d0031b071fcfe21",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "15"
+    },
+    {
+      "file": "assets/figure-24.png",
+      "sha256": "ace020d3d1c094b3c1e981fae3a7c979d2dac6d2bcb6903b5015be8f676704eb",
+      "source": "https://arxiv.org/pdf/2403.03206v1",
+      "source_page": "16"
+    }
+  ]
+}

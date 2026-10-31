@@ -113,6 +113,18 @@ def document(title, body, depth, canonical):
             '</div></body>\n</html>\n')
 
 
+def annotated_reader_link(paper):
+    edition = paper.get("annotated_reader")
+    if not edition:
+        return ""
+    expected = paper["url"] + "annotated/"
+    if edition.get("url") != expected:
+        raise ValueError("Annotated reader must live under its paper article")
+    return ('<p class="paper-edition-link"><a href="' + esc(expected) + '">'
+            + language_text("全文中英对照与词汇注释版", "Full bilingual text with vocabulary notes")
+            + ' <span aria-hidden="true">↗</span></a></p>')
+
+
 def render_hub(papers):
     entries = []
     for number, paper in enumerate(papers, 1):
@@ -123,7 +135,8 @@ def render_hub(papers):
                        + paper["slug"] + '/' + LAYOUT_QUERY + '" lang="en">' + esc(paper["paper_title"]) + '</a></h2>'
                        + language_text(paper["summary_zh"], paper["summary"], "p", "paper-summary")
                        + '<p class="paper-meta">' + esc(paper["authors"]) + ' · <a href="' + esc(paper["source_url"])
-                       + '">' + esc(source) + '</a></p><ul class="paper-topics" aria-label="Topics">' + topics
+                       + '">' + esc(source) + '</a></p>' + annotated_reader_link(paper)
+                       + '<ul class="paper-topics" aria-label="Topics">' + topics
                        + '</ul></div><a class="paper-entry-link" href="papers/' + paper["slug"] + '/' + LAYOUT_QUERY + '">'
                        + language_text("论文精读", "Reading note") + ' <span aria-hidden="true">↗</span></a></article>')
     body = ('<main class="paper-hub" data-paper-reader data-language="en"><header class="notes-hero">'
@@ -198,7 +211,8 @@ def render_language(data, paper, language, renderer, output):
 def render_paper(paper, zh, en, renderer, output):
     body = ('<main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero">'
             '<p class="eyebrow">Paper Notes</p><h1 lang="en">' + esc(paper["paper_title"]) + '</h1></header>'
-            '<div class="reader-toolbar"><a href="../../' + LAYOUT_QUERY + '">Paper Notes</a>' + languages() + '</div>'
+            + annotated_reader_link(paper)
+            + '<div class="reader-toolbar"><a href="../../' + LAYOUT_QUERY + '">Paper Notes</a>' + languages() + '</div>'
             + render_language(zh, paper, "zh", renderer, output)
             + render_language(en, paper, "en", renderer, output)
             + '<dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure">'
