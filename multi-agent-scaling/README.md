@@ -6,12 +6,11 @@ A living, evidence-led research atlas at https://mkj69.github.io/multi-agent-sca
 
 **Questions:** Does adding agents reliably increase system capability? How do base-model skill, agent count, communication overhead, task coupling and costs jointly determine outcomes? Which organizational designs dominate naive agent-count expansion? Does an agent scaling law exist?
 
-The public page contains six sections: thesis; competing empirical results; mechanistic taxonomy; transparent token-cost lab; filterable literature leads; proposed experimental agenda.
+The public page contains five sections: thesis; competing empirical results; mechanistic taxonomy; transparent token-cost lab; proposed experimental agenda. The earlier filterable list of literature leads was removed on 31 October 2026; a new reading list is being assembled.
 
 ## Evidence hygiene
 
 - **Direct empirical evidence:** reported performance/cost claims from source papers. Distinguish preprints from the 2026 Nature Machine Intelligence version of *Towards a science of scaling agent systems*; do not combine old and updated sample sizes.
-- **Literature leads:** some entries link to an arXiv **search**, not a verified paper record. These are explicitly marked SEARCH and should be resolved before use in a formal literature review.
 - **Synthesis:** no consensus universal monotonic scaling law follows from currently mixed results.
 - **Hypothesis:** optimum team size is task-, model-, topology- and budget-dependent.
 - **Interactive lab:** simple directed-edge accounting, **not** a validated task-accuracy predictor.
@@ -29,7 +28,7 @@ The public page contains six sections: thesis; competing empirical results; mech
 
 - `index.html`: paper-backed research narrative
 - `style.css`: responsive design
-- `app.js`: bibliography explorer and transparent communication calculator
+- `app.js`: transparent communication calculator
 
 ## Publication
 
