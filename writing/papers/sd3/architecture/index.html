@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>精读 SD3：模型结构 | Kaijing Ma</title>
+<meta name="description" content="SD3 论文精读第二部分：按原文逐段解读第 4 节、5.2 节和附录 B.2。从潜空间自编码器、切块 token、三个文本编码器、注意力、DiT 的调制，讲到 MM-DiT 的双流联合注意力和模型大小，对照论文第 4 节、5.2 节和附录 B.2。附交互动画。">
+<style>
+/* Layout: one reading column of numbered lessons; each lesson = plain-language idea, one worked number example, an animated figure, a short self-check. */
+:root{
+  --page:#fcfcfa; --panel:#ffffff; --ink:#4a4f56; --heading:#22272d; --muted:#7a8087; --line:#e1e3e3; --line-strong:#cec7c0;
+  --accent:#796a5c; --blue:#2f5f93; --blue-soft:#e9eff7; --pink:#ab4265; --pink-soft:#f7e9ee; --orange:#a76425; --orange-soft:#f7eee4; --green:#397451; --green-soft:#e7f1ea;
+  --f-body:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-display:"Songti SC","Noto Serif SC","STSong",serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.9;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.site-header{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding-block:22px 0;font-size:14px}
+.site-header a{color:var(--muted);text-decoration:none} .site-header a:hover{color:var(--heading)}
+.site-header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+main{max-width:760px;margin:0 auto;padding-block:30px 90px;display:flex;flex-direction:column;gap:34px}
+h1,h2,h3{font-family:var(--f-display);color:var(--heading);text-wrap:balance;line-height:1.4;margin:0}
+h1{font-size:34px} h2{font-size:26px} h3{font-size:19px}
+p{margin:0} a{color:var(--blue)}
+.eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{font-size:17.5px;color:var(--muted)}
+.hero{display:flex;flex-direction:column;gap:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.toc a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:15px;line-height:1.5}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);outline:none}
+.toc .n{font-family:var(--f-mono);color:var(--accent);font-size:13px;min-width:2.2em}
+.lesson{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+.lesson-head{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-strong);padding-top:22px}
+.lesson-head .no{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.goal{font-size:15px;color:var(--muted)}
+.box{border-radius:8px;padding:12px 16px;font-size:15.5px;line-height:1.8}
+.box b{font-weight:700}
+.key{background:var(--green-soft)} .key b{color:var(--green)}
+.warn{background:var(--orange-soft)} .warn b{color:var(--orange)}
+.sd3{background:var(--blue-soft)} .sd3 b{color:var(--blue)}
+.math{overflow-x:auto;padding:4px 0;text-align:center}
+code{font-family:var(--f-mono);font-size:.9em}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.6}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{border-bottom:1.5px solid var(--heading);color:var(--heading)}
+tbody tr:last-child td{border-bottom:1.5px solid var(--heading)}
+ol,ul{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+figcaption{font-size:14px;color:var(--muted);line-height:1.7}
+.fig-title{font-weight:700;color:var(--heading);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:14px}
+.controls label{display:flex;align-items:center;gap:8px}
+input[type=range]{width:170px;accent-color:var(--accent)}
+button,select{font:inherit;font-size:14px;color:var(--heading);background:var(--page);border:1px solid var(--line-strong);border-radius:6px;padding:4px 12px;cursor:pointer}
+button:hover,button:focus-visible,select:focus-visible{border-color:var(--accent);outline:2px solid transparent}
+.readout{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr} h1{font-size:28px} h2{font-size:22px}}
+.two>*{min-width:0}
+details.quiz{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--panel)}
+details.quiz summary{cursor:pointer;color:var(--heading);font-weight:600}
+details.quiz p{margin-top:8px;font-size:15.5px}
+.card{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.card>div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card>div+div{border-left:1px solid var(--line-strong)}
+@media (max-width:620px){.card{grid-template-columns:1fr}.card>div+div{border-left:0;border-top:1px solid var(--line-strong)}}
+.card h3{font-size:17px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:0 8px;border-radius:999px}
+.tag.fm{background:var(--pink-soft);color:var(--pink)} .tag.cfm{background:var(--green-soft);color:var(--green)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+
+.orig{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 8px 8px 0;padding:10px 16px;display:flex;flex-direction:column;gap:4px}
+.orig .loc{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+.orig p{font-family:Georgia,"Times New Roman",var(--f-display);font-size:15.5px;line-height:1.75;color:var(--heading)}
+ol.read{gap:10px} ol.read .q{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--heading)}
+.bg{background:var(--panel);border:1px dashed var(--line-strong)} .bg b{color:var(--heading)}
+p.readout{min-height:1.6em;line-height:1.6}
+.ref{background:var(--pink-soft)} .ref b{color:var(--pink)}
+.ref ul{margin-top:4px;gap:2px}
+.parts{display:flex;flex-wrap:wrap;gap:8px;font-size:14px}
+.parts a,.parts span{padding:4px 12px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--panel)}
+.parts span{border-color:var(--accent);color:var(--heading);font-weight:600}
+.map td:first-child{min-width:7em;font-size:14px;color:var(--accent)}
+.lesson,.tbl{min-width:0;max-width:100%}
+@media (max-width:620px){table{font-size:14px} th,td{padding:6px 6px}}
+.shape{font-family:var(--f-mono);font-size:.92em;color:var(--heading);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="/">Kaijing Ma</a>
+  <nav aria-label="网站导航"><a href="/writing/">Paper Notes</a><a href="/writing/papers/sd3/">SD3 概念笔记</a><a href="/writing/papers/sd3/annotated/">SD3 中英对照</a><a href="/#writing">Writing</a></nav>
+</header>
+<main>
+
+<section class="hero">
+  <span class="eyebrow">SD3 论文精读 · 第二部分 · 第 4 节、5.2 节、附录 B.2</span>
+  <h1>精读 SD3：模型结构（MM-DiT）</h1>
+  <div class="parts"><a href="/writing/papers/sd3/primer/">第一部分 · Flow Matching 与 5.1</a><span>第二部分 · 模型结构</span><a href="/writing/papers/sd3/scaling/">第三部分 · 训练到 8B</a></div>
+  <p class="lede">第一部分讲的是"网络要学什么"：输入带噪声的 \(z_t\) 和时间 \(t\)，输出速度。这一部分按论文原文的顺序，一段一段读第 4 节（Text-to-Image Architecture）、它引用的附录 B.2，以及验证这些设计的 5.2 节。每一节先给出原文位置和关键原句，再逐句解读：这句话在说什么、为什么这么做、数字从哪来、哪里容易读错。论文默认读者已经会的背景（注意力、LayerNorm、adaLN）放在灰框里，需要时再看。</p>
+  <p class="lede">建议的读法：左边开着论文 PDF（或本站的 <a href="/writing/papers/sd3/annotated/">中英对照版</a>），右边开着这一页，读一段对一段。</p>
+  <nav class="toc" aria-label="目录">
+    <a href="#l0"><span class="n">地图</span>要读的全部原文位置</a>
+    <a href="#l1"><span class="n">精读 1</span>§4 第 1、2 段：总体设定</a>
+    <a href="#l2"><span class="n">精读 2</span>附录 B.2：图像怎么表示</a>
+    <a href="#l3"><span class="n">精读 3</span>附录 B.2：文字怎么表示</a>
+    <a href="#l4"><span class="n">精读 4</span>§4 骨干第 1 段：沿用 DiT 的调制</a>
+    <a href="#l5"><span class="n">精读 5</span>§4 骨干第 2 段：切块成序列</a>
+    <a href="#l6"><span class="n">精读 6</span>Fig. 2 与两套权重：MM-DiT</a>
+    <a href="#l7"><span class="n">精读 7</span>§4 最后一段：模型大小</a>
+    <a href="#l8"><span class="n">精读 8</span>§5.2.1：自编码器通道数</a>
+    <a href="#l9"><span class="n">精读 9</span>§5.2.2：合成 caption</a>
+    <a href="#l10"><span class="n">精读 10</span>§5.2.3：骨干网络比较</a>
+    <a href="#l11"><span class="n">总结</span>一次完整的前向</a>
+  </nav>
+</section>
+
+<!-- ===================================================== MAP -->
+<section class="lesson" id="l0">
+  <div class="lesson-head"><span class="no">论文阅读地图</span><h2>这部分要读的全部原文位置</h2><p class="goal">按论文顺序排列。页码按 arXiv 2403.03206v1 的 PDF。右栏是本页对应的精读节。</p></div>
+  <div class="tbl"><table class="map">
+    <thead><tr><th>论文位置</th><th>讲了什么</th><th>本页</th></tr></thead>
+    <tbody>
+      <tr><td>§4 第 1、2 段（p.4 右栏）</td><td>模型要同时处理文字和图片；沿用 LDM，在预训练自编码器的潜空间里训练；文字用冻结的预训练模型编码，细节见附录 B.2</td><td>精读 1</td></tr>
+      <tr><td>附录 B.2 "Latent Image Representation"（p.20）</td><td>自编码器 \(E,D\)；下采样 8；前向过程在潜空间做；潜变量归一化</td><td>精读 2</td></tr>
+      <tr><td>附录 B.2 "Text Representation"（p.20 到 21）</td><td>CLIP-L/14、OpenCLIP bigG/14、T5-v1.1-XXL；\(c_{vec}\in\mathbb R^{2048}\)；\(c_{ctxt}\in\mathbb R^{154\times4096}\)</td><td>精读 3</td></tr>
+      <tr><td>§4 "Multimodal Diffusion Backbone" 第 1 段（p.4）</td><td>沿用 DiT；时间步和 \(c_{vec}\) 进调制；pooled 向量太粗，还需要序列 \(c_{ctxt}\)</td><td>精读 4</td></tr>
+      <tr><td>§4 "Multimodal Diffusion Backbone" 第 2 段（p.4 到 5）</td><td>加位置编码，2×2 切块，序列长度 \(\frac12h\cdot\frac12w\)；文字和图片嵌入到同一维度后拼接</td><td>精读 5</td></tr>
+      <tr><td>Fig. 2a、Fig. 2b 及图注（p.5）</td><td>全部组件的总览；一个 MM-DiT 块的内部</td><td>精读 1、4、6</td></tr>
+      <tr><td>§4，Fig. 2 下方第 1、2 段（p.5）</td><td>按 DiT 做调制的注意力和 MLP；两种模态两套权重，等价于两个 Transformer 只在注意力处连起来</td><td>精读 6</td></tr>
+      <tr><td>§4 最后一段（p.5）</td><td>深度 \(d\)：隐藏维度 \(64d\)，MLP \(4\cdot64d\)，头数 \(d\)</td><td>精读 7</td></tr>
+      <tr><td>§5.2 引言（p.6 到 7）</td><td>找到了训练方式之后，还要改进网络结构和图文表示</td><td>精读 8</td></tr>
+      <tr><td>§5.2.1 + Table 3（p.7）+ Fig. 10（p.21）</td><td>潜变量通道数 4、8、16 的取舍，选 16</td><td>精读 8</td></tr>
+      <tr><td>§5.2.2 + Table 4（p.7）</td><td>CogVLM 合成 caption，50/50 混合</td><td>精读 9</td></tr>
+      <tr><td>§5.2.3 + Fig. 4（p.7 到 9）</td><td>DiT、CrossDiT、UViT、MM-DiT（2 套、3 套权重）的比较</td><td>精读 10</td></tr>
+      <tr><td>附录 B.3 "Optimization" 最后一句（p.21）</td><td>每个文本编码器独立以 46.4% 置零，约 10% 的步数相当于无条件</td><td>精读 3</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box warn"><b>先排一个雷：字母 \(d\) 有两个意思。</b>§4 最后一段和 5.3 节里，\(d\) 是<b>模型深度</b>（MM-DiT 块的个数，比如 \(d=38\)）。§5.2.1、附录 B.2、Table 3 里，\(d\) 是<b>潜变量的通道数</b>（比如 \(d=16\)）。§4 骨干第 2 段又把通道数写成 \(c\)。Fig. 10 里两个同时出现：横轴 depth 是深度，"4/8/16 chn" 是通道数。另外 Fig. 2b 的调制参数 \(\epsilon\) 和第一部分的噪声 \(\epsilon\) 也只是撞了字母。</div>
+</section>
+
+<!-- ===================================================== 1 -->
+<section class="lesson" id="l1">
+  <div class="lesson-head"><span class="no">精读 1 · §4 第 1、2 段 + Fig. 2a</span><h2>总体设定：网络吃什么、吐什么</h2><p class="goal">读完这两段，你应该能说出 SD3 网络的三个输入、一个输出，以及哪些部件是冻结的。</p></div>
+  <div class="orig"><span class="loc">原文 · §4 第 1 段</span><p>"For text-conditional sampling of images, our model has to take both modalities, text and images, into account. We use pretrained models to derive suitable representations and then describe the architecture of our diffusion backbone."</p></div>
+  <ol class="read">
+    <li><span class="q">"take both modalities … into account"</span>：第一部分的速度网络只看 \(z_t\) 和 \(t\)。文生图要多一个条件，网络变成 \(v_\Theta(z_t,t,c)\)，\(c\) 是 caption。"两种模态"就是文字和图片。</li>
+    <li><span class="q">"pretrained models to derive suitable representations"</span>：文字和图片都先交给<b>别人训好的模型</b>转换成数字表示，SD3 自己只训练中间的"扩散骨干"（diffusion backbone）。所以本节分两步讲：先讲表示（精读 2、3），再讲骨干（精读 4 到 7）。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §4 第 2 段</span><p>"Our general setup follows LDM (Rombach et al., 2022) for training text-to-image models in the latent space of a pretrained autoencoder. … we also … encode the text conditioning c using pretrained, frozen text models. Details can be found in Appendix B.2."</p></div>
+  <ol class="read">
+    <li><span class="q">"follows LDM"</span>：LDM 就是 Stable Diffusion 1 的论文。它的做法是"先用自编码器把图压小，在压小的空间里做扩散"。SD3 整体沿用这个框架，所以第一部分里的 \(x_0\) 其实是<b>潜变量</b>，不是像素。</li>
+    <li><span class="q">"pretrained, frozen text models"</span>：frozen 的意思是训练 SD3 时这些文本模型的参数不动。好处是省算力，而且它们的输出对同一句话永远一样，可以提前算好存起来（第三部分 5.3.1、附录 E.1）。</li>
+    <li><span class="q">"Details can be found in Appendix B.2"</span>：正文只有一句话，细节全在附录。所以要读懂这一节，<b>必须跳到附录 B.2</b>，下面两节就是读它。</li>
+  </ol>
+  <h3>先看一眼全貌：Fig. 2a 的形状变化</h3>
+  <figure>
+    <div class="fig-title">图 1 · 一张图在网络里的形状变化（按 Fig. 2a 和附录 B.2 的数字）</div>
+    <div class="controls"><label>分辨率 <select id="a1-res"><option value="256">256×256</option><option value="512">512×512</option><option value="1024" selected>1024×1024</option></select></label><button type="button" id="a1-next">下一步</button><button type="button" id="a1-reset">从头</button></div>
+    <p class="readout" id="a1-read"></p>
+    <canvas id="a1" width="720" height="300"></canvas>
+    <figcaption>每点一次"下一步"，数据往后走一格。方块大小大致代表"有多少个数"。最后输出的速度和输入潜变量形状完全一样，因为采样时要做 \(z\leftarrow z+v\,dt\)，两者要逐个数相加。</figcaption>
+  </figure>
+  <div class="box ref"><b>Fig. 2a 从上往下怎么读</b><ul><li>左上：Caption 进 CLIP-G/14、CLIP-L/14、T5 XXL 三个编码器。两个 CLIP 的 pooled 输出（左边竖条 "Pooled"）往下走；三个编码器的序列输出拼成右边那个 "77 + 77 tokens"、"4096 channel" 的矩形（精读 3）。</li><li>左中：Pooled → MLP，Timestep → Sinusoidal Encoding → MLP，两者 ⊕ 得到 \(y\)（精读 4）。</li><li>中间：序列矩形 → Linear → \(c\)（文字 token）。右上：Noised Latent → Patching → Linear → ⊕ Positional Embedding → \(x\)（图片 token，精读 5）。</li><li>中下：\(c\)、\(x\)、\(y\) 进 MM-DiT-Block 1 到 \(d\)（精读 6）。</li><li>右下：Modulation → Linear → Unpatching → Output。Output 是速度：§3 Rectified Flow 段说 "The network output directly parameterizes the velocity \(v_\Theta\)"。</li></ul></div>
+  <details class="quiz"><summary>自测：SD3 训练时，哪些参数在更新，哪些不动？</summary><p>不动：自编码器（\(E\) 和 \(D\)）、CLIP-L、OpenCLIP bigG、T5-XXL。更新：Fig. 2a 里所有紫色的层，也就是两个 MLP、几个 Linear、位置编码之外的投影，以及 \(d\) 个 MM-DiT 块。论文里的 "8B" 只数这些要训练的部分（精读 7）。</p></details>
+</section>
+
+<!-- ===================================================== 2 -->
+<section class="lesson" id="l2">
+  <div class="lesson-head"><span class="no">精读 2 · 附录 B.2 "Latent Image Representation"</span><h2>图像怎么表示：潜空间</h2><p class="goal">读完这段，你应该能说清 \(E\)、\(D\)、\(h,w,d\) 的意思，前向过程在哪个空间做，以及为什么要归一化。</p></div>
+  <div class="orig"><span class="loc">原文 · 附录 B.2 第 1 段（p.20）</span><p>"We follow LDM … and use a pretrained autoencoder to represent RGB images \(X\in\mathbb R^{H\times W\times3}\) in a smaller latent space \(x=E(X)\in\mathbb R^{h\times w\times d}\). We use a spatial downsampling factor of 8, such that \(h=\frac H8\) and \(w=\frac W8\), and experiment with different values for \(d\) in Section 5.2.1."</p></div>
+  <ol class="read">
+    <li><span class="q">"pretrained autoencoder"</span>：自编码器 = 编码器 \(E\)（压缩）+ 解码器 \(D\)（还原），训练目标是"压了再解要和原图像"。它是在 SD3 之前单独训好的。</li>
+    <li><span class="q">"\(X\in\mathbb R^{H\times W\times3}\)"</span>：大写 \(X\) 是像素图，高 \(H\)、宽 \(W\)、RGB 三通道。小写 \(x\) 是压缩后的潜变量，高 \(h\)、宽 \(w\)、\(d\) 个通道。</li>
+    <li><span class="q">"downsampling factor of 8"</span>：每 8×8 个像素变成潜变量的 1 个格子。1024×1024 的图变成 128×128 的格子。每个格子有 \(d\) 个数，SD3 最终用 \(d=16\)。</li>
+    <li><span class="q">"experiment with different values for \(d\)"</span>：\(d\) 选多少是一个实验问题，留到 5.2.1 节回答（精读 8）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 2 · 编码器把 8×8 个像素压成 1 个格子，每个格子有 \(d\) 个数</div>
+    <div class="controls"><label>通道数 \(d\) <select id="a2-d"><option value="4">4</option><option value="8">8</option><option value="16" selected>16</option></select></label><button type="button" id="a2-play">播放压缩</button><span class="readout" id="a2-read"></span></div>
+    <canvas id="a2" width="720" height="300"></canvas>
+    <figcaption>左边是一张 64×64 的玩具图。编码器每次处理一块 8×8 像素（亮框），变成右边的一个格子，格子里的竖条示意 \(d\) 个数。读数里的重建 FID、PSNR 来自 Table 3；压缩倍数是 \(8\cdot8\cdot3/d\)，我算的。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · 附录 B.2 第 1 段（续）</span><p>"We always apply the forward process from Equation 2 in the latent space, and when sampling a representation \(x\) via Equation 1, we decode it back into pixel space \(X=D(x)\) … We follow Rombach et al. (2022) and normalize the latents by their mean and standard deviation, which are globally computed over a subset of the training data."</p></div>
+  <ol class="read">
+    <li><span class="q">"forward process from Equation 2 in the latent space"</span>：Eq. 2 是 \(z_t=a_tx_0+b_t\epsilon\)，对 RF 就是 \(z_t=(1-t)x_0+t\epsilon\)。这里明确了 \(x_0\) 是潜变量 \(E(X)\)，噪声 \(\epsilon\) 的形状也是 \(h\times w\times d\)。</li>
+    <li><span class="q">"sampling … via Equation 1 … decode it back"</span>：Eq. 1 是 ODE \(dy_t=v_\Theta\,dt\)。生成时在潜空间里从纯噪声走到 \(t=0\)，最后只调用一次 \(D\) 把潜变量变回图。</li>
+    <li><span class="q">"normalize the latents by their mean and standard deviation"</span>：在一部分训练数据上统计潜变量的均值和标准差，每个潜变量减均值、除标准差。原因：路径 \((1-t)x_0+t\epsilon\) 默认 \(x_0\) 和 \(\epsilon\) 数值尺度相当。如果潜变量本身数值很大，同一个 \(t\) 下"信号多少、噪声多少"就和设计的不一样了，第一部分讲的 SNR 和 \(t\) 的对应关系也会失效。</li>
+  </ol>
+  <div class="box sd3"><b>为什么值得这么做：</b>1024×1024×3 是约 315 万个数，128×128×16 是约 26 万个数，少了 12 倍。像素里很多细节人眼看不出来，交给自编码器处理，扩散骨干只管"画什么"。代价是：自编码器还原不出来的东西，扩散模型怎么学也画不出来。这个"天花板"论证在 5.2.1 节（精读 8）。</div>
+  <details class="quiz"><summary>自测：训练 SD3 时，loss 是在像素上算还是在潜变量上算？</summary><p>在潜变量上。网络预测的速度和目标速度 \(\epsilon-x_0\) 都是 \(h\times w\times16\) 的潜变量形状。训练时根本不需要解码器 \(D\)，只有生成时最后一步才用。</p></details>
+</section>
+
+<!-- ===================================================== 3 -->
+<section class="lesson" id="l3">
+  <div class="lesson-head"><span class="no">精读 3 · 附录 B.2 "Text Representation" + B.3</span><h2>文字怎么表示：三个编码器，两种输出</h2><p class="goal">读完这段，你应该能一步步推出 \(c_{vec}\in\mathbb R^{2048}\) 和 \(c_{ctxt}\in\mathbb R^{154\times4096}\) 的每个数字。</p></div>
+  <div class="orig"><span class="loc">原文 · 附录 B.2 第 2 段（p.20）</span><p>"… for all experiments, we use a combination of CLIP models and a encoder-decoder text model. Specifically, we encode c with the text encoders of both a CLIP L/14 model … as well as an OpenCLIP bigG/14 model …"</p></div>
+  <ol class="read">
+    <li><span class="q">"CLIP models"</span>：CLIP 是用"图片和配文"对比学习训练的：匹配的图文向量靠近，不匹配的远离。所以它的文字向量天然知道"这句话对应什么画面"。CLIP 有图像编码器和文本编码器，这里只用文本编码器。L/14 和 bigG/14 是两个大小不同的版本。</li>
+    <li><span class="q">"a encoder-decoder text model"</span>：指 T5，一个只在文字上训练的语言模型，比 CLIP 更懂长句、复杂描述和要拼写的字。SD3 只用它的编码器部分。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 B.2 第 2 段（续）</span><p>"We concatenate the pooled outputs, of sizes 768 and 1280 respectively, to obtain a vector conditioning \(c_{vec}\in\mathbb R^{2048}\). We also concatenate the penultimate hidden representations channel-wise to a CLIP context conditioning \(c^{CLIP}_{ctxt}\in\mathbb R^{77\times2048}\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"pooled outputs, of sizes 768 and 1280"</span>：编码器能把整句话压成<b>一个</b>向量，叫 pooled 输出。CLIP-L 的是 768 维，bigG 的是 1280 维。首尾相接：\(768+1280=2048\)，这就是 \(c_{vec}\)。它代表整句话的大意，但细节（谁是红的、谁在左边）都糊在一起了。</li>
+    <li><span class="q">"penultimate hidden representations"</span>：penultimate 是"倒数第二层"。编码器给每个 token 一个向量，CLIP 最多处理 77 个 token（短句补齐到 77）。论文没解释为什么取倒数第二层（SDXL 也是这么取的）。</li>
+    <li><span class="q">"channel-wise"</span>：按通道方向拼：同一个 token 的两个向量（768 维和 1280 维）首尾相接，所以是 \(77\times(768+1280)=77\times2048\)。token 数不变。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 B.2 第 2 段（末）</span><p>"Next, we encode c also to the final hidden representation, \(c^{T5}_{ctxt}\in\mathbb R^{77\times4096}\), of the encoder of a T5-v1.1-XXL model. Finally, we zero-pad \(c^{CLIP}_{ctxt}\) along the channel axis to 4096 dimensions to match the T5 representation and concatenate it along the sequence axis with \(c^{T5}_{ctxt}\) to obtain the final context representation \(c_{ctxt}\in\mathbb R^{154\times4096}\). These two caption representations, \(c_{vec}\) and \(c_{ctxt}\), are used in two different ways as described in Section 4."</p></div>
+  <ol class="read">
+    <li><span class="q">"final hidden representation … T5-v1.1-XXL"</span>：T5 取最后一层，也是 77 个 token，每个 4096 维。</li>
+    <li><span class="q">"zero-pad … to 4096"</span>：CLIP 部分只有 2048 维，右边补 2048 个 0，变成 \(77\times4096\)，和 T5 一样宽。补零不加信息，只为形状对齐。</li>
+    <li><span class="q">"concatenate it along the sequence axis"</span>：这次按 token 方向（上下）拼：\(77+77=154\) 个 token，每个 4096 维。Fig. 2a 里 "77 + 77 tokens" 就是这个意思。</li>
+    <li><span class="q">"used in two different ways as described in Section 4"</span>：伏笔。\(c_{vec}\) 进调制（精读 4），\(c_{ctxt}\) 作为 token 进注意力（精读 5、6）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 3 · 按上面三段原文，一步步拼出 \(c_{vec}\) 和 \(c_{ctxt}\)</div>
+    <div class="controls"><button type="button" id="a4-next">下一步</button><button type="button" id="a4-reset">从头</button></div>
+    <p class="readout" id="a4-read"></p>
+    <canvas id="a4" width="720" height="340"></canvas>
+    <figcaption>矩形的宽代表维数，高代表 token 个数，比例按真实数字画。对照 Fig. 2a 左上角看，是同一张图。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · 附录 B.3 "Optimization" 最后一句（p.21）</span><p>"For unconditional diffusion guidance …, we set the outputs of each of the three text encoders independently to zero with a probability of 46.4%, such that we roughly train an unconditional model in 10% of all steps."</p></div>
+  <ol class="read">
+    <li><span class="q">"unconditional diffusion guidance"</span>：即 classifier-free guidance（CFG）：采样时同时算"有文字"和"没文字"两个速度，往"有文字"的方向多推一点，图会更贴合文字。所以训练时网络也得会处理"没文字"的输入。</li>
+    <li><span class="q">"independently … 46.4% … 10% of all steps"</span>：三个编码器各自独立地以 46.4% 的概率被置零，三个同时为零的概率是 \(0.464^3\approx0.0999\)，约 10%。好处是推理时可以只用一部分编码器（比如去掉 T5 省显存），第三部分 5.3.3 节 "Flexible Text Encoders" 讲。注意 5.3.3 节写的是 46.3%，和这里差 0.1，是论文里的小出入。</li>
+  </ol>
+  <details class="quiz"><summary>自测：如果只用 \(c_{vec}\)，"一只红猫和一只蓝狗"可能出什么问题？</summary><p>\(c_{vec}\) 把整句压成一个向量，"红、蓝、猫、狗"混在一起，模型可能画成蓝猫红狗。\(c_{ctxt}\) 保留了每个 token，模型才能把"红"绑定到"猫"上。这就是精读 4 里原文说 pooled 向量 "retains only coarse-grained information" 的意思。</p></details>
+</section>
+
+<!-- ===================================================== 4 -->
+<section class="lesson" id="l4">
+  <div class="lesson-head"><span class="no">精读 4 · §4 "Multimodal Diffusion Backbone" 第 1 段 + Fig. 2b 上半</span><h2>沿用 DiT：时间和整句大意走"调制"</h2><p class="goal">读完这段，你应该能说清 DiT 的调制是什么，\(y\) 怎么来的，以及为什么光有调制不够。</p></div>
+  <div class="orig"><span class="loc">原文 · §4 骨干第 1 段（p.4）</span><p>"Our architecture builds upon the DiT (Peebles &amp; Xie, 2023) architecture. DiT only considers class conditional image generation and uses a modulation mechanism to condition the network on both the timestep of the diffusion process and the class label. Similarly, we use embeddings of the timestep \(t\) and \(c_{vec}\) as inputs to the modulation mechanism."</p></div>
+  <div class="box bg"><b>背景：一个 Transformer 块</b>（论文默认你会）<br>Transformer 处理一串 token（每个是一个向量）。一个块 = 注意力 + MLP，前面各有 LayerNorm，后面各有残差：\(h\leftarrow h+\text{Attn}(\text{LN}(h))\)，\(h\leftarrow h+\text{MLP}(\text{LN}(h))\)。LayerNorm 把每个 token 的向量减均值、除标准差；MLP 是每个 token 自己算的两层全连接；残差让每块只在原来基础上"加一点修改"。<b>注意力是唯一让不同 token 交换信息的地方</b>，下一节详细讲。</div>
+  <ol class="read">
+    <li><span class="q">"builds upon the DiT"</span>：DiT（Diffusion Transformer）是把扩散模型的 UNet 换成 Transformer 的工作。SD1、SDXL 用的都是 UNet，SD3 改用 Transformer 一族。</li>
+    <li><span class="q">"DiT only considers class conditional image generation"</span>：DiT 原本在 ImageNet 上做"给一个类别（比如 207 号：金毛犬）画一张图"，条件只是一个类别编号，没有句子。</li>
+    <li><span class="q">"a modulation mechanism"</span>：DiT 的调制叫 adaLN：LayerNorm 之后，不直接往下走，先<b>乘一个向量、加一个向量</b>，这两个向量由条件算出来。条件不同，每一层的"放大哪些特征、偏移多少"就不同。</li>
+    <li><span class="q">"we use embeddings of the timestep \(t\) and \(c_{vec}\)"</span>：SD3 把 DiT 的"类别"换成了 \(c_{vec}\)（整句大意）。Fig. 2a 左下：\(t\) 先做正弦编码再过 MLP，\(c_{vec}\) 过另一个 MLP，两者相加得到 \(y\)。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 4 · 拖动 \(t\)：时间编码变了，调制把特征"拉伸、平移、开关"</div>
+    <div class="controls"><label>\(t\) <input type="range" id="a7-t" min="0" max="1" step="0.01" value="0.8"></label><span class="readout" id="a7-read"></span></div>
+    <canvas id="a7" width="720" height="320"></canvas>
+    <figcaption>上面一行是 \(t\) 的正弦编码（32 维，颜色表示正负），用的是 Transformer 和 DiT 的标准公式：一组不同频率的 sin、cos，每个 \(t\) 有独特的"指纹"。下面灰色是某个 token 经过 LayerNorm 的特征分布，蓝色是调制后的 \(\alpha\cdot\text{LN}+\beta\)，右边是门 \(\gamma\)。\(\alpha,\beta,\gamma\) 随 \(t\) 怎么变是我编的示意，真实网络里由学到的线性层决定。</figcaption>
+  </figure>
+  <h3>Fig. 2b 里的六个调制参数</h3>
+  <p>Fig. 2b 最上方：\(y\) → SiLU → Linear，分出每一块、每个模态各六个向量（图里左边带下标 \(c\) 的给文字流，右边带下标 \(x\) 的给图片流）：</p>
+  <div class="tbl"><table>
+    <thead><tr><th>参数</th><th>在 Fig. 2b 的位置</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td>\(\alpha,\ \beta\)</td><td>第一个 Layernorm 下面 "Mod: \(\alpha\cdot\bullet+\beta\)"</td><td>注意力之前缩放、平移</td></tr>
+      <tr><td>\(\gamma\)</td><td>注意力输出的 Linear 下面那个 ∗</td><td>门：注意力的结果加回残差前乘多少</td></tr>
+      <tr><td>\(\delta,\ \epsilon\)</td><td>第二个 Layernorm 下面 "Mod: \(\delta\cdot\bullet+\epsilon\)"</td><td>MLP 之前缩放、平移</td></tr>
+      <tr><td>\(\zeta\)</td><td>MLP 下面那个 ∗</td><td>门：MLP 的结果加回残差前乘多少</td></tr>
+    </tbody>
+  </table></div>
+  <div class="orig"><span class="loc">原文 · §4 骨干第 1 段（末）</span><p>"However, as the pooled text representation retains only coarse-grained information about the text input (Podell et al., 2023), the network also requires information from the sequence representation \(c_{ctxt}\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"retains only coarse-grained information"</span>：调制是对<b>所有 token 统一</b>乘、统一加，它只能传"全局"信息：现在是第几步、整句话大概是什么。"左上角画一只红猫"这种和位置、词与词关系有关的细节，调制传不了。</li>
+    <li><span class="q">"also requires … \(c_{ctxt}\)"</span>：所以 154 个文字 token 必须以 token 的身份进入网络，通过注意力和图片 token 交换信息。怎么进，就是下一段和精读 6 要讲的。</li>
+  </ol>
+  <details class="quiz"><summary>自测：如果某一块的 \(\gamma\) 全是 0，这块的注意力还起作用吗？</summary><p>不起作用。注意力输出乘 \(\gamma\) 才加回残差，\(\gamma=0\) 等于什么都没加。因为 \(\gamma\) 由 \(y\) 算出，网络可以学会在某些 \(t\)、某些句子下开，另一些情况下关。</p></details>
+</section>
+
+<!-- ===================================================== 5 -->
+<section class="lesson" id="l5">
+  <div class="lesson-head"><span class="no">精读 5 · §4 "Multimodal Diffusion Backbone" 第 2 段</span><h2>切块：图片和文字都变成一串 token</h2><p class="goal">读完这段，你应该能算出任意分辨率下的 token 数，并说清"common dimensionality"和"concatenate"指什么。</p></div>
+  <div class="orig"><span class="loc">原文 · §4 骨干第 2 段（p.4 到 5）</span><p>"We construct a sequence consisting of embeddings of the text and image inputs. Specifically, we add positional encodings and flatten 2 × 2 patches of the latent pixel representation \(x\in\mathbb R^{h\times w\times c}\) to a patch encoding sequence of length \(\frac12\cdot h\cdot\frac12\cdot w\). After embedding this patch encoding and the text encoding \(c_{ctxt}\) to a common dimensionality, we concatenate the two sequences."</p></div>
+  <ol class="read">
+    <li><span class="q">"a sequence consisting of embeddings of the text and image inputs"</span>：目标是一串 token，前一部分是文字，后一部分是图片。Transformer 只认"一串向量"，没有"二维"的概念。</li>
+    <li><span class="q">"flatten 2 × 2 patches"</span>：把潜变量里相邻的 2×2 个格子打包成一个 token。每个 token 里有 \(2\cdot2\cdot16=64\) 个数。为什么不是每格一个 token？因为注意力的计算量和长度的平方成正比，打包后长度变成 1/4，计算量变成 1/16。这是 DiT 的做法，5.3.3 节也说 "We train on 2 × 2 patches"。</li>
+    <li><span class="q">"\(x\in\mathbb R^{h\times w\times c}\)"</span>：这里通道数写成了 \(c\)（附录 B.2 写成 \(d\)），同一个东西。也别和 caption 的 \(c\) 混淆。</li>
+    <li><span class="q">"length \(\frac12\cdot h\cdot\frac12\cdot w\)"</span>：1024×1024 → 潜变量 128×128 → \(64\times64=4096\) 个 token。</li>
+    <li><span class="q">"add positional encodings"</span>：排成一串之后，网络分不清哪个 token 原来在左上、哪个在右下，所以给每个 token 加上一个表示坐标的向量。具体是 2D 频率编码，换分辨率和长宽比时怎么改在 5.3.2 节（第三部分）。</li>
+    <li><span class="q">"embedding … to a common dimensionality"</span>：图片 token 是 64 维，文字 token 是 4096 维，各用一个线性层映射到同样的宽度（隐藏维度 \(64d\)，精读 7）。Fig. 2a 里图片那路的 "Linear" 和文字那路的 "Linear" 就是这两个。</li>
+    <li><span class="q">"we concatenate the two sequences"</span>：154 个文字 token + 4096 个图片 token，拼成 4250 个 token 的一串。但注意下一段马上说两部分用两套权重，拼接只发生在注意力里（精读 6）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 5 · 切块并排成一串（玩具：8×8 的潜变量）</div>
+    <div class="controls"><button type="button" id="a3-play">播放</button><button type="button" id="a3-reset">重来</button><label><input type="checkbox" id="a3-pos" checked> 显示位置编号</label><span class="readout" id="a3-read"></span></div>
+    <canvas id="a3" width="720" height="320"></canvas>
+    <figcaption>8×8 的潜变量按 2×2 切成 16 块，按行排成一串。每个 token 下面的（行，列）就是位置编码要告诉网络的信息。</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>图片分辨率</th><th>潜变量</th><th>图片 token</th><th>+ 文字 token</th></tr></thead>
+    <tbody><tr><td>256×256</td><td>32×32×16</td><td>256</td><td>154</td></tr><tr><td>512×512</td><td>64×64×16</td><td>1024</td><td>154</td></tr><tr><td>1024×1024</td><td>128×128×16</td><td>4096</td><td>154</td></tr></tbody>
+  </table></div>
+  <p>分辨率翻倍，图片 token 变 4 倍，注意力计算量约变 16 倍。这就是 5.3.2 节先在 256×256 上预训练、最后才微调到 1024 的原因。</p>
+  <details class="quiz"><summary>自测：一张 768×1344 的图有多少个图片 token？</summary><p>潜变量 \(96\times168\)，切 2×2 后 \(48\times84=4032\) 个。和 1024×1024 的 4096 个差不多，这正是第三部分"像素总数约等于 \(S^2\)"的分桶思路。</p></details>
+</section>
+
+<!-- ===================================================== 6 -->
+<section class="lesson" id="l6">
+  <div class="lesson-head"><span class="no">精读 6 · Fig. 2 下方第 1、2 段 + Fig. 2b</span><h2>MM-DiT：两套权重，一次联合注意力</h2><p class="goal">读完这段，你应该能对着 Fig. 2b 讲出一个块里每个方框，并说清"等价于两个 Transformer"是什么意思。</p></div>
+  <div class="orig"><span class="loc">原文 · §4，Fig. 2 下方第 1 段（p.5）</span><p>"… we concatenate the two sequences. We then follow DiT and apply a sequence of modulated attention and MLPs."</p></div>
+  <p>"modulated attention and MLPs" 就是精读 4 的调制版 Transformer 块。要读懂这一节，先补一个背景：注意力。</p>
+  <div class="box bg"><b>背景：注意力</b>（论文默认你会）<br>每个 token 用三个矩阵算出三个向量：Query（我想找什么）、Key（我有什么）、Value（我给出的内容）。token \(i\) 的 Q 和每个 token \(j\) 的 K 做点积，除以 \(\sqrt{d_k}\)，softmax 变成加起来为 1 的权重，再按权重把所有 V 加起来：\(\operatorname{softmax}(QK^\top/\sqrt{d_k})V\)。点积大 = "对上了" = 多听它。多头注意力就是把向量切成几份，各做一次。下面的图可以点不同的 token 看它"听谁"。</div>
+  <figure>
+    <div class="fig-title">图 6 · 点一个 token，看它听谁的（玩具数字，Q、K 都是 2 维）</div>
+    <div class="controls"><label>提问的 token <select id="a6-q"></select></label><span class="readout" id="a6-read"></span></div>
+    <canvas id="a6" width="720" height="330"></canvas>
+    <figcaption>左边细箭头是每个 token 的 K，粗箭头是选中 token 的 Q。右边是 \(q\cdot k_j/\sqrt2\) 和 softmax 后的权重，真实计算。文字 token（粉）和图片 token（蓝）在同一次注意力里，图片块可以直接"听"文字，这就是联合注意力。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · §4，Fig. 2 下方第 2 段（p.5）</span><p>"Since text and image embeddings are conceptually quite different, we use two separate sets of weights for the two modalities. As shown in Figure 2b, this is equivalent to having two independent transformers for each modality, but joining the sequences of the two modalities for the attention operation, such that both representations can work in their own space yet take the other one into account."</p></div>
+  <ol class="read">
+    <li><span class="q">"conceptually quite different"</span>：文字 token 来自 T5/CLIP，图片 token 来自自编码器的潜变量，数值分布、含义完全不同。让同一套矩阵同时处理两者是强人所难。</li>
+    <li><span class="q">"two separate sets of weights"</span>：Fig. 2b 左列（\(c\)）和右列（\(x\)）结构一模一样，但每个方框各有自己的参数：各自的 Layernorm、调制（\(\alpha_c\) 和 \(\alpha_x\) 分开）、算 Q/K/V 的 Linear、注意力之后的 Linear、MLP。</li>
+    <li><span class="q">"equivalent to having two independent transformers"</span>：把 Fig. 2b 中间的 Attention 盖住，左右两列就是两个互不相干的 Transformer。</li>
+    <li><span class="q">"joining the sequences … for the attention operation"</span>：唯一的连接点是 Attention：左列的 Q、K、V 和右列的 Q、K、V 在 token 方向拼起来（图里 ⊙），做<b>一次</b>注意力。于是每个文字 token 能听所有图片 token，每个图片 token 也能听所有文字 token。出来后按位置拆开，各回各的 Linear。</li>
+    <li><span class="q">"work in their own space yet take the other one into account"</span>：两全：各用各的权重（自己的空间），又在注意力里互相看见。而且文字 token 也被逐层更新（文字的意思可以随"画到哪了"而调整），这是和交叉注意力最大的区别（精读 10）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 7 · 注意力矩阵：每一格是"行 token 听列 token"</div>
+    <div class="controls"><label>结构 <select id="a8-m"><option value="dit">DiT：拼接，一套权重</option><option value="cross">CrossDiT：交叉注意力</option><option value="mm" selected>MM-DiT：两套权重，联合注意力</option></select></label><button type="button" id="a8-flow">播放一次信息流</button></div>
+    <canvas id="a8" width="720" height="360"></canvas>
+    <figcaption>玩具：3 个文字 token（粉）、6 个图片 token（蓝）。涂色的格子是这种结构会算的注意力，颜色表示那一行的 Q 用哪套权重算。切换三种结构对比：MM-DiT 和 DiT 的矩阵一样满，区别在权重分两套；CrossDiT 没有文字行，文字不被更新。</figcaption>
+  </figure>
+  <div class="box ref"><b>对着 Fig. 2b 从上往下走一遍（以图片流为例，文字流完全对称）</b><ul><li>\(y\) → SiLU → Linear → 六个调制向量 \(\alpha_x,\beta_x,\gamma_x,\delta_x,\epsilon_x,\zeta_x\)。</li><li>\(x\) → Layernorm → Mod: \(\alpha_x\cdot\bullet+\beta_x\) → Linear 得到 Q、K、V →（可选）Q、K 各过 RMS-Norm。</li><li>和文字流的 Q、K、V 拼接 → Attention → 拆出图片部分 → Linear → 乘 \(\gamma_x\) → 加回残差（⊕）。</li><li>→ Layernorm → Mod: \(\delta_x\cdot\bullet+\epsilon_x\) → MLP → 乘 \(\zeta_x\) → 加回残差。</li><li>图注："Concatenation is indicated by ⊙ and element-wise multiplication by ∗. The RMS-Norm for Q and K can be added to stabilize training runs." 后半句的 QK-norm 在 5.3.2 节（第三部分）。</li></ul></div>
+  <details class="quiz"><summary>自测：一个 MM-DiT 块里，文字和图片 token 在哪几个操作上"用的是同一个东西"？</summary><p>只有注意力那一步的 softmax 是在拼起来的整串上一起做的，以及两者都用同一个 \(y\) 算调制（但通过不同的 Linear 得到 \(\alpha_c\) 和 \(\alpha_x\)）。其余所有层的权重都是两套。</p></details>
+</section>
+
+<!-- ===================================================== 7 -->
+<section class="lesson" id="l7">
+  <div class="lesson-head"><span class="no">精读 7 · §4 最后一段</span><h2>模型大小：只用一个旋钮 \(d\)</h2><p class="goal">读完这段，你应该能从 \(d\) 推出隐藏维度、头数，并粗算出 2B 和 8B。</p></div>
+  <div class="orig"><span class="loc">原文 · §4 最后一段（p.5）</span><p>"For our scaling experiments, we parameterize the size of the model in terms of the model's depth \(d\), i.e. the number of attention blocks, by setting the hidden size to \(64\cdot d\) (expanded to \(4\cdot64\cdot d\) channels in the MLP blocks), and the number of attention heads equal to \(d\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"For our scaling experiments"</span>：第三部分要画"模型越大 loss 越低"的曲线，需要一个单一的大小旋钮。</li>
+    <li><span class="q">"depth \(d\), i.e. the number of attention blocks"</span>：\(d\) = Fig. 2a 里 MM-DiT-Block 的个数。</li>
+    <li><span class="q">"hidden size to \(64\cdot d\)"</span>：每个 token 在网络内部的宽度。\(d=24\) 时 1536，\(d=38\) 时 2432。精读 5 里"common dimensionality"就是这个数。</li>
+    <li><span class="q">"\(4\cdot64\cdot d\) channels in the MLP"</span>：MLP 中间层是隐藏维度的 4 倍，Transformer 的常规设置。</li>
+    <li><span class="q">"number of attention heads equal to \(d\)"</span>：隐藏维度 \(64d\) 切成 \(d\) 份，每个头固定 64 维。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 8 · 拖动深度 \(d\)，看模型尺寸（参数是我按 Fig. 2b 粗估）</div>
+    <div class="controls"><label>深度 \(d\) <input type="range" id="a9-d" min="12" max="40" step="1" value="24"></label><span class="readout" id="a9-read"></span></div>
+    <canvas id="a9" width="720" height="300"></canvas>
+    <figcaption>粗估：每块每个模态有 Q、K、V、输出四个 \(h\times h\) 矩阵（\(4h^2\)）、MLP（\(8h^2\)）、调制（\(y\) 到六个向量，\(6h^2\)），共 \(18h^2\)；两个模态 \(36h^2\)；乘以 \(d\)。不含输入输出层和文本编码器。结果 \(d=24\) 约 2.0B，\(d=38\) 约 8.1B，和论文的 "2B (d=24)"（Fig. 5 图注）、"8B"（Table 5 的 depth=38）对得上。竖线是论文训练过的深度。</figcaption>
+  </figure>
+  <div class="box sd3"><b>注意宽度也跟着变：</b>加深的同时也在加宽，所以参数约正比于 \(d^3\)：\(d\) 翻倍，参数约 8 倍。8B 只是 MM-DiT 本身，推理时还要加冻结的 T5-XXL（4.7B，5.3.3 节）、两个 CLIP 和自编码器。论文没有给每个深度的参数表，上面的粗估是我算的。</div>
+  <details class="quiz"><summary>自测：\(d=30\) 的模型隐藏维度、头数、MLP 宽度各是多少？</summary><p>隐藏维度 \(64\times30=1920\)，30 个头（每头 64 维），MLP 中间 \(4\times1920=7680\)。粗估参数 \(36\times1920^2\times30\approx4.0\)B。</p></details>
+</section>
+
+<!-- ===================================================== 8 -->
+<section class="lesson" id="l8">
+  <div class="lesson-head"><span class="no">精读 8 · §5.2 引言 + §5.2.1 + Table 3 + Fig. 10</span><h2>自编码器：通道数越多越好吗</h2><p class="goal">读完这段，你应该能说清"天花板"论证、Table 3 每一行的意思，以及为什么 Fig. 10 是选 16 通道的关键证据。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.2 引言（p.6 到 7）</span><p>"… the final performance of our algorithm depends not only on the training formulation, but also on the parameterization via a neural network and the quality of the image and text representations we use. In the following sections, we describe how we improve all these components before scaling our final method in Section 5.3."</p></div>
+  <ol class="read">
+    <li><span class="q">"not only on the training formulation"</span>：5.1 节（第一部分）只解决了"怎么训练"（RF + logit-normal）。</li>
+    <li><span class="q">"parameterization via a neural network … image and text representations"</span>：还剩三样：网络结构（5.2.3）、图像表示（5.2.1）、文字表示（5.2.2）。5.2 的三个小节就是逐个改进它们，然后 5.3 才放大。所以 5.2 是"配方定稿"。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.2.1（p.7）</span><p>"The reconstruction quality of this autoencoder provides an upper bound on the achievable image quality after latent diffusion training. … we find that increasing the number of latent channels \(d\) significantly boosts reconstruction performance, see Table 3. Intuitively, predicting latents with higher \(d\) is a more difficult task, and thus models with increased capacity should be able to perform better for larger \(d\) … We confirm this hypothesis in Figure 10 …"</p></div>
+  <ol class="read">
+    <li><span class="q">"upper bound on the achievable image quality"</span>：天花板论证。扩散模型就算完美地生成了潜变量，最后也要经过解码器 \(D\)。\(D\) 还原不了的细节，最终的图里就不会有。</li>
+    <li><span class="q">"increasing the number of latent channels \(d\) significantly boosts reconstruction"</span>：见下表，4 → 8 → 16 通道，四个指标全部单调变好。</li>
+    <li><span class="q">"predicting latents with higher \(d\) is a more difficult task"</span>：代价。通道多了，潜变量里信息更多，扩散模型要学的分布更复杂。</li>
+    <li><span class="q">"models with increased capacity should be able to perform better for larger \(d\)"</span>：作者的假设：小模型吃不下 16 通道，大模型吃得下。</li>
+    <li><span class="q">"We confirm this hypothesis in Figure 10"</span>：Fig. 10 在附录 p.21，横轴是 flow 模型的深度，三条线是 4、8、16 通道，纵轴是生成图的 FID。图注："the flow model trained on the 16-channel autoencoder space needs more model capacity … At depth \(d=22\), the gap between 8-chn and 16-chn becomes negligible. We opt for the 16-chn model as we ultimately aim to scale to much larger model sizes."</li>
+  </ol>
+  <div class="tbl"><table>
+    <thead><tr><th>Table 3（下采样 \(f=8\)）</th><th>4 通道</th><th>8 通道</th><th>16 通道</th></tr></thead>
+    <tbody>
+      <tr><td>FID ↓（重建图和原图的分布距离）</td><td>2.41</td><td>1.56</td><td>1.06</td></tr>
+      <tr><td>Perceptual Similarity ↓（感知距离）</td><td>0.85</td><td>0.68</td><td>0.45</td></tr>
+      <tr><td>SSIM ↑（结构相似度，最大 1）</td><td>0.75</td><td>0.79</td><td>0.86</td></tr>
+      <tr><td>PSNR ↑（信噪比，dB）</td><td>25.12</td><td>26.40</td><td>28.62</td></tr>
+      <tr><td>压缩倍数 \(8\cdot8\cdot3/d\)（我算的）</td><td>48×</td><td>24×</td><td>12×</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box warn"><b>两种 FID 别混：</b>Table 3 的 FID 是<b>重建</b> FID，比较"原图"和"压了再解的图"，衡量自编码器。Fig. 10 的 FID 是<b>生成</b> FID，衡量整个扩散模型画得好不好。Table 3 只说明天花板高，Fig. 10 才说明大模型能不能够到天花板。SD1、SDXL 用的是 4 通道。</div>
+  <details class="quiz"><summary>自测：如果有人只看 Table 3 就说"16 通道肯定最好"，哪里不对？</summary><p>Table 3 只说明重建更好。Fig. 10 显示小模型在 16 通道上的生成 FID 反而更差，到深度 22 左右才追平 8 通道。选 16 的理由是"我们要做很大的模型"，这是一个押注规模的选择。</p></details>
+</section>
+
+<!-- ===================================================== 9 -->
+<section class="lesson" id="l9">
+  <div class="lesson-head"><span class="no">精读 9 · §5.2.2 + Table 4</span><h2>合成 caption：一半原始，一半 CogVLM</h2><p class="goal">读完这段，你应该能说清为什么要合成 caption、为什么是 50/50、Table 4 每一行怎么读。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.2.2（p.7）</span><p>"Betker et al. (2023) demonstrated that synthetically generated captions can greatly improve text-to-image models trained at scale. This is due to the oftentimes simplistic nature of the human-generated captions … which overly focus on the image subject and usually omit details describing the background or composition of the scene, or, if applicable, displayed text."</p></div>
+  <ol class="read">
+    <li><span class="q">"Betker et al. (2023)"</span>：这是 DALL-E 3 的论文，它的主要发现就是"重写训练配文"。</li>
+    <li><span class="q">"overly focus on the image subject"</span>：网上的配文通常只说主体（"一只猫"），不写背景、构图、画面里的文字。模型从没见过"详细描述 ↔ 画面"的对应，就学不会听复杂的提示。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.2.2（续）</span><p>"… use an off-the-shelf, state-of-the-art vision-language model, CogVLM, to create synthetic annotations … As synthetic captions may cause a text-to-image model to forget about certain concepts not present in the VLM's knowledge corpus, we use a ratio of 50 % original and 50 % synthetic captions."</p></div>
+  <ol class="read">
+    <li><span class="q">"CogVLM"</span>：一个看图说话的模型，给每张训练图写一段详细描述。</li>
+    <li><span class="q">"forget about certain concepts not present in the VLM's knowledge corpus"</span>：CogVLM 不认识的东西（比如某些专有名词、人物、作品名），它写的配文里就不会出现。只用合成配文，模型就学不到这些词。保留一半原始配文是为了留住它们。</li>
+    <li><span class="q">"50 % original and 50 % synthetic"</span>：论文没有比较其他比例，50/50 是一个合理的折中，不是实验选出来的最优值。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 9 · Table 4：GenEval 各项成功率（%）</div>
+    <div class="controls"><button type="button" id="a5c-play">播放</button><span class="readout" id="a5c-read"></span></div>
+    <canvas id="a5c" width="720" height="300"></canvas>
+    <figcaption>原文实验设置："we train two \(d=15\) MM-DiT models for 250k steps, one on only original captions and the other on the 50/50 mix"。GenEval 用检测模型自动判断生成图是否满足要求（物体个数、颜色、位置等）。</figcaption>
+  </figure>
+  <ol class="read">
+    <li><b>总分</b> 43.27 → 49.78。</li>
+    <li><b>涨得最多</b>：颜色归属 11.75 → 24.75（翻倍多），位置 6.50 → 18.00，两个物体 41.41 → 52.53，计数 33.44 → 41.56。这些都要求理解句子结构（哪个颜色属于哪个物体、谁在谁左边），正是详细配文教得会的。</li>
+    <li><b>略降</b>：颜色 71.54 → 68.09，单个物体 95.00 → 93.75。幅度小，单个物体本来就接近满分。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>两个小模型各训一次，只看 GenEval 一个自动指标，没有随机种子重复。足够支持"混合比只用原始好"，但不能说明 50/50 最优。</div>
+  <details class="quiz"><summary>自测：为什么不全用合成 caption？</summary><p>CogVLM 不认识的概念在合成配文里会消失，模型就学不到这些词和画面的对应，等于"忘掉"它们。保留一半原始配文可以留住这些概念。</p></details>
+</section>
+
+<!-- ===================================================== 10 -->
+<section class="lesson" id="l10">
+  <div class="lesson-head"><span class="no">精读 10 · §5.2.3 + Fig. 4</span><h2>骨干网络比较：为什么是 MM-DiT</h2><p class="goal">读完这段，你应该能说清参赛的五种结构各是什么、在比什么，以及 Fig. 4 支持了哪些结论、没支持哪些。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.2.3 第 1 段（p.7）</span><p>"… we follow the experimental setup from Section 5.1 and compare text-to-image performance on CC12M of DiT, CrossDiT (DiT but with cross-attending to the text tokens instead of sequence-wise concatenation (Chen et al., 2023)) and our MM-DiT. For MM-DiT, we compare models with two sets of weights and three sets of weights, where the latter handles the CLIP and T5 tokens … separately. Note that DiT (w/ concatenation of text and image tokens as in Section 4) can be interpreted as a special case of MM-DiT with one shared set of weights for all modalities. Finally, we consider the UViT architecture as a hybrid between the widely used UNets and transformer variants."</p></div>
+  <ol class="read">
+    <li><span class="q">"follow the experimental setup from Section 5.1"</span>：和第一部分 5.1 一样的小规模设置（附录 B.3：batch 1024、AdamW、学习率 \(10^{-4}\)），这里只用 CC12M 一个数据集。</li>
+    <li><span class="q">"DiT"</span>：文字和图片 token 拼成一串，<b>一套权重</b>。原文点明它就是"只有一套权重的 MM-DiT"。</li>
+    <li><span class="q">"CrossDiT … cross-attending to the text tokens"</span>：Chen et al. (2023) 是 PixArt-α。图片 token 先自注意力，再做一次"图片问、文字答"的交叉注意力。文字只提供 K、V，<b>从头到尾不被更新</b>。SD1、SDXL 的 UNet 也是交叉注意力的思路。</li>
+    <li><span class="q">"two sets of weights and three sets of weights"</span>：两套 = 文字一套、图片一套（精读 6）。三套 = 把文字再拆成 CLIP 一套、T5 一套。</li>
+    <li><span class="q">"UViT … a hybrid between the widely used UNets and transformer variants"</span>：Hoogeboom et al. (2023) 的结构，UNet 的骨架里放 Transformer 块。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.2.3 第 2 段（p.9）</span><p>"We analyze the convergence behavior of these architectures in Figure 4: Vanilla DiT underperforms UViT. The cross-attention DiT variant CrossDiT achieves better performance than UViT, although UViT seems to learn much faster initially. Our MM-DiT variant significantly outperforms the cross-attention and vanilla variants. We observe only a small gain when using three parameter sets instead of two (at the cost of increased parameter count and VRAM usage), and thus opt for the former option for the remainder of this work."</p></div>
+  <ol class="read">
+    <li><span class="q">"convergence behavior … Figure 4"</span>：Fig. 4 画的是随训练步数（到 500k 步）的变化：左图验证 loss（图里写 "average over levels 1-7"，即在 \(t\) 的几个等距档位上分别算 loss 再平均），右图左轴 FID、右轴 CLIP score。图注："MM-DiT performs favorably across all metrics"。</li>
+    <li><span class="q">"Vanilla DiT underperforms UViT"</span>：一套权重硬塞两种模态，效果最差的一档。</li>
+    <li><span class="q">"CrossDiT … better than UViT, although UViT … faster initially"</span>：交叉注意力比 UViT 好，但 UViT 前期学得快，曲线有交叉。</li>
+    <li><span class="q">"MM-DiT … significantly outperforms"</span>：两套权重 + 联合注意力，三个指标都最好。和 DiT 比说明"分两套权重"有用；和 CrossDiT 比说明"文字也参与更新、双向注意"有用。</li>
+    <li><span class="q">"only a small gain when using three parameter sets … opt for the former"</span>："the former" 指两套。三套的收益抵不过多出来的参数和显存。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>Fig. 4 是小规模、单次训练的曲线，没有误差范围。"三套收益小"是看曲线的定性判断，论文没给数字。另外这些结构参数量不完全相同（MM-DiT 两套权重参数更多），论文没有做"同参数量"的对照。</div>
+  <details class="quiz"><summary>自测：在 CrossDiT 里，第 10 层的文字 token 和第 1 层的有什么区别？</summary><p>没有区别。交叉注意力里文字只提供 K、V，不被更新，每一层看到的都是同一份文字表示。MM-DiT 里文字 token 每层都经过注意力和 MLP，会被图片信息更新。</p></details>
+</section>
+
+<!-- ===================================================== 11 -->
+<section class="lesson" id="l11">
+  <div class="lesson-head"><span class="no">总结</span><h2>串起来：一次完整的前向</h2><p class="goal">合上论文，能对着 Fig. 2a 讲出每个方框，并说出它来自哪一段原文。</p></div>
+  <ol>
+    <li><b>图片</b>：训练图 → 冻结的 \(E\) → 归一化的 16 通道潜变量 \(x_0\)（附录 B.2、§5.2.1）。</li>
+    <li><b>加噪</b>：按第一部分抽 \(t\)（logit-normal）和 \(\epsilon\)，\(z_t=(1-t)x_0+t\epsilon\)（Eq. 2、§3）。</li>
+    <li><b>图片 token</b>：\(z_t\) 切 2×2 → Linear → 加位置编码 → \(x\)（§4 骨干第 2 段）。</li>
+    <li><b>文字 token</b>：caption（一半原始一半 CogVLM，§5.2.2）→ CLIP-L、CLIP-G、T5 → \(c_{ctxt}\in\mathbb R^{154\times4096}\) → Linear → \(c\)（附录 B.2）。</li>
+    <li><b>调制向量</b>：\(t\) 正弦编码过 MLP + \(c_{vec}\) 过 MLP → \(y\)（§4 骨干第 1 段）。</li>
+    <li><b>\(d\) 个 MM-DiT 块</b>：两套权重，联合注意力（Fig. 2 下方、Fig. 2b、§5.2.3）。</li>
+    <li><b>输出</b>：图片流 → Modulation → Linear → Unpatching → 速度 \(v_\Theta\)（Fig. 2a 右下）。</li>
+    <li><b>loss</b>：和 \(\epsilon-x_0\) 的平方误差（第一部分）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 10 · Fig. 2a 的数据流（点"播放"跟着数据走）</div>
+    <div class="controls"><button type="button" id="a10-play">播放</button><span class="readout" id="a10-read"></span></div>
+    <canvas id="a10" width="720" height="420"></canvas>
+    <figcaption>按 Fig. 2a 的布局重画：粉色是输入输出，绿色是固定的处理，蓝色是要训练的层。三个亮点分别代表文字、时间、图片的信息，在 MM-DiT 块里汇合。</figcaption>
+  </figure>
+  <div class="box sd3"><b>这一部分在全文中的位置：</b>MM-DiT 是论文的第二个贡献（§1 的贡献列表）。5.2 的三个改进（16 通道、50/50 caption、MM-DiT）加上 5.1 的 RF + logit-normal，就是第三部分 5.3 要放大到 8B 的配方。</div>
+  <details class="quiz"><summary>最终自测：用三句话讲清 MM-DiT。</summary><p>图片切成 2×2 的 token，文字用两个 CLIP 和 T5 编码成 154 个 token，时间和整句大意 \(c_{vec}\) 合成 \(y\) 去调制每一层。每个块里文字和图片各用一套权重，但把两边的 Q、K、V 拼起来做一次联合注意力，所以两种模态互相看见、一起逐层更新。在 CC12M 的小规模比较中，它的 loss、CLIP、FID 都好于一套权重的 DiT 和文字不更新的 CrossDiT，而再细分成三套权重收益很小。</p></details>
+</section>
+
+<footer>
+  <p>依据：Esser et al., "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis", ICML 2024（<a href="https://arxiv.org/abs/2403.03206v1">arXiv 2403.03206v1</a>）第 4 节、5.2 节、Fig. 2、Fig. 4、Fig. 10、Table 3、Table 4 与附录 B.2、B.3；Peebles &amp; Xie, "Scalable Diffusion Models with Transformers"（DiT），ICCV 2023。引文为论文原句的节选。图 2、4、5、6、7、10 是示意；图 9 和表格的数字来自论文；图 8 的参数是按结构粗估。</p>
+  <p>上一部分：<a href="/writing/papers/sd3/primer/">从零读懂 Flow Matching</a> · 下一部分：<a href="/writing/papers/sd3/scaling/">SD3 怎么训练到 8B</a></p>
+</footer>
+</main>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
+<script>
+(function(){
+"use strict";
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+function ctx(id){const c=$(id);const r=window.devicePixelRatio||1;if(!c._w){c._w=c.width;c._h=c.height;}const W=Math.round(c.clientWidth||c._w),H=Math.round(c._h*Math.max(0.72,Math.min(1,W/c._w)));if(c._cw!==W||c._ch!==H){c._cw=W;c._ch=H;c.width=W*r;c.height=H*r;c.style.height=H+'px';}const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.W=W;x.H=H;x.font='12px '+C('--f-mono');return x;}
+// seeded rng
+let seed=12345;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const SD=0.4;const dataSample=()=>(rnd()<0.5?-3:3)+SD*gauss();
+const npdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+// exact marginal RF velocity for the toy: x0 ~ 0.5N(-3,SD^2)+0.5N(3,SD^2), eps~N(0,1), z=(1-t)x0+t eps ; u = E[eps - x0 | z]
+function uMarg(z,t){let num=0,den=0;for(const mu of [-3,3]){const m=(1-t)*mu, v=(1-t)*(1-t)*SD*SD+t*t, s=Math.sqrt(v);const w=npdf(z,m,s);
+  const ex0=mu+(1-t)*SD*SD/v*(z-m), eeps=t/v*(z-m);num+=w*(eeps-ex0);den+=w;}return den>0?num/den:0;}
+function axes(x,o){ // o: {L,R,T,B,xmin,xmax,ymin,ymax,xt:[...],yt:[...],xl,yl}
+  const pw=x.W-o.L-o.R,ph=x.H-o.T-o.B;const X=v=>o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y=v=>o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');x.lineWidth=1;
+  (o.yt||[]).forEach(v=>{x.beginPath();x.moveTo(o.L,Y(v));x.lineTo(o.L+pw,Y(v));x.stroke();x.fillText(String(v),4,Y(v)+4);});
+  (o.xt||[]).forEach(v=>{x.fillText(String(v),X(v)-8,x.H-o.B+16);});
+  if(o.xl)x.fillText(o.xl,o.L+pw-x.measureText(o.xl).width,o.T+ph-6);
+  if(o.yl)x.fillText(o.yl,o.L+4,o.T-2>10?o.T-2:12);
+  return {X,Y,pw,ph};
+}
+function arrow(x,x1,y1,x2,y2,col,w){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w||2;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();const a=Math.atan2(y2-y1,x2-x1),h=Math.min(8,Math.hypot(x2-x1,y2-y1)*0.5);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-h*Math.cos(a-0.45),y2-h*Math.sin(a-0.45));x.lineTo(x2-h*Math.cos(a+0.45),y2-h*Math.sin(a+0.45));x.closePath();x.fill();}
+const anims={};function loop(name,step){if(anims[name])cancelAnimationFrame(anims[name]);const f=()=>{if(step()!==false)anims[name]=requestAnimationFrame(f);else anims[name]=0;};anims[name]=requestAnimationFrame(f);}
+
+function rr(x,X,Y,W,H,r,fill,stroke){x.beginPath();x.roundRect?x.roundRect(X,Y,W,H,r):x.rect(X,Y,W,H);if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=1.2;x.stroke();}}
+function label(x,t,X,Y,col,align){x.fillStyle=col||C('--heading');x.textAlign=align||'left';x.fillText(t,X,Y);x.textAlign='left';}
+const ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+function ctxN(id,hN){const c=$(id);if(!c._h0){c._w=c.width;c._h0=c.height;}c._h=(c.clientWidth||c._w)<560?hN:c._h0;return ctx(id);}
+
+/* ---------- A1 shape pipeline ---------- */
+let a1s=0;const A1N=6;
+function drawA1(){const x=ctxN('a1',560);x.clearRect(0,0,x.W,x.H);const R=+$('a1-res').value,l=R/8,tk=(l/2)*(l/2);
+  const st=[{n:'像素图',s:`${R}×${R}×3`,v:R*R*3,col:C('--pink')},{n:'潜变量',s:`${l}×${l}×16`,v:l*l*16,col:C('--orange')},{n:'切块',s:`${tk} 个 × 64`,v:tk*64,col:C('--green')},{n:'投影 + 位置',s:`${tk} 个 × 64d`,v:tk*64*4,col:C('--blue')},{n:'d 个 MM-DiT 块',s:'+ 154 个文字 token',v:tk*64*4,col:C('--accent')},{n:'速度输出',s:`${l}×${l}×16`,v:l*l*16,col:C('--orange')}];
+  const n=st.length,nar=x.W<560,cols=nar?3:6,gap=x.W/cols,rowH=nar?x.H/2:x.H,maxv=Math.max(...st.map(s=>s.v));
+  st.forEach((s,i)=>{const r=Math.floor(i/cols),cx=gap*(i%cols+0.5),on=i<=a1s;const side=Math.max(14,Math.min(gap-22,rowH*0.5)*Math.sqrt(s.v/maxv));const cy=r*rowH+rowH*0.42;
+    x.globalAlpha=on?1:0.18;rr(x,cx-side/2,cy-side/2,side,side,4,s.col+'33',s.col);
+    if(i===2||i===3){x.strokeStyle=s.col;x.lineWidth=1;for(let k=1;k<4;k++){x.beginPath();x.moveTo(cx-side/2,cy-side/2+side*k/4);x.lineTo(cx+side/2,cy-side/2+side*k/4);x.stroke();}}
+    if(i===4){for(let k=0;k<3;k++)rr(x,cx-side/2+k*4,cy-side/2-k*4,side,side,4,null,s.col);}
+    x.font=(nar?'11px ':'12px ')+C('--f-mono');label(x,s.n,cx,r*rowH+rowH*0.78,C('--heading'),'center');label(x,s.s,cx,r*rowH+rowH*0.78+16,C('--muted'),'center');x.font='12px '+C('--f-mono');
+    if(i<n-1&&(i%cols)<cols-1){x.globalAlpha=i<a1s?1:0.18;arrow(x,cx+gap*0.36,cy,cx+gap*0.62,cy,C('--line-strong'),1.5);}x.globalAlpha=1;});
+  const msg=['从一张 '+R+'×'+R+' 的彩色图开始，共 '+(R*R*3).toLocaleString()+' 个数','自编码器压缩 8 倍：每 8×8 像素变一个格子，16 个通道（第 2 课）','每 2×2 个格子打包成一个 token：'+tk+' 个 token（第 3 课）','线性层把每个 token 变到隐藏维度 64d，加上位置编码（第 3 课）','和文字 token 一起经过 d 个 MM-DiT 块（第 6 到 8 课）','只取图片 token，变回 '+l+'×'+l+'×16：这就是预测的速度'];
+  $('a1-read').textContent=msg[a1s];}
+$('a1-next').onclick=()=>{a1s=Math.min(A1N-1,a1s+1);drawA1();};$('a1-reset').onclick=()=>{a1s=0;drawA1();};$('a1-res').onchange=drawA1;
+
+/* ---------- A2 autoencoder ---------- */
+const A2img=(()=>{const N=64,a=[];for(let i=0;i<N;i++){a.push([]);for(let j=0;j<N;j++){let r=0.55+0.35*(1-i/N),g=0.72+0.2*(1-i/N),b=0.95;// sky
+  if(Math.hypot(i-14,j-46)<8){r=1;g=0.82;b=0.35;}
+  const hill=40+6*Math.sin(j/9)+3*Math.sin(j/4);if(i>hill){r=0.3+0.1*Math.sin(j/3);g=0.55+0.1*Math.cos(i/5);b=0.3;}
+  if(i>30&&i<46&&j>12&&j<26&&i>hill-14){r=0.62;g=0.36;b=0.28;} if(i>22&&i<=30&&j>10+(30-i)&&j<28-(30-i)){r=0.75;g=0.2;b=0.2;}
+  a[i].push([r,g,b]);}}return a;})();
+let a2k=64;
+function drawA2(){const x=ctx('a2');x.clearRect(0,0,x.W,x.H);const d=+$('a2-d').value;const S=Math.min(x.H-50,x.W*0.4),px=S/64,ox=14,oy=24;
+  label(x,'像素 64×64×3',ox,16,C('--heading'));
+  for(let i=0;i<64;i++)for(let j=0;j<64;j++){const c=A2img[i][j];x.fillStyle=`rgb(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0})`;x.fillRect(ox+j*px,oy+i*px,px+0.5,px+0.5);}
+  const done=Math.min(64,a2k),cur=done<64?done:-1;
+  if(cur>=0){const bi=Math.floor(cur/8),bj=cur%8;x.strokeStyle=C('--heading');x.lineWidth=2;x.strokeRect(ox+bj*8*px,oy+bi*8*px,8*px,8*px);}
+  const lx=ox+S+60,cs=Math.min((x.W-lx-14)/8,S/8);label(x,`潜变量 8×8×${d}`,lx,16,C('--heading'));
+  arrow(x,ox+S+10,oy+S/2,lx-10,oy+S/2,C('--line-strong'),1.5);label(x,'E',ox+S+26,oy+S/2-8,C('--muted'));
+  for(let k=0;k<done;k++){const bi=Math.floor(k/8),bj=k%8;let m=[0,0,0];for(let i=0;i<8;i++)for(let j=0;j<8;j++){const c=A2img[bi*8+i][bj*8+j];m[0]+=c[0]/64;m[1]+=c[1]/64;m[2]+=c[2]/64;}
+    const X0=lx+bj*cs,Y0=oy+bi*cs;x.fillStyle=`rgba(${m[0]*255|0},${m[1]*255|0},${m[2]*255|0},0.35)`;x.fillRect(X0+1,Y0+1,cs-2,cs-2);
+    const bw=(cs-6)/d;for(let c=0;c<d;c++){const v=0.5+0.45*Math.sin(m[0]*7+c*1.7+m[1]*3*c+m[2]*5);x.fillStyle=C('--blue');x.globalAlpha=0.85;x.fillRect(X0+3+c*bw,Y0+cs-3-(cs-8)*v,Math.max(1,bw-0.6),(cs-8)*v);x.globalAlpha=1;}}
+  x.strokeStyle=C('--line');for(let i=0;i<=8;i++){x.beginPath();x.moveTo(lx,oy+i*cs);x.lineTo(lx+8*cs,oy+i*cs);x.stroke();x.beginPath();x.moveTo(lx+i*cs,oy);x.lineTo(lx+i*cs,oy+8*cs);x.stroke();}
+  const T={4:['2.41','25.12'],8:['1.56','26.40'],16:['1.06','28.62']}[d];
+  $('a2-read').textContent=`每格 ${d} 个数 · 压缩 ${192/d}× · 重建 FID ${T[0]} · PSNR ${T[1]}`;}
+$('a2-d').onchange=drawA2;$('a2-play').onclick=()=>{a2k=0;if(reduce){a2k=64;drawA2();return;}let f=0;loop('a2',()=>{f++;if(f%4===0)a2k++;drawA2();return a2k<64;});};
+
+/* ---------- A3 patchify ---------- */
+let a3p=16;
+function drawA3(){const x=ctxN('a3',460);const nar=x.W<560;x.clearRect(0,0,x.W,x.H);const showPos=$('a3-pos').checked;const g=Math.min(24,((nar?x.H-120:x.H-58)-44)/8),ox=20,oy=24;
+  label(x,'潜变量 8×8（每格 16 通道）',ox,16,C('--heading'));
+  const hue=(r,c)=>`hsl(${(r*47+c*83)%360},45%,62%)`;
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){const k=r*4+c;const moved=k<Math.floor(a3p);x.globalAlpha=moved?0.25:1;for(let i=0;i<2;i++)for(let j=0;j<2;j++){x.fillStyle=hue(r,c);x.fillRect(ox+(c*2+j)*g+1,oy+(r*2+i)*g+1,g-2,g-2);}x.globalAlpha=1;
+    x.strokeStyle=C('--heading');x.lineWidth=1.5;x.strokeRect(ox+c*2*g,oy+r*2*g,2*g,2*g);}
+  const perRow=nar?8:16,sy0=nar?x.H-120:x.H-58,tw=Math.min(40,(x.W-40)/perRow-4);label(x,nar?'token 序列：16 个，每个 64 个数':'token 序列：16 个，每个 2×2×16 = 64 个数',20,sy0-14,C('--heading'));
+  for(let k=0;k<16;k++){const r=Math.floor(k/4),c=k%4;const sx=20+(k%perRow)*(tw+4),sy=sy0+Math.floor(k/perRow)*58;x.strokeStyle=C('--line');x.strokeRect(sx,sy,tw,28);
+    const fr=a3p-k;if(fr<=0)continue;const u=ease(Math.min(1,fr));const fx=ox+c*2*g,fy=oy+r*2*g;const X=fx+(sx-fx)*u,Y=fy+(sy-fy)*u,W=2*g+(tw-2*g)*u,H=2*g+(28-2*g)*u;
+    x.fillStyle=hue(r,c);x.fillRect(X,Y,W,H);if(showPos&&u>0.95){x.fillStyle=C('--heading');x.font='10px '+C('--f-mono');x.fillText(`${r},${c}`,sx+3,sy+44);x.font='12px '+C('--f-mono');}}
+  if(showPos){x.fillStyle=C('--muted');for(let r=0;r<4;r++)x.fillText('行'+r,ox+8*g+6,oy+r*2*g+g+4);}
+  $('a3-read').textContent=a3p>=16?'16 个 token，按行排好':`正在搬第 ${Math.floor(a3p)+1} 块`;}
+$('a3-play').onclick=()=>{a3p=0;if(reduce){a3p=16;drawA3();return;}loop('a3',()=>{a3p=Math.min(16,a3p+0.06);drawA3();return a3p<16;});};
+$('a3-reset').onclick=()=>{a3p=0;drawA3();};$('a3-pos').onchange=drawA3;
+
+/* ---------- A4 text encoders ---------- */
+let a4s=0;const A4N=6;
+function drawA4(){const x=ctx('a4');x.clearRect(0,0,x.W,x.H);const s=a4s;const ox=x.W<560?96:170,oy=30;const sc=(x.W-ox-20)/4096,hh=(x.H-80)/154;if(x.W<560)x.font='10px '+C('--f-mono');
+  const P=C('--pink'),G=C('--green'),O=C('--orange'),B=C('--blue');
+  // pooled column on left
+  label(x,'pooled',14,20,C('--heading'));
+  const pw=20,ph1=(x.H-80)*768/2048,ph2=(x.H-80)*1280/2048;
+  if(s>=1){rr(x,30,oy,pw,ph1,2,P+'55',P);label(x,'768',56,oy+ph1/2+4,C('--muted'));rr(x,30,oy+ph1+(s>=2?0:8),pw,ph2,2,G+'55',G);label(x,'1280',56,oy+ph1+ph2/2+4,C('--muted'));}
+  if(s>=2){label(x,'c_vec: 2048',14,oy+ph1+ph2+18,B);}
+  const box=(X,Y,W,H,col,t)=>{rr(x,X,Y,W,H,2,col+'40',col);if(t)label(x,t,X+6,Y+16,C('--heading'));};
+  if(s>=3){box(ox,oy,768*sc,77*hh,P,'CLIP-L 77×768');box(ox+768*sc,oy,1280*sc,77*hh,G,'CLIP-G 77×1280');}
+  if(s>=4){x.setLineDash([4,3]);box(ox+2048*sc,oy,2048*sc,77*hh,C('--muted'),'补零 2048');x.setLineDash([]);}
+  if(s>=5){box(ox,oy+77*hh,4096*sc,77*hh,O,'T5-XXL 77×4096');x.strokeStyle=C('--heading');x.lineWidth=2;x.strokeRect(ox,oy,4096*sc,154*hh);label(x,'c_ctxt: 154×4096',ox,oy+154*hh+18,B);}
+  if(s===0){label(x,'"a red cube on a blue sphere"',14,oy+30,C('--heading'));label(x,'→ CLIP-L/14',14,oy+54,C('--muted'));label(x,'→ OpenCLIP bigG/14',14,oy+74,C('--muted'));label(x,'→ T5-v1.1-XXL',14,oy+94,C('--muted'));}
+  const msg=['同一句话送进三个冻结的文本编码器','两个 CLIP 各给一个 pooled 向量：768 维和 1280 维','首尾相接，得到 c_vec ∈ R^2048（整句大意，进调制）','两个 CLIP 的倒数第二层序列（各 77 个 token）在通道方向拼起来：77×2048','右边补零到 4096 维，为了和 T5 一样宽','T5 的 77×4096 拼在下面：c_ctxt ∈ R^(154×4096)（进注意力）'];
+  $('a4-read').textContent=msg[s];}
+$('a4-next').onclick=()=>{a4s=Math.min(A4N-1,a4s+1);drawA4();};$('a4-reset').onclick=()=>{a4s=0;drawA4();};
+
+/* ---------- A5c captions Table 4 ---------- */
+const T4=[['颜色归属',11.75,24.75],['颜色',71.54,68.09],['位置',6.50,18.00],['计数',33.44,41.56],['单个物体',95.00,93.75],['两个物体',41.41,52.53],['总分',43.27,49.78]];let a5u=1;
+function drawA5c(){const x=ctxN('a5c',600);x.clearRect(0,0,x.W,x.H);
+  if(x.W<560){const L=72,Rm=48,rowH=(x.H-10)/T4.length,Xs=v=>L+(x.W-L-Rm)*v/100;x.font='11px '+C('--f-mono');
+    T4.forEach((r,i)=>{const y=6+i*rowH;label(x,r[0],L-6,y+rowH*0.45,C('--heading'),'right');const v1=r[1]*a5u,v2=r[2]*a5u,bh=rowH*0.3;
+      x.fillStyle=C('--line-strong');x.fillRect(L,y+rowH*0.12,Xs(v1)-L,bh);x.fillStyle=C('--blue');x.fillRect(L,y+rowH*0.12+bh+2,Xs(v2)-L,bh);
+      if(a5u>=1){label(x,r[1].toFixed(2),Xs(v1)+4,y+rowH*0.12+bh-2,C('--muted'));label(x,r[2].toFixed(2),Xs(v2)+4,y+rowH*0.12+2*bh,C('--blue'));}});
+    x.font='12px '+C('--f-mono');$('a5c-read').textContent='灰：原始 caption · 蓝：50/50 混合';return;}const o={L:40,R:10,T:16,B:40,xmin:0,xmax:T4.length,ymin:0,ymax:100,yt:[0,25,50,75,100]};const {X,Y}=axes(x,o);
+  const bw=(X(1)-X(0))*0.32;T4.forEach((r,i)=>{const cx=X(i+0.5);const v1=r[1]*a5u,v2=r[2]*a5u;
+    x.fillStyle=C('--line-strong');x.fillRect(cx-bw-1,Y(v1),bw,Y(0)-Y(v1));x.fillStyle=C('--blue');x.fillRect(cx+1,Y(v2),bw,Y(0)-Y(v2));
+    if(a5u>=1){x.font='10px '+C('--f-mono');label(x,r[1].toFixed(2),cx-bw/2,Y(v1)-3,C('--muted'),'center');label(x,r[2].toFixed(2),cx+bw/2+1,Y(v2)-3,C('--blue'),'center');x.font='12px '+C('--f-mono');}
+    label(x,r[0],cx,x.H-o.B+18,C('--heading'),'center');});
+  $('a5c-read').textContent='灰：原始 caption · 蓝：50/50 混合';}
+$('a5c-play').onclick=()=>{a5u=0;if(reduce){a5u=1;drawA5c();return;}loop('a5c',()=>{a5u=Math.min(1,a5u+0.025);drawA5c();return a5u<1;});};
+
+/* ---------- A6 attention toy ---------- */
+const TOK=[{n:'red',k:[1.6,0.3],q:[0.2,1.2],t:1},{n:'cube',k:[0.4,1.7],q:[1.0,0.6],t:1},{n:'图块 1',k:[-0.8,-0.4],q:[1.2,1.0],t:0},{n:'图块 2',k:[-1.0,0.6],q:[0.3,1.8],t:0},{n:'图块 3',k:[0.9,-1.2],q:[-1.2,0.9],t:0}];
+TOK.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t.n;$('a6-q').appendChild(o);});$('a6-q').value=2;
+function drawA6(){const x=ctxN('a6',640);const nar=x.W<560;x.clearRect(0,0,x.W,x.H);const qi=+$('a6-q').value,q=TOK[qi].q;
+  const sc=TOK.map(t=>(q[0]*t.k[0]+q[1]*t.k[1])/Math.SQRT2);const mx=Math.max(...sc);const ex=sc.map(s=>Math.exp(s-mx));const Z=ex.reduce((a,b)=>a+b,0);const w=ex.map(e=>e/Z);
+  const cx=nar?x.W*0.5:x.W*0.22,cy=nar?x.H*0.27:x.H*0.52,R=nar?x.H*0.2/1.9:Math.min(x.W*0.18,x.H*0.38)/1.9;
+  x.strokeStyle=C('--line');x.beginPath();x.moveTo(cx-2*R,cy);x.lineTo(cx+2*R,cy);x.moveTo(cx,cy-2*R);x.lineTo(cx,cy+2*R);x.stroke();
+  TOK.forEach((t,i)=>{const col=t.t?C('--pink'):C('--blue');arrow(x,cx,cy,cx+t.k[0]*R,cy-t.k[1]*R,col,1.5);label(x,t.n,cx+t.k[0]*R+(t.k[0]>0?4:-4),cy-t.k[1]*R-4,col,t.k[0]>0?'left':'right');});
+  arrow(x,cx,cy,cx+q[0]*R,cy-q[1]*R,C('--heading'),3.5);label(x,'Q('+TOK[qi].n+')',cx+q[0]*R*0.55-6,cy-q[1]*R*0.55-10,C('--heading'),'right');
+  label(x,'K 向量（细）和 Q 向量（粗）',12,16,C('--muted'));
+  const bx=nar?70:x.W*0.48,bw=x.W-bx-50,top0=nar?x.H*0.55:34,rowH=nar?(x.H*0.43)/TOK.length:(x.H-60)/TOK.length;label(x,'q·k/√2',bx,top0-14,C('--muted'));label(x,'softmax 权重',bx+70,top0-14,C('--muted'));
+  TOK.forEach((t,i)=>{const y=top0+i*rowH;const col=t.t?C('--pink'):C('--blue');label(x,t.n,bx-8,y+rowH/2,col,'right');label(x,sc[i].toFixed(2),bx+4,y+rowH/2,C('--muted'));
+    rr(x,bx+70,y+rowH*0.2,(bw-70)*w[i],rowH*0.55,3,col);label(x,(w[i]*100).toFixed(0)+'%',bx+74+(bw-70)*w[i],y+rowH/2+4,C('--heading'));});
+  const top=w.indexOf(Math.max(...w));$('a6-read').textContent=`${TOK[qi].n} 最"听" ${TOK[top].n}（${(w[top]*100).toFixed(0)}%）`;}
+$('a6-q').onchange=drawA6;
+
+/* ---------- A7 modulation ---------- */
+const A7feat=(()=>{const a=[];let s=777;const r=()=>{s=(s*16807)%2147483647;return s/2147483647;};for(let i=0;i<600;i++){let u=0,v=0;while(!u)u=r();while(!v)v=r();a.push(Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v));}return a;})();
+function drawA7(){const x=ctx('a7');x.clearRect(0,0,x.W,x.H);const t=+$('a7-t').value;
+  const D=32,half=16,cw=(x.W-40)/D,eh=Math.min(70,x.H*0.22);label(x,x.W<560?'t 的正弦编码（32 维）':'正弦编码 sin/cos(1000t · f_i)，f_i = 10000^(-i/16)',20,14,C('--muted'));
+  for(let i=0;i<D;i++){const f=Math.pow(10000,-(i%half)/half);const v=i<half?Math.cos(1000*t*f):Math.sin(1000*t*f);const a=Math.abs(v);x.fillStyle=v>=0?C('--orange'):C('--blue');x.globalAlpha=0.15+0.85*a;x.fillRect(20+i*cw,22,cw-1,eh);x.globalAlpha=1;}
+  label(x,'低频（左）随 t 慢慢变 → 高频（右）变得快',20,eh+38,C('--muted'));
+  const al=0.6+0.9*t,be=1.6*(t-0.5),ga=0.25+0.75*Math.sin(Math.PI*t)**2;
+  const o={L:30,R:120,T:eh+56,B:24,xmin:-5,xmax:5,ymin:0,ymax:1,xt:[-4,-2,0,2,4]};const {X,Y,pw,ph}=axes(x,o);
+  const hist=(f,col,fill)=>{const nb=50,bins=new Array(nb).fill(0);A7feat.forEach(v=>{const z=f(v);const b=Math.floor((z+5)/10*nb);if(b>=0&&b<nb)bins[b]++;});const m=110;x.fillStyle=col;x.globalAlpha=fill;bins.forEach((c,i)=>{const hgt=Math.min(1,c/m);x.fillRect(X(-5+i*10/nb),Y(hgt),pw/nb-1,Y(0)-Y(hgt));});x.globalAlpha=1;};
+  hist(v=>v,C('--muted'),0.35);hist(v=>al*v+be,C('--blue'),0.6);
+  label(x,'LN 后',o.L+4,o.T+12,C('--muted'));label(x,'α·LN+β',o.L+4,o.T+28,C('--blue'));
+  const gx=x.W-100,gy=o.T+8,gh=ph-16;rr(x,gx,gy,26,gh,4,null,C('--line-strong'));rr(x,gx,gy+gh*(1-ga),26,gh*ga,4,C('--green'));label(x,'门 γ',gx+32,gy+12,C('--heading'));label(x,ga.toFixed(2),gx+32,gy+30,C('--green'));
+  $('a7-read').textContent=`t=${t.toFixed(2)} · α=${al.toFixed(2)} · β=${be.toFixed(2)} · γ=${ga.toFixed(2)}（示意）`;}
+$('a7-t').oninput=drawA7;
+
+/* ---------- A8 attention patterns ---------- */
+let a8f=-1;
+function drawA8(){const x=ctxN('a8',700);x.clearRect(0,0,x.W,x.H);const m=$('a8-m').value;const NT=3,NI=6,N=NT+NI,nar=x.W<560;const cell=nar?Math.min((x.W-60)/N,(x.H*0.6-50)/N):Math.min((x.H-70)/N,(x.W*0.55-40)/N),ox=40,oy=40;
+  const P=C('--pink'),B=C('--blue');const isT=i=>i<NT;
+  label(x,'列：被听的 token（K, V）',ox,16,C('--muted'));
+  for(let i=0;i<N;i++){x.fillStyle=isT(i)?P:B;x.fillRect(ox+i*cell+2,oy-14,cell-4,8);x.fillRect(ox-14,oy+i*cell+2,8,cell-4);}
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){let on=false,col=C('--accent');
+    if(m==='dit'){on=true;col=C('--accent');}
+    else if(m==='cross'){on=!isT(r);col=B;}
+    else{on=true;col=isT(r)?P:B;}
+    let a=on?0.55:0;if(a8f>=0&&on){const ph=(a8f%1);const rowAct=Math.floor(a8f)%N;a=r===rowAct?0.95:0.3;}
+    x.fillStyle=col;x.globalAlpha=a;x.fillRect(ox+c*cell+1,oy+r*cell+1,cell-2,cell-2);x.globalAlpha=1;x.strokeStyle=C('--line');x.strokeRect(ox+c*cell,oy+r*cell,cell,cell);}
+  if(m==='cross'){x.fillStyle=C('--muted');x.font='11px '+C('--f-mono');x.fillText('文字行不算：',ox+2,oy+cell*0.6);x.fillText('文字不被更新',ox+2,oy+cell*1.6);x.font='12px '+C('--f-mono');}
+  x.strokeStyle=C('--heading');x.lineWidth=1.5;x.beginPath();x.moveTo(ox+NT*cell,oy);x.lineTo(ox+NT*cell,oy+N*cell);x.moveTo(ox,oy+NT*cell);x.lineTo(ox+N*cell,oy+NT*cell);x.stroke();
+  const tx=nar?14:ox+N*cell+30,ty=nar?oy+N*cell+24:oy+14;const lines={dit:[['一套权重给所有 token',C('--accent')],['文字和图片挤在同一套',C('--muted')],['W_Q W_K W_V 和 MLP 里',C('--muted')],['= 只有一套权重的 MM-DiT',C('--muted')]],
+    cross:[['图片：自注意力（图听图）',B],['     + 交叉注意力（图听字）',B],['文字：只给 K、V，',P],['     从头到尾不更新',P],['SD1/SDXL 的 UNet、PixArt-α',C('--muted')]],
+    mm:[['文字流：自己的 LN、调制、',P],['     W_Q W_K W_V、MLP',P],['图片流：另一套同样的层',B],['注意力：两边 Q、K、V 拼起来',C('--heading')],['     一次联合注意力，再拆开',C('--heading')]]}[m];
+  lines.forEach((l,i)=>label(x,l[0],tx,ty+i*20,l[1]));
+  if(a8f>=0){const r=Math.floor(a8f)%N;label(x,`第 ${r+1} 行：${isT(r)?'文字':'图片'} token 正在听${m==='cross'&&isT(r)?'（不算）':'涂色的列'}`,tx,nar?ty+lines.length*20+8:oy+N*cell-6,C('--heading'));}}
+$('a8-m').onchange=()=>{a8f=-1;drawA8();};
+$('a8-flow').onclick=()=>{a8f=0;if(reduce){a8f=-1;drawA8();return;}loop('a8',()=>{a8f+=0.04;if(a8f>=9){a8f=-1;drawA8();return false;}drawA8();});};
+
+/* ---------- A9 size ---------- */
+function drawA9(){const x=ctx('a9');x.clearRect(0,0,x.W,x.H);const d=+$('a9-d').value;const P=dd=>36*(64*dd)**2*dd/1e9;
+  const o={L:44,R:14,T:20,B:28,xmin:12,xmax:40,ymin:0,ymax:10,xt:[15,20,25,30,35,40],yt:[0,2,4,6,8,10],xl:'深度 d',yl:'参数（十亿，粗估）'};const {X,Y}=axes(x,o);
+  [15,18,21,24,30,38].forEach(v=>{x.strokeStyle=C('--line-strong');x.setLineDash([3,3]);x.beginPath();x.moveTo(X(v),Y(0));x.lineTo(X(v),Y(10));x.stroke();x.setLineDash([]);});
+  x.strokeStyle=C('--blue');x.lineWidth=2.2;x.beginPath();for(let v=12;v<=40;v+=0.25){const p=P(v);v===12?x.moveTo(X(v),Y(p)):x.lineTo(X(v),Y(Math.min(10,p)));}x.stroke();
+  x.fillStyle=C('--pink');x.beginPath();x.arc(X(d),Y(Math.min(10,P(d))),6,0,7);x.fill();
+  [[24,'2B'],[38,'8B']].forEach(([v,t])=>label(x,'论文 '+t,X(v)-6,Y(P(v))+(v===38?18:-8),C('--muted'),'right'));
+  const h=64*d;$('a9-read').textContent=`d=${d} · 隐藏 ${h} · MLP ${4*h} · ${d} 头 · 约 ${P(d).toFixed(2)}B`;}
+$('a9-d').oninput=drawA9;
+
+/* ---------- A10 Fig 2a flow ---------- */
+let a10u=-1;
+function drawA10(){const x=ctxN('a10',760);x.clearRect(0,0,x.W,x.H);const W=x.W,H=x.H,nar=W<560;if(nar)x.font='10px '+C('--f-mono');const T=(a,b)=>nar?b:a;const P=C('--pink'),G=C('--green'),V=C('--blue');
+  const bx=(cx,cy,w,h,t,kind)=>{const col=kind==='in'?P:kind==='fix'?G:V;rr(x,cx-w/2,cy-h/2,w,h,6,col+'2e',col);label(x,t,cx,cy+4,C('--heading'),'center');};
+  const c1=W*0.16,c2=W*0.47,c3=W*0.8,bw=Math.min(150,nar?W*0.29:W*0.24),bh=24;
+  const R=[0.06,0.17,0.28,0.39,0.5].map(v=>v*H);
+  bx(c2,R[0],bw,bh,'Caption','in');bx(c2,R[1],bw*1.1,bh,T('CLIP-L · CLIP-G · T5','CLIP×2 · T5'),'fix');bx(c2,R[2],bw,bh,'Linear → c','tr');
+  bx(c1,R[2],bw*0.95,bh,T('Pooled → MLP','Pooled MLP'),'tr');bx(c1,H*0.61,bw*0.8,bh,'Timestep','in');bx(c1,R[4],bw*0.95,bh,T('Sin 编码 → MLP','Sin+MLP'),'tr');bx(c1,R[3],bw*0.6,bh,'y = ⊕','tr');
+  bx(c3,R[0],bw,bh,T('Noised Latent z_t','z_t'),'in');bx(c3,R[1],bw,bh,'Patching','fix');bx(c3,R[2],bw,bh,T('Linear + 位置编码','Linear+位置'),'tr');
+  const mY=H*0.68,mH=H*0.14;rr(x,W*0.3,mY-mH/2,W*0.56,mH,8,V+'1e',V);label(x,T('d 个 MM-DiT 块（c 和 x 联合注意力，y 调制）','d 个 MM-DiT 块'),W*0.58,mY+4,C('--heading'),'center');
+  bx(c3,H*0.86,bw,bh,T('Modulation · Linear','Mod·Linear'),'tr');bx(c3,H*0.95,bw,bh,T('Unpatching → 速度 v','速度 v'),'in');
+  const ln=(a,b,c,d)=>{x.strokeStyle=C('--line-strong');x.lineWidth=1.3;x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke();};
+  ln(c2,R[0]+12,c2,R[1]-12);ln(c2,R[1]+12,c2,R[2]-12);ln(c2-bw*0.45,R[1]+8,c1,R[2]-12);ln(c2,R[2]+12,c2,mY-mH/2);
+  const ex=W*0.27;ln(c1,H*0.61-12,c1,R[4]+12);ln(c1,R[4]-12,c1,R[3]+12);ln(c1,R[2]+12,c1,R[3]-12);ln(c1+bw*0.3,R[3],ex,R[3]);ln(ex,R[3],ex,mY);ln(ex,mY,W*0.3,mY);
+  ln(c3,R[0]+12,c3,R[1]-12);ln(c3,R[1]+12,c3,R[2]-12);ln(c3,R[2]+12,c3,mY-mH/2);ln(c3,mY+mH/2,c3,H*0.86-12);ln(c3,H*0.86+12,c3,H*0.95-12);
+  if(a10u>=0){const u=a10u;const dot=(px,py,col)=>{x.fillStyle=col;x.beginPath();x.arc(px,py,7,0,7);x.fill();};
+    const path=(pts,uu,col)=>{const k=Math.min(pts.length-1.001,Math.max(0,uu*(pts.length-1)));const i=Math.floor(k),f=k-i;dot(pts[i][0]+(pts[i+1][0]-pts[i][0])*f,pts[i][1]+(pts[i+1][1]-pts[i][1])*f,col);};
+    const u1=Math.min(1,u/0.7);if(u<0.72){path([[c2,R[0]],[c2,R[1]],[c2,R[2]],[c2,mY-mH/2]],u1,P);path([[c1,H*0.61],[c1,R[4]],[c1,R[3]],[ex,R[3]],[ex,mY],[W*0.3,mY]],u1,G);path([[c3,R[0]],[c3,R[1]],[c3,R[2]],[c3,mY-mH/2]],u1,V);}
+    if(u>=0.72&&u<1)path([[c3,mY+mH/2],[c3,H*0.86],[c3,H*0.95]],(u-0.72)/0.28,V);}
+  $('a10-read').textContent=a10u<0?'':a10u<0.7?'三路信息分别准备':'汇合后只取图片流输出速度';}
+$('a10-play').onclick=()=>{a10u=0;if(reduce){a10u=1;drawA10();return;}loop('a10',()=>{a10u=Math.min(1,a10u+0.006);drawA10();return a10u<1;});};
+
+/* ---------- init + theme ---------- */
+function all(){drawA1();drawA2();drawA3();drawA4();drawA5c();drawA6();drawA7();drawA8();drawA9();drawA10();}
+all();
+const mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',all);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,150);});
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+</body>
+</html>

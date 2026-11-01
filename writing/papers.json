@@ -249,7 +249,24 @@
         "source_version": "arXiv:2403.03206v1",
         "layout": "english-then-chinese",
         "glossary_entries": 200
-      }
+      },
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/sd3/primer/",
+          "title_zh": "精读第一部分：从零读懂 Flow Matching 与 5.1",
+          "title_en": "Study guide 1: Flow Matching from scratch and Section 5.1"
+        },
+        {
+          "url": "https://mkj69.github.io/writing/papers/sd3/architecture/",
+          "title_zh": "精读第二部分：模型结构（MM-DiT）",
+          "title_en": "Study guide 2: Model architecture (MM-DiT)"
+        },
+        {
+          "url": "https://mkj69.github.io/writing/papers/sd3/scaling/",
+          "title_zh": "精读第三部分：训练到 8B",
+          "title_en": "Study guide 3: Training at scale to 8B"
+        }
+      ]
     },
     {
       "slug": "instaflow",
