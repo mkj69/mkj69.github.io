@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>从零读懂 Flow Matching | Kaijing Ma</title>
+<meta name="description" content="SD3 的背景知识入门：从分布、ODE、插值路径、条件速度，一步步讲到 Flow Matching、Conditional Flow Matching、加权损失与 timestep 采样，最后回到 SD3 第 5.1 节的实验。附交互动画。">
+<style>
+/* Layout: one reading column of numbered lessons; each lesson = plain-language idea, one worked number example, an animated figure, a short self-check. */
+:root{
+  --page:#fcfcfa; --panel:#ffffff; --ink:#4a4f56; --heading:#22272d; --muted:#7a8087; --line:#e1e3e3; --line-strong:#cec7c0;
+  --accent:#796a5c; --blue:#2f5f93; --blue-soft:#e9eff7; --pink:#ab4265; --pink-soft:#f7e9ee; --orange:#a76425; --orange-soft:#f7eee4; --green:#397451; --green-soft:#e7f1ea;
+  --f-body:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-display:"Songti SC","Noto Serif SC","STSong",serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.9;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.site-header{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding-block:22px 0;font-size:14px}
+.site-header a{color:var(--muted);text-decoration:none} .site-header a:hover{color:var(--heading)}
+.site-header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+main{max-width:760px;margin:0 auto;padding-block:30px 90px;display:flex;flex-direction:column;gap:34px}
+h1,h2,h3{font-family:var(--f-display);color:var(--heading);text-wrap:balance;line-height:1.4;margin:0}
+h1{font-size:34px} h2{font-size:26px} h3{font-size:19px}
+p{margin:0} a{color:var(--blue)}
+.eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{font-size:17.5px;color:var(--muted)}
+.hero{display:flex;flex-direction:column;gap:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.toc a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:15px;line-height:1.5}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);outline:none}
+.toc .n{font-family:var(--f-mono);color:var(--accent);font-size:13px;min-width:2.2em}
+.lesson{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+.lesson-head{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-strong);padding-top:22px}
+.lesson-head .no{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.goal{font-size:15px;color:var(--muted)}
+.box{border-radius:8px;padding:12px 16px;font-size:15.5px;line-height:1.8}
+.box b{font-weight:700}
+.key{background:var(--green-soft)} .key b{color:var(--green)}
+.warn{background:var(--orange-soft)} .warn b{color:var(--orange)}
+.sd3{background:var(--blue-soft)} .sd3 b{color:var(--blue)}
+.math{overflow-x:auto;padding:4px 0;text-align:center}
+code{font-family:var(--f-mono);font-size:.9em}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.6}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{border-bottom:1.5px solid var(--heading);color:var(--heading)}
+tbody tr:last-child td{border-bottom:1.5px solid var(--heading)}
+ol,ul{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+figcaption{font-size:14px;color:var(--muted);line-height:1.7}
+.fig-title{font-weight:700;color:var(--heading);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:14px}
+.controls label{display:flex;align-items:center;gap:8px}
+input[type=range]{width:170px;accent-color:var(--accent)}
+button,select{font:inherit;font-size:14px;color:var(--heading);background:var(--page);border:1px solid var(--line-strong);border-radius:6px;padding:4px 12px;cursor:pointer}
+button:hover,button:focus-visible,select:focus-visible{border-color:var(--accent);outline:2px solid transparent}
+.readout{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr} h1{font-size:28px} h2{font-size:22px}}
+.two>*{min-width:0}
+details.quiz{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--panel)}
+details.quiz summary{cursor:pointer;color:var(--heading);font-weight:600}
+details.quiz p{margin-top:8px;font-size:15.5px}
+.card{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.card>div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card>div+div{border-left:1px solid var(--line-strong)}
+@media (max-width:620px){.card{grid-template-columns:1fr}.card>div+div{border-left:0;border-top:1px solid var(--line-strong)}}
+.card h3{font-size:17px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:0 8px;border-radius:999px}
+.tag.fm{background:var(--pink-soft);color:var(--pink)} .tag.cfm{background:var(--green-soft);color:var(--green)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="/">Kaijing Ma</a>
+  <nav aria-label="网站导航"><a href="/writing/">Paper Notes</a><a href="/writing/papers/sd3/">SD3 概念笔记</a><a href="/writing/papers/sd3/annotated/">SD3 中英对照</a><a href="/#writing">Writing</a></nav>
+</header>
+<main>
+
+<section class="hero">
+  <span class="eyebrow">SD3 背景知识 · 从零开始的 9 课</span>
+  <h1>从零读懂 Flow Matching</h1>
+  <p class="lede">这是读 SD3（Esser et al., ICML 2024）之前的入门课。不假设你懂扩散模型。我们把"图片"缩成数轴上的一个数，用一维的小例子一课一课往上搭：从"什么是分布"开始，到 Flow Matching（FM）和 Conditional Flow Matching（CFM），再到 SD3 第 5.1 节那个比较 61 种训练方式的实验。每课都有能动的图和一道自测题。</p>
+  <nav class="toc" aria-label="目录">
+    <a href="#l1"><span class="n">第 1 课</span>生成模型在干什么</a>
+    <a href="#l2"><span class="n">第 2 课</span>用速度把点搬过去（ODE）</a>
+    <a href="#l3"><span class="n">第 3 课</span>规定一条路：插值</a>
+    <a href="#l4"><span class="n">第 4 课</span>一对点的速度（条件速度）</a>
+    <a href="#l5"><span class="n">第 5 课</span>路会交叉：平均速度与 FM</a>
+    <a href="#l6"><span class="n">第 6 课</span>CFM：绕过算不出的平均</a>
+    <a href="#l7"><span class="n">第 7 课</span>为什么中间的 t 最难</a>
+    <a href="#l8"><span class="n">第 8 课</span>换一种说法：权重与抽 t</a>
+    <a href="#l9"><span class="n">第 9 课</span>回到 SD3 的 5.1 实验</a>
+  </nav>
+</section>
+
+<!-- ===================================================== L1 -->
+<section class="lesson" id="l1">
+  <div class="lesson-head"><span class="no">第 1 课</span><h2>生成模型在干什么？</h2><p class="goal">学完你应该能说清楚：数据分布、噪声分布是什么，生成模型要把谁变成谁。</p></div>
+  <h3>一张图片就是一个点</h3>
+  <p>一张 64×64 的彩色图片，每个像素有红、绿、蓝三个数，一共 12288 个数。所以一张图片就是 12288 维空间里的一个点。这个维数没法想象，但好在接下来所有道理都和维数无关。于是我们把图片缩成<b>只有 1 个数</b>：整个"图片空间"就是一条数轴。</p>
+  <h3>数据分布：真实图片落在哪里</h3>
+  <p>假设世界上只有两类图：猫和狗。在我们的玩具世界里，猫图都落在 −3 附近，狗图都落在 +3 附近，各占一半。"真实图片在哪多、在哪少"的这个形状，叫<b>数据分布</b>，论文记作 \(p_0\)，从里面拿出来的一张图记作 \(x_0\)。</p>
+  <h3>噪声分布：电脑最会抽的随机数</h3>
+  <p>电脑很容易抽标准正态分布 \(\mathcal N(0,1)\) 的随机数：大多在 0 附近，越远越少。这叫<b>噪声分布</b>，论文记作 \(p_1\)，抽出来的一个数记作 \(\epsilon\)。</p>
+  <figure>
+    <div class="fig-title">图 1 · 抽样对比：噪声好抽，数据难抽</div>
+    <div class="controls"><button type="button" id="f1-go">各抽 300 个</button><button type="button" id="f1-reset">清空</button><span class="readout" id="f1-read"></span></div>
+    <canvas id="f1" width="720" height="260"></canvas>
+    <figcaption>上方灰色的是噪声分布 \(\mathcal N(0,1)\)，下方是数据分布（猫在 −3，狗在 +3）。点击按钮，看点一个一个落下来。电脑可以直接从上面抽，但没有办法直接从下面抽，因为我们不知道下面那个形状的公式，只有一堆训练图片。</figcaption>
+  </figure>
+  <h3>生成模型的任务</h3>
+  <p>造一台机器：<b>输入一个噪声数 \(\epsilon\)，输出一个像真实数据的数</b>。而且用很多不同的噪声反复跑，输出整体上要还原数据分布：一半落在 −3 附近，一半落在 +3 附近，中间 0 附近几乎没有，因为那里不是真实的图。</p>
+  <p>一步直接变过去很难学（GAN 就是这么做的，训练出了名的不稳定）。Diffusion 和 flow 的想法是：<b>分很多小步慢慢走过去</b>，每一小步只需要学"往哪边挪一点"。第 2 课就讲这个"慢慢走"。</p>
+  <details class="quiz"><summary>自测：如果一个模型生成的 1000 个点大多落在 0 附近，它好不好？</summary><p>不好。真实数据（猫、狗）都在 ±3 附近，0 附近几乎没有真实图片。落在 0 附近相当于生成了"既不像猫也不像狗"的模糊图。好的模型要同时还原两个峰和它们的比例。</p></details>
+</section>
+
+<!-- ===================================================== L2 -->
+<section class="lesson" id="l2">
+  <div class="lesson-head"><span class="no">第 2 课</span><h2>用"速度"把点一点点搬过去：ODE</h2><p class="goal">学完你应该能说清楚：速度场是什么，Euler 法每一步在做什么，为什么"路直"就能少走几步。</p></div>
+  <h3>风和小球</h3>
+  <p>抽一个噪声数，比如 0.5，就在数轴 0.5 处放一个小球。想象数轴上到处刮着风：在每个位置 \(y\)、每个时刻 \(t\)，风有一个方向和大小，这就是<b>速度</b> \(v(y,t)\)。小球被风推着走一小段时间 \(dt\)，位置就变化 \(v\,dt\)。写成式子（SD3 的 Eq. 1）：</p>
+  <div class="math">\[ dy_t = v_\Theta(y_t,t)\,dt \]</div>
+  <p>这种"变化率等于某个函数"的式子叫 <b>ODE（常微分方程）</b>。<b>神经网络就是这张风速地图</b>：输入位置 \(y\) 和时刻 \(t\)，输出风速（\(\Theta\) 是网络参数）。训练，就是让这张地图处处画对。</p>
+  <div class="box warn"><b>时间方向（SD3 的约定）：</b>\(t=1\) 是纯噪声（小球的起点），\(t=0\) 是真实数据（终点）。生成时时间从 1 倒着走到 0。论文先定义"图片怎么变成噪声"（时间往 1 走），速度描述的也是这个方向，所以倒着走时每一步要<b>减去</b>速度。</div>
+  <h3>Euler 法：一步一步走</h3>
+  <p>电脑只能把时间切成几段，每段假设风速不变，直接走一步：</p>
+  <div class="math">\[ y_{t-\Delta t} = y_t - \Delta t\cdot v_\Theta(y_t,t) \]</div>
+  <p>算一遍：小球从 \(y_1=0.5\) 出发，假设这条路上风速处处是 \(v=-2.5\)（第 4 课会知道它怎么来的），切成 2 步，每步 \(\Delta t=0.5\)：第一步 \(0.5-0.5\times(-2.5)=1.75\)，第二步 \(1.75-0.5\times(-2.5)=3.0\)。到了 +3，变成一张"狗图"。</p>
+  <figure>
+    <div class="fig-title">图 2 · Euler 法：直路随便切，弯路要切细</div>
+    <div class="controls">
+      <label for="f2-n">步数 <input type="range" id="f2-n" min="1" max="12" step="1" value="2"></label><span class="readout" id="f2-nv"></span>
+      <button type="button" id="f2-play">播放</button>
+    </div>
+    <div class="two"><canvas id="f2a" width="360" height="260"></canvas><canvas id="f2b" width="360" height="260"></canvas></div>
+    <figcaption>横轴是时间 \(t\)（从右边的 1 走到左边的 0），纵轴是位置。灰线是真正的路，彩色折线是 Euler 法走出来的。左边是直路：不管几步都准确到达 3。右边是弯路：步数少时冲出弯道，终点偏离 3；把步数拖大，折线越来越贴着弯路。</figcaption>
+  </figure>
+  <div class="box key"><b>要记住：</b>每走一步就要调用一次网络。SD3 默认走 50 步，就是生成一张图要跑 50 次大网络。路越直，越少的步数就够；InstaFlow 想把路拉直到 1 步就行。</div>
+  <details class="quiz"><summary>自测：风速处处 −2.5，从 0.5 出发切成 4 步，最后到哪？</summary><p>每步 \(\Delta t=0.25\)，每步加 \(0.25\times2.5=0.625\)：0.5 → 1.125 → 1.75 → 2.375 → 3.0。还是正好到 3，因为路是直的。</p></details>
+</section>
+
+<!-- ===================================================== L3 -->
+<section class="lesson" id="l3">
+  <div class="lesson-head"><span class="no">第 3 课</span><h2>先规定一条路：图片和噪声怎么混合</h2><p class="goal">学完你应该能说清楚：\(z_t=a_tx_0+b_t\epsilon\) 每个符号的意思，以及"所有点一起走"时分布怎么变。</p></div>
+  <p>网络要学风速，可风速应该是多少？我们得先规定"图片怎么一步步变成噪声"，也就是一条路。做法是：随便拿一张图 \(x_0\)，随便抽一个噪声 \(\epsilon\)，把它俩按比例混合（SD3 的 Eq. 2）：</p>
+  <div class="math">\[ z_t = a_t\,x_0 + b_t\,\epsilon,\qquad a_0=1,\ b_0=0;\quad a_1=0,\ b_1=1 \]</div>
+  <p>\(a_t\) 是图片的份量，\(b_t\) 是噪声的份量。\(t=0\) 时全是图片，\(t=1\) 时全是噪声。最简单的选择是 <b>rectified flow（RF）</b>：\(a_t=1-t,\ b_t=t\)，也就是在图片和噪声之间连一条<b>直线</b>：</p>
+  <div class="math">\[ z_t = (1-t)\,x_0 + t\,\epsilon \]</div>
+  <p>算一个：\(x_0=3\)（一张狗图），\(\epsilon=0.5\)。\(t=0.5\) 时 \(z=0.5\times3+0.5\times0.5=1.75\)。你会发现这正是第 2 课里小球走到一半的位置。</p>
+  <figure>
+    <div class="fig-title">图 3 · 很多对（图片，噪声）同时混合</div>
+    <div class="controls">
+      <label for="f3-t">时刻 \(t\) <input type="range" id="f3-t" min="0" max="1" step="0.01" value="0"></label><span class="readout" id="f3-tv"></span>
+      <button type="button" id="f3-play">播放</button>
+    </div>
+    <canvas id="f3" width="720" height="320"></canvas>
+    <figcaption>左边：每条细线是一对 \((x_0,\epsilon)\) 的直线路径，左端在 \(t=0\)（数据），右端在 \(t=1\)（噪声）。竖线是当前时刻，彩色点是此刻的 \(z_t\)。右边：把 2000 对的 \(z_t\) 画成直方图。拖动 \(t\)，看分布怎么从"两个峰"连续地变成"一个峰"。这个随 \(t\) 变化的分布叫 \(p_t\)。</figcaption>
+  </figure>
+  <div class="box sd3"><b>SD3 里：</b>不同方法的第一层区别就是 \(a_t,b_t\) 选得不同。cosine 用 \(\cos(\tfrac{\pi}{2}t),\sin(\tfrac{\pi}{2}t)\)；LDM 用一串离散系数累乘；EDM 让图片不缩小、只往上加噪声。SD3 选的是直线（RF）。</div>
+  <details class="quiz"><summary>自测：RF 下 \(x_0=-3,\ \epsilon=1\)，\(t=0.75\) 时 \(z_t\) 是多少？</summary><p>\(0.25\times(-3)+0.75\times1=-0.75+0.75=0\)。记住这个 0，第 5 课要用。</p></details>
+</section>
+
+<!-- ===================================================== L4 -->
+<section class="lesson" id="l4">
+  <div class="lesson-head"><span class="no">第 4 课</span><h2>只看一对时，速度一下就能算出来</h2><p class="goal">学完你应该能说清楚：什么是条件速度 \(u_t(z\mid\epsilon)\)，以及为什么 RF 的训练目标是 \(\epsilon-x_0\)。</p></div>
+  <p>固定一对 \((x_0,\epsilon)\)，它的路是 \(z_t=(1-t)x_0+t\epsilon\)。速度就是"位置随时间的变化率"，对 \(t\) 求导：</p>
+  <div class="math">\[ \frac{dz_t}{dt} = \frac{d}{dt}\big[(1-t)x_0 + t\epsilon\big] = -x_0 + \epsilon = \epsilon - x_0 \]</div>
+  <p>这叫<b>条件速度</b>，写作 \(u_t(z\mid\epsilon)\)，"条件"的意思是：<b>在已经知道是哪一对的条件下</b>的速度。直线的速度当然处处一样，和 \(t\) 无关。</p>
+  <p>代第 2 课的数：\(x_0=3,\ \epsilon=0.5\)，\(u=0.5-3=-2.5\)。<b>这就是第 2 课那个 −2.5 的来历。</b>负号表示从图片往噪声走时数值变小；生成时倒着走，于是数值变大，从 0.5 走到 3。</p>
+  <p>一般的路径也一样，求导得 \(u_t(z\mid\epsilon)=a_t'x_0+b_t'\epsilon\)（撇号表示对 \(t\) 求导）。</p>
+  <figure>
+    <div class="fig-title">图 4 · 一对点的条件速度</div>
+    <div class="controls">
+      <label for="f4-x">图片 \(x_0\) <input type="range" id="f4-x" min="-3.5" max="3.5" step="0.1" value="3"></label>
+      <label for="f4-e">噪声 \(\epsilon\) <input type="range" id="f4-e" min="-2.5" max="2.5" step="0.1" value="0.5"></label>
+      <span class="readout" id="f4-read"></span>
+    </div>
+    <canvas id="f4" width="720" height="260"></canvas>
+    <figcaption>一条直线路径和沿途的速度箭头。不管在路上哪一点，箭头都一样长、一样方向，大小就是 \(\epsilon-x_0\)。拖动两个滑块，看箭头怎么变。</figcaption>
+  </figure>
+  <div class="box key"><b>所以看起来训练很简单：</b>让网络看到 \(z_t\) 和 \(t\)，去猜 \(\epsilon-x_0\)。但这里藏着一个问题，网络只看得到 \(z_t\)，<b>看不到是哪一对</b>。第 5 课就来看这个问题。</div>
+  <details class="quiz"><summary>自测：\(x_0=-3,\ \epsilon=1\) 这一对的条件速度是多少？</summary><p>\(1-(-3)=4\)。</p></details>
+</section>
+
+<!-- ===================================================== L5 -->
+<section class="lesson" id="l5">
+  <div class="lesson-head"><span class="no">第 5 课</span><h2>路会交叉：真正要学的是"平均速度"，这就是 FM</h2><p class="goal">学完你应该能说清楚：为什么同一个点会有好几个"正确答案"，平均速度 \(u_t(z)\) 是什么，FM 损失为什么算不出来。</p></div>
+  <h3>两条路撞在一起</h3>
+  <p>看两对：A 是 \((x_0=-3,\ \epsilon=1)\)，B 是 \((x_0=3,\ \epsilon=-1)\)。第 3 课的自测算过，A 在 \(t=0.75\) 时位于 0；同样算 B：\(0.25\times3+0.75\times(-1)=0\)。<b>两条路在 \((t=0.75,\ z=0)\) 这一点相交。</b></p>
+  <p>它们的条件速度：A 是 \(1-(-3)=+4\)，B 是 \(-1-3=-4\)。网络在这一点只知道"现在 \(t=0.75\)，位置是 0"，不知道是 A 还是 B。那它该输出 +4 还是 −4？</p>
+  <figure>
+    <div class="fig-title">图 5a · 交叉点上，网络该听谁的？</div>
+    <div class="controls"><button type="button" id="f5a-play">播放两颗球</button><span class="readout" id="f5a-read"></span></div>
+    <canvas id="f5a" width="720" height="280"></canvas>
+    <figcaption>粉色是 A，绿色是 B。两颗球从噪声端（右）往数据端（左）走，在 \(t=0.75,\ z=0\) 相遇。在相遇点，A 的速度是 +4，B 的是 −4。如果所有经过这一点的路一样多，最合理的回答是它们的平均：0（灰色箭头）。</figcaption>
+  </figure>
+  <h3>平均速度：所有经过这一点的路的平均</h3>
+  <p>真实情况下，经过一个点 \((t,z)\) 的路有无数条（无数对图片和噪声）。在这一点上最合理的风速，就是<b>所有经过这一点的路的条件速度的平均</b>，按"这一对有多大可能经过这里"加权（SD3 的 Eq. 6）：</p>
+  <div class="math">\[ u_t(z) = \mathbb E\big[\,u_t(z\mid\epsilon)\ \big|\ z_t = z\,\big] \]</div>
+  <p>这叫<b>边际速度</b>（marginal velocity）。神奇的是：如果所有小球都按这个平均风速走，那么在每个时刻，小球的整体分布正好等于第 3 课图 3 里的 \(p_t\)。所以从 \(t=1\) 的噪声出发，按它倒着走，到 \(t=0\) 时整体就变成数据分布。（证明是附录 B.1 的第一段，用的是"水流守恒"的连续性方程，第 6 课末尾有解释。）</p>
+  <figure>
+    <div class="fig-title">图 5b · 按平均速度走：从噪声流到数据</div>
+    <div class="controls"><button type="button" id="f5b-play">播放</button><button type="button" id="f5b-reset">重来</button><label><input type="checkbox" id="f5b-field" checked> 显示风场</label></div>
+    <canvas id="f5b" width="720" height="340"></canvas>
+    <figcaption>背景小箭头是在我们的玩具世界里精确算出来的平均速度 \(u_t(z)\)（数据是两个峰，噪声是标准正态，路径是 RF 直线）。每个小球从右边 \(t=1\) 的噪声出发，按平均速度往左走。到左边 \(t=0\)，它们自动分成了 −3 和 +3 两堆。注意：每一对的路是直的，但小球实际走的路是<b>弯的</b>，因为平均速度在不同位置、不同时刻都在变。</figcaption>
+  </figure>
+  <h3>Flow Matching（FM）损失：理想目标</h3>
+  <p>既然平均速度能把噪声变成数据，那就训练网络去拟合它，这就是 <b>Flow Matching</b>（SD3 的 Eq. 7）：</p>
+  <div class="math">\[ \mathcal L_{FM} = \mathbb E_{t,\ z\sim p_t}\ \big\|\,v_\Theta(z,t) - u_t(z)\,\big\|^2 \]</div>
+  <p>意思是：随机挑一个时刻 \(t\)、一个位置 \(z\)，让网络输出的风速尽量接近真正的平均风速。</p>
+  <div class="box warn"><b>问题：</b>\(u_t(z)\) 算不出来。要算它，得知道"所有可能经过 \(z\) 的图片和噪声"并求平均，也就是要对整个数据分布做积分。我们的玩具世界能精确算，是因为数据分布是两个已知的正态分布；真实图片的分布我们根本不知道公式。所以 FM 是一个"理想但做不到"的目标。第 6 课解决它。</div>
+  <details class="quiz"><summary>自测：用一句话说出条件速度和平均速度的区别。</summary><p>条件速度是"已知是哪一对时，这一对的速度"，好算；平均速度是"只知道位置和时刻时，所有可能经过这里的路的平均速度"，这才是能把整个噪声分布推成数据分布的风速，但算不出来。</p></details>
+</section>
+
+<!-- ===================================================== L6 -->
+<section class="lesson" id="l6">
+  <div class="lesson-head"><span class="no">第 6 课</span><h2>CFM：只学一对一对的，自动学到平均</h2><p class="goal">学完你应该能说清楚：CFM 损失长什么样，为什么它的最优解和 FM 一样。</p></div>
+  <h3>先玩一个猜数游戏</h3>
+  <p>我手里有两张牌，一张写 +4，一张写 −4，每次随机翻一张。你每次都只能报<b>同一个</b>数 \(g\)，罚分是 \((g-\text{翻到的数})^2\)。报几罚分最少？</p>
+  <figure>
+    <div class="fig-title">图 6a · 平方误差的最优猜测 = 平均值</div>
+    <div class="controls">
+      <label for="f6-g">你的猜测 \(g\) <input type="range" id="f6-g" min="-6" max="6" step="0.1" value="3"></label><span class="readout" id="f6-read"></span>
+      <label for="f6-set">牌 <select id="f6-set"><option value="a">+4, −4</option><option value="b">+4, −4, −4</option><option value="c">1, 2, 6</option></select></label>
+    </div>
+    <canvas id="f6" width="720" height="260"></canvas>
+    <figcaption>曲线是平均罚分随猜测 \(g\) 的变化，最低点（绿色）正好在所有牌的平均值上。换一副牌试试：+4、−4、−4 时最低点在 −4/3；1、2、6 时在 3。</figcaption>
+  </figure>
+  <p>答案是<b>平均值</b>。这是平方误差的一个基本性质：面对一堆可能的答案，平方误差下的最好猜法就是它们的平均。</p>
+  <h3>把这个道理用到交叉点上</h3>
+  <p>现在换一种训练方法：<b>每次只抽一对</b> \((x_0,\epsilon)\) 和一个 \(t\)，算出 \(z_t\)，让网络去拟合<b>这一对</b>的条件速度（SD3 的 Eq. 8）：</p>
+  <div class="math">\[ \mathcal L_{CFM} = \mathbb E_{t,\ x_0,\ \epsilon}\ \big\|\,v_\Theta(z_t,t) - u_t(z_t\mid\epsilon)\,\big\|^2,\qquad \text{RF 下目标就是 } \epsilon - x_0 \]</div>
+  <p>这个目标每次都能直接算出来，所以训练做得到。那网络最后学到什么？在交叉点 \((0.75,0)\) 上，有时候训练样本来自 A（目标 +4），有时候来自 B（目标 −4），网络看到的输入完全一样。根据猜数游戏，它在这一点能做到的最好，就是输出它们的平均。<b>而这正是平均速度 \(u_t(z)\)。</b></p>
+  <figure>
+    <div class="fig-title">图 6b · 网络在训练中被"拉向平均"</div>
+    <div class="controls"><button type="button" id="f6b-play">开始训练</button><button type="button" id="f6b-reset">重来</button><span class="readout" id="f6b-read"></span></div>
+    <canvas id="f6b" width="720" height="240"></canvas>
+    <figcaption>一个只在交叉点上有一个可调输出的极简"网络"，从 3.0 开始。每一步随机抽到 A 或 B，用 CFM 的梯度下降更新一次（学习率 0.05）。粉点和绿点是每次抽到的目标，深色线是网络输出，它在 +4 和 −4 的拉扯中稳定到平均值 0 附近。</figcaption>
+  </figure>
+  <h3>两个损失只差一个常数（附录 B.1 第二段）</h3>
+  <p>更严格地说，把 \(\|v-u\|^2\) 展开成 \(\|v\|^2-2\langle v,u\rangle+\|u\|^2\)，逐项比较 FM 和 CFM：</p>
+  <ol>
+    <li>\(\|v\|^2\)：两个损失里一模一样。</li>
+    <li>\(\|u\|^2\)：和网络参数无关，训练时是常数，可以不管。</li>
+    <li>交叉项 \(\langle v,u\rangle\)：对每一对的条件速度求期望，正好等于对平均速度求期望，因为平均速度本来就是这么定义的（Eqs. 34 to 36）。</li>
+  </ol>
+  <p>所以 \(\mathcal L_{FM}=\mathcal L_{CFM}+\text{常数}\)，<b>两者的梯度完全一样，最优解也一样</b>。我们用做得到的 CFM，学到了做不到的 FM 想要的东西。</p>
+  <div class="card">
+    <div><span class="tag fm">FM</span><h3>Flow Matching</h3><p>目标：平均速度 \(u_t(z)\)。</p><p>直观：直接告诉网络"这一点的正确风速"。</p><p>问题：要对整个数据分布求平均，<b>算不出来</b>。</p></div>
+    <div><span class="tag cfm">CFM</span><h3>Conditional Flow Matching</h3><p>目标：这一对的条件速度 \(u_t(z\mid\epsilon)\)，RF 下是 \(\epsilon-x_0\)。</p><p>直观：每次只给网络看一对的答案，网络在平方误差下自动取平均。</p><p>结论：<b>能算</b>，并且和 FM 最优解相同。</p></div>
+  </div>
+  <details class="quiz"><summary>附录 B.1 第一段在证明什么？（选读）</summary><p>它证明"按平均速度走，分布真的会从噪声变成数据"。工具是连续性方程 \(\frac{d}{dt}p_t+\nabla\cdot(p_t v_t)=0\)，可以理解成水流守恒：某处的"水"变多，一定是流进来的比流出去的多。每一对自己的路都满足守恒，平均起来整体也满足，所以平均速度能推动整个 \(p_t\)。</p></details>
+  <details class="quiz"><summary>自测：CFM 训练时，网络每一步的"标准答案"是什么？它最终学到的又是什么？</summary><p>每一步的标准答案是抽到的那一对的条件速度（RF 下是 \(\epsilon-x_0\)）；最终学到的是所有可能经过同一点的条件速度的平均，也就是平均速度 \(u_t(z)\)。</p></details>
+</section>
+
+<!-- ===================================================== L7 -->
+<section class="lesson" id="l7">
+  <div class="lesson-head"><span class="no">第 7 课</span><h2>为什么中间的 t 最难学</h2><p class="goal">学完你应该能说清楚：在 \(t\) 接近 0 或 1 时网络要学的东西很简单，而在中间很复杂。</p></div>
+  <p>网络要学的是平均速度 \(u_t(z)\)。把某个时刻 \(t\) 的 \(u_t(z)\) 画成 \(z\) 的函数，看看它长什么样：</p>
+  <ul>
+    <li>\(t\) 接近 0：\(z\approx x_0\)，图片几乎完全知道了，只有噪声未知，最好的猜法是噪声的平均 0，所以答案约等于 \(-z\)，一条直线。</li>
+    <li>\(t\) 接近 1：\(z\approx\epsilon\)，噪声几乎完全知道了，只有图片未知，最好的猜法是所有图片的平均（这里是 0），所以答案约等于 \(z\)，也是一条直线。</li>
+    <li>中间：图片和噪声混在一起，网络得先判断"这更可能是猫还是狗"，答案在两类之间会急剧切换，函数是一条弯弯的 S 形。</li>
+  </ul>
+  <figure>
+    <div class="fig-title">图 7 · 平均速度 \(u_t(z)\) 的形状随 \(t\) 的变化</div>
+    <div class="controls"><label for="f7-t">时刻 \(t\) <input type="range" id="f7-t" min="0.02" max="0.98" step="0.01" value="0.5"></label><span class="readout" id="f7-tv"></span><button type="button" id="f7-play">扫一遍</button></div>
+    <canvas id="f7" width="720" height="300"></canvas>
+    <figcaption>横轴是位置 \(z\)，纵轴是该位置的平均速度。浅色虚线是两条参考直线 \(-z\) 和 \(z\)。把 \(t\) 拖到两头，曲线几乎是直线，很好学；拖到中间，曲线出现一个陡峭的 S 形转折，这就是网络最难学好的地方。</figcaption>
+  </figure>
+  <div class="box sd3"><b>SD3 的 3.1 节说的就是这个：</b>"对 \(t=0\)，最优预测是 \(p_1\) 的均值；对 \(t=1\)，最优预测是 \(p_0\) 的均值"。两头只需要猜一个平均值，中间才是真正难的地方。所以 SD3 想让训练多练中间的时刻，这就是第 8 课的 timestep 采样。</div>
+  <details class="quiz"><summary>自测：为什么说两端"容易"，并不是说两端的误差小？</summary><p>"容易"指要学的函数简单（接近一条直线），网络很快能学对。两端的误差本身不一定小：比如 \(t\) 接近 0 时噪声完全不知道，误差至少有噪声本身那么大，但这部分误差谁也消不掉，网络也不用为它费力。</p></details>
+</section>
+
+<!-- ===================================================== L8 -->
+<section class="lesson" id="l8">
+  <div class="lesson-head"><span class="no">第 8 课</span><h2>换一种说法：加权损失和"抽哪些 t"</h2><p class="goal">学完你应该能说清楚：log-SNR \(\lambda_t\)、权重 \(w_t\) 是什么，RF 的 \(w_t=\frac{t}{1-t}\) 怎么来，以及为什么"多抽中间的 t"就是"给中间更大的权重"。</p></div>
+  <h3>8a. 为什么要换说法</h3>
+  <p>不同方法让网络输出的东西不同：RF 输出速度，DDPM/LDM 输出噪声 \(\epsilon\)（"eps-prediction"），EDM 输出另一种组合。要公平比较，SD3 先把它们全部翻译成同一种语言：<b>"噪声预测误差 × 一个随 \(t\) 变化的权重"</b>。</p>
+  <h3>8b. log-SNR：图片和噪声谁更强</h3>
+  <div class="math">\[ \lambda_t = \log\frac{a_t^2}{b_t^2} \]</div>
+  <p>图片份量大时 \(\lambda_t\) 很大，噪声份量大时很小。从 \(t=0\) 到 \(1\)，它从 \(+\infty\) 降到 \(-\infty\)。RF 下 \(\lambda_t=2\log\frac{1-t}{t}\)：\(t=0.5\) 时是 0（一半一半），\(t=0.1\) 时约 4.4，\(t=0.9\) 时约 −4.4。</p>
+  <h3>8c. 速度和噪声可以互相换算</h3>
+  <p>从 \(z=a_tx_0+b_t\epsilon\) 解出 \(x_0=(z-b_t\epsilon)/a_t\)，代入 \(u=a_t'x_0+b_t'\epsilon\)，整理得（SD3 的 Eq. 10）：</p>
+  <div class="math">\[ u_t(z\mid\epsilon) = \frac{a_t'}{a_t}\,z \;-\; \frac{b_t}{2}\,\lambda_t'\,\epsilon \]</div>
+  <p>第一项只依赖网络看得到的 \(z\)，第二项正比于噪声。所以"猜对速度"和"猜对噪声"是一回事，只差一个系数。代回 CFM 损失，\(z\) 那项消掉，剩下：</p>
+  <div class="math">\[ \mathcal L_{CFM} = \mathbb E\Big[\Big(\tfrac{b_t}{2}\lambda_t'\Big)^2\,\big\|\epsilon_\Theta - \epsilon\big\|^2\Big] \]</div>
+  <p>论文把所有方法写成统一形式 \(\mathcal L_w=-\frac12\mathbb E\big[w_t\,\lambda_t'\,\|\epsilon_\Theta-\epsilon\|^2\big]\)。<b>每个方法 = 一条路径 \((a_t,b_t)\) + 一条权重曲线 \(w_t\)。</b>只要 \(w_t>0\)，换权重不改变最优解，但会改变网络把力气花在哪些 \(t\) 上。</p>
+  <h3>8d. 一步步算出 RF 的权重</h3>
+  <ol>
+    <li>\(a_t=1-t,\ b_t=t\)，所以 \(\lambda_t=2\log\frac{1-t}{t}\)。</li>
+    <li>求导：\(\lambda_t'=2\big(\frac{-1}{1-t}-\frac{1}{t}\big)=\frac{-2}{t(1-t)}\)。</li>
+    <li>让统一形式等于 CFM：\(-\frac12w_t\lambda_t'=\big(\frac{b_t}{2}\lambda_t'\big)^2\)，解得 \(w_t=-\frac12\lambda_t'b_t^2\)。</li>
+    <li>代入：\(w_t=-\frac12\cdot\frac{-2}{t(1-t)}\cdot t^2=\frac{t}{1-t}\)。</li>
+  </ol>
+  <h3>8e. 多抽某些 t，就是给它们更大的权重</h3>
+  <p>CFM 训练时 \(t\) 默认从 0 到 1 均匀地抽。如果改成按某个密度 \(\pi(t)\) 抽，期望损失变成 \(\int\pi(t)L(t)\,dt\)，和"均匀抽、再乘权重 \(\pi(t)\)"完全一样。换算到统一形式就是 SD3 的 Eq. 18：</p>
+  <div class="math">\[ w_t^{\pi} = \frac{t}{1-t}\,\pi(t) \]</div>
+  <p>第 7 课说中间最难，所以 SD3 设计了几种"多抽中间"的 \(\pi(t)\)：</p>
+  <ul>
+    <li><b>logit-normal</b>：先抽 \(u\sim\mathcal N(m,s)\)，再令 \(t=\frac{1}{1+e^{-u}}\)。\(m\) 控制峰的位置，\(s\) 控制胖瘦。</li>
+    <li><b>mode</b>：两端密度始终大于 0；\(s>0\) 偏爱中间，\(s=0\) 就是均匀分布。</li>
+    <li><b>CosMap</b>：让 RF 的 log-SNR 随抽样变化的方式和 cosine 路径一样。</li>
+  </ul>
+  <figure>
+    <div class="fig-title">图 8 · 不同的抽 t 方式</div>
+    <div class="controls">
+      <label for="f8-m">logit-normal \(m\) <input type="range" id="f8-m" min="-1.5" max="1.5" step="0.05" value="0"></label><span class="readout" id="f8-mv"></span>
+      <label for="f8-s">\(s\) <input type="range" id="f8-s" min="0.3" max="2" step="0.05" value="1"></label><span class="readout" id="f8-sv"></span>
+      <label for="f8-ms">mode \(s\) <input type="range" id="f8-ms" min="-1" max="1.75" step="0.01" value="1.29"></label><span class="readout" id="f8-msv"></span>
+      <button type="button" id="f8-play">按 logit-normal 抽 2000 个 t</button>
+    </div>
+    <canvas id="f8" width="720" height="300"></canvas>
+    <figcaption>横轴是 \(t\)（左边数据、右边噪声），纵轴是密度。灰虚线是均匀分布（普通 rf），蓝线 logit-normal，橙线 mode，绿线 CosMap。点按钮，看按 logit-normal 抽出来的 \(t\) 堆成的直方图和蓝线吻合：中间被抽到的次数远多于两头。默认参数 \(m=0,s=1\) 正是 SD3 最后选的设置。</figcaption>
+  </figure>
+  <details class="quiz"><summary>自测："多抽中间的 t"会改变网络的最优解吗？</summary><p>不会。每个 \(t\) 上的最好答案仍然是平均速度 \(u_t(z)\)，只是训练时中间的 \(t\) 出现得更频繁，网络把更多能力花在最难的地方。在网络能力有限的现实里，这会让结果更好。</p></details>
+</section>
+
+<!-- ===================================================== L9 -->
+<section class="lesson" id="l9">
+  <div class="lesson-head"><span class="no">第 9 课</span><h2>回到 SD3：第 5.1 节的实验</h2><p class="goal">学完你应该能说清楚：5.1 在比什么、怎么比、Table 1 怎么读。</p></div>
+  <p>前面 8 课拼起来，正好就是 5.1 需要的全部背景：一个训练方式 = 路径（第 3 课）+ 网络输出与权重（第 8 课）+ 抽 \(t\) 的方式（第 8 课）。5.1 就是把各种组合摆在一起比。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>问题</th><th>答案（论文第 5.1 节和附录 B.3）</th></tr></thead>
+    <tbody>
+      <tr><td>想回答什么</td><td>同样的网络、同样的数据，哪种训练方式生成的图最好？"RF + 多练中间"能否打败 SD1/SDXL 一直用的 <code>eps/linear</code>？</td></tr>
+      <tr><td>什么不变</td><td>同一个网络结构；数据是 ImageNet（标题写成"a photo of a 〈类名〉"）和 CC12M；batch 1024，AdamW，学习率 \(10^{-4}\)；每个变体取验证 loss 最低的 checkpoint</td></tr>
+      <tr><td>什么在变</td><td>61 个变体：经典扩散 4 个（eps/v × linear/cos）；rf/mode 9 个（含 \(s=0\) 的普通 rf）；rf/lognorm 30 个；rf/cosmap 1 个；edm 15 个；edm/rf、edm/cos 2 个</td></tr>
+      <tr><td>为什么不比 loss</td><td>权重不同，loss 数值没法横比，而且 loss 低不等于图好</td></tr>
+      <tr><td>比什么</td><td>在 COCO-2014 验证集上生成图，看 CLIP score（越高越好，图文是否对得上）和 FID（越低越好，用 CLIP 特征算，每次 1000 张，所以数值在 50 到 140 之间）</td></tr>
+      <tr><td>在哪些条件下比</td><td>6 种 Euler 采样设置（50 步配 CFG 1.0、2.5、5.0；CFG 5.0 配 5、10、25 步）× 用不用 EMA × 2 个数据集 = 24 种情况</td></tr>
+    </tbody>
+  </table></div>
+  <h3>两个指标怎么合成一个名次：非支配排序</h3>
+  <p>CLIP 和 FID 经常打架，不能简单相加。如果 A 在两个指标上都不比 B 差、且至少一个更好，就说 A 支配 B。没被任何人支配的排第 1 层；拿掉它们，剩下的里再找，排第 2 层……每种情况排一次，24 个名次取平均，就是 Table 1 的数。</p>
+  <figure>
+    <div class="fig-title">图 9 · 非支配排序（示例数据，不是论文的数）</div>
+    <div class="controls"><button type="button" id="f9-next">剥下一层</button><button type="button" id="f9-reset">重来</button><span class="readout" id="f9-read"></span></div>
+    <canvas id="f9" width="720" height="300"></canvas>
+    <figcaption>6 个虚构的变体，横轴 FID（越往左越好），纵轴 CLIP（越往上越好）。点按钮一层一层剥出名次。</figcaption>
+  </figure>
+  <h3>怎么读结果</h3>
+  <ul>
+    <li><code>rf/lognorm(0.00, 1.00)</code> 平均名次 1.54，在所有、5 步、50 步三列都靠前，所以 SD3 后面一直用它。但它不是每列第一：50 步下 <code>rf/lognorm(0.50, 0.60)</code> 是 1.00，可它 5 步时掉到 8.50。</li>
+    <li>排在 <code>eps/linear</code>（2.88）前面的全是"RF + 多练中间的采样"。<b>普通 rf（均匀抽 t）只有 5.67，比 eps/linear 还差。</b>所以贡献是"RF 配上合适的 \(t\) 采样"，不是 RF 本身。这正好验证了第 7、8 课的道理。</li>
+    <li>Fig. 3：步数少（5、10 步）时，RF 系列的 FID 远低于经典扩散，说明路更直（第 2 课）；25 步以上，只有 lognorm(0,1) 还能和 eps/linear 打平。</li>
+  </ul>
+  <div class="box warn"><b>心里要有数：</b>这些比较在小模型、小数据上做，每个变体只训练一次，没有多个随机种子。8B 大模型直接沿用了 lognorm(0,1)，没有在大模型上重新比一遍。</div>
+  <details class="quiz"><summary>最终自测：用三句话讲清 SD3 的第一个贡献。</summary><p>所有扩散/flow 方法都可以写成"一条路径 + 一条权重曲线"，于是能在同样条件下公平比较。中间的 \(t\) 最难学，而按某个分布抽 \(t\) 等价于加权，所以作者让 RF 多抽中间的 \(t\)（如 logit-normal）。61 个变体的大比较里，RF + logit-normal(0,1) 一直排在前面，而普通 RF 反而不如传统的 eps/linear。</p></details>
+</section>
+
+<footer>
+  <p>依据：Esser et al., "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis", ICML 2024（<a href="https://arxiv.org/abs/2403.03206v1">arXiv 2403.03206v1</a>）第 2、3、5.1 节与附录 B.1、B.3；Lipman et al., "Flow Matching for Generative Modeling", ICLR 2023。图 5b、图 7 的速度场是在一维玩具数据（两个正态分布 \(\mathcal N(\pm3,0.4^2)\) 各占一半）上按 RF 路径精确计算的；图 9 是示例数据。</p>
+</footer>
+</main>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
+<script>
+(function(){
+"use strict";
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+function ctx(id){const c=$(id);const r=window.devicePixelRatio||1;if(!c._w){c._w=c.width;c._h=c.height;}const W=Math.round(c.clientWidth||c._w),H=Math.round(c._h*Math.max(0.72,Math.min(1,W/c._w)));if(c._cw!==W||c._ch!==H){c._cw=W;c._ch=H;c.width=W*r;c.height=H*r;c.style.height=H+'px';}const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.W=W;x.H=H;x.font='12px '+C('--f-mono');return x;}
+// seeded rng
+let seed=12345;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const SD=0.4;const dataSample=()=>(rnd()<0.5?-3:3)+SD*gauss();
+const npdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+// exact marginal RF velocity for the toy: x0 ~ 0.5N(-3,SD^2)+0.5N(3,SD^2), eps~N(0,1), z=(1-t)x0+t eps ; u = E[eps - x0 | z]
+function uMarg(z,t){let num=0,den=0;for(const mu of [-3,3]){const m=(1-t)*mu, v=(1-t)*(1-t)*SD*SD+t*t, s=Math.sqrt(v);const w=npdf(z,m,s);
+  const ex0=mu+(1-t)*SD*SD/v*(z-m), eeps=t/v*(z-m);num+=w*(eeps-ex0);den+=w;}return den>0?num/den:0;}
+function axes(x,o){ // o: {L,R,T,B,xmin,xmax,ymin,ymax,xt:[...],yt:[...],xl,yl}
+  const pw=x.W-o.L-o.R,ph=x.H-o.T-o.B;const X=v=>o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y=v=>o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');x.lineWidth=1;
+  (o.yt||[]).forEach(v=>{x.beginPath();x.moveTo(o.L,Y(v));x.lineTo(o.L+pw,Y(v));x.stroke();x.fillText(String(v),4,Y(v)+4);});
+  (o.xt||[]).forEach(v=>{x.fillText(String(v),X(v)-8,x.H-o.B+16);});
+  if(o.xl)x.fillText(o.xl,o.L+pw-x.measureText(o.xl).width,o.T+ph-6);
+  if(o.yl)x.fillText(o.yl,o.L+4,o.T-2>10?o.T-2:12);
+  return {X,Y,pw,ph};
+}
+function arrow(x,x1,y1,x2,y2,col,w){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w||2;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();const a=Math.atan2(y2-y1,x2-x1),h=Math.min(8,Math.hypot(x2-x1,y2-y1)*0.5);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-h*Math.cos(a-0.45),y2-h*Math.sin(a-0.45));x.lineTo(x2-h*Math.cos(a+0.45),y2-h*Math.sin(a+0.45));x.closePath();x.fill();}
+const anims={};function loop(name,step){if(anims[name])cancelAnimationFrame(anims[name]);const f=()=>{if(step()!==false)anims[name]=requestAnimationFrame(f);else anims[name]=0;};anims[name]=requestAnimationFrame(f);}
+
+/* ---------- F1 sampling ---------- */
+let f1n=[],f1d=[],f1q=0;
+function drawF1(){const x=ctx('f1');x.clearRect(0,0,x.W,x.H);const L=30,R=12,mid=x.H/2;const X=v=>L+(x.W-L-R)*(v+5)/10;
+  x.fillStyle=C('--muted');[-4,-3,-2,-1,0,1,2,3,4].forEach(v=>x.fillText(String(v),X(v)-4,x.H-4));
+  x.strokeStyle=C('--line');x.beginPath();x.moveTo(L,mid);x.lineTo(x.W-R,mid);x.stroke();
+  x.fillText('噪声 N(0,1)',L,14);x.fillText('数据（猫 -3，狗 +3）',L,mid+16);
+  const curve=(f,base,h,col)=>{x.strokeStyle=col;x.lineWidth=1.5;x.beginPath();for(let i=0;i<=200;i++){const v=-5+i/20;const yy=base-h*f(v);i?x.lineTo(X(v),yy):x.moveTo(X(v),yy);}x.stroke();};
+  curve(v=>npdf(v,0,1)/npdf(0,0,1),mid-14,mid-40,C('--muted'));
+  curve(v=>(0.5*npdf(v,-3,SD)+0.5*npdf(v,3,SD))/(0.5*npdf(0,0,SD)),x.H-28,mid-56,C('--accent'));
+  const hist=(arr,base,maxh,col)=>{const bins=new Array(50).fill(0);arr.forEach(v=>{const b=Math.floor((v+5)/0.2);if(b>=0&&b<50)bins[b]++;});const mx=Math.max(12,...bins);x.fillStyle=col;bins.forEach((c,i)=>{const h=maxh*c/mx;x.globalAlpha=0.55;x.fillRect(X(-5+i*0.2)+1,base-h,(x.W-L-R)/50-2,h);x.globalAlpha=1;});};
+  hist(f1n,mid-14,mid-44,C('--blue'));hist(f1d,x.H-28,mid-60,C('--pink'));
+  $('f1-read').textContent=`噪声 ${f1n.length} 个 · 数据 ${f1d.length} 个`;}
+$('f1-go').onclick=()=>{f1q+=300;if(reduce){while(f1q-->0){f1n.push(gauss());f1d.push(dataSample());}f1q=0;drawF1();return;}loop('f1',()=>{for(let k=0;k<6&&f1q>0;k++,f1q--){f1n.push(gauss());f1d.push(dataSample());}drawF1();return f1q>0;});};
+$('f1-reset').onclick=()=>{f1n=[];f1d=[];f1q=0;drawF1();};
+
+/* ---------- F2 Euler ---------- */
+const A2=1.0;const curvedY=t=>3-2.5*t+A2*Math.sin(Math.PI*t);const curvedV=t=>-2.5+A2*Math.PI*Math.cos(Math.PI*t);
+let f2p=1;
+function drawF2one(id,trueY,vel,title,col){const x=ctx(id);x.clearRect(0,0,x.W,x.H);
+  const o={L:30,R:10,T:22,B:24,xmin:0,xmax:1,ymin:-0.5,ymax:4.5,xt:[0,0.5,1],yt:[0,1,2,3,4]};const {X,Y}=axes(x,o);
+  x.fillStyle=C('--heading');x.fillText(title,o.L,14);
+  x.strokeStyle=C('--line-strong');x.lineWidth=2;x.beginPath();for(let i=0;i<=100;i++){const t=i/100;i?x.lineTo(X(t),Y(trueY(t))):x.moveTo(X(t),Y(trueY(t)));}x.stroke();
+  const N=+$('f2-n').value,dt=1/N;let y=0.5,t=1;const pts=[[t,y]];for(let k=0;k<N;k++){y=y-dt*vel(t);t=t-dt;pts.push([t,y]);}
+  const show=Math.max(1,Math.floor(f2p*N+1e-9)+1);x.strokeStyle=col;x.lineWidth=2.2;x.beginPath();pts.slice(0,show).forEach((p,i)=>i?x.lineTo(X(p[0]),Y(p[1])):x.moveTo(X(p[0]),Y(p[1])));x.stroke();
+  x.fillStyle=col;pts.slice(0,show).forEach(p=>{x.beginPath();x.arc(X(p[0]),Y(p[1]),3.5,0,7);x.fill();});
+  x.strokeStyle=C('--green');x.setLineDash([3,3]);x.beginPath();x.moveTo(o.L,Y(3));x.lineTo(x.W-o.R,Y(3));x.stroke();x.setLineDash([]);
+  if(show===pts.length){x.fillStyle=col;x.fillText('终点 '+pts[N][1].toFixed(2),X(0)+6,Y(pts[N][1])-8);}
+  return pts[N][1];}
+function drawF2(){$('f2-nv').textContent=$('f2-n').value+' 步';drawF2one('f2a',t=>3-2.5*t,()=>-2.5,'直路：v 处处 = -2.5',C('--blue'));drawF2one('f2b',curvedY,curvedV,'弯路：v 随 t 变化',C('--pink'));}
+$('f2-n').oninput=()=>{f2p=1;drawF2();};
+$('f2-play').onclick=()=>{if(reduce){f2p=1;drawF2();return;}f2p=0;let last=performance.now();loop('f2',()=>{const now=performance.now();f2p=Math.min(1,f2p+(now-last)/2200);last=now;drawF2();return f2p<1;});};
+
+/* ---------- F3 interpolation ---------- */
+const pairs3=[];for(let i=0;i<2000;i++)pairs3.push([dataSample(),gauss()]);
+function drawF3(){const t=+$('f3-t').value;$('f3-tv').textContent='t = '+t.toFixed(2);const x=ctx('f3');x.clearRect(0,0,x.W,x.H);
+  const W1=x.W*0.68;const L=30,T=14,B=26,ph=x.H-T-B;const X=v=>L+(W1-L-10)*v,Y=v=>T+ph*(1-(v+5)/10);
+  x.fillStyle=C('--muted');[-4,-2,0,2,4].forEach(v=>{x.strokeStyle=C('--line');x.beginPath();x.moveTo(L,Y(v));x.lineTo(W1-10,Y(v));x.stroke();x.fillText(String(v),6,Y(v)+4);});
+  x.fillText('t=0 数据',L,x.H-6);x.fillText('t=1 噪声',W1-70,x.H-6);
+  for(let i=0;i<40;i++){const [a,e]=pairs3[i];x.strokeStyle=C('--line-strong');x.lineWidth=1;x.beginPath();x.moveTo(X(0),Y(a));x.lineTo(X(1),Y(e));x.stroke();}
+  x.strokeStyle=C('--accent');x.lineWidth=1.5;x.beginPath();x.moveTo(X(t),T);x.lineTo(X(t),T+ph);x.stroke();
+  for(let i=0;i<40;i++){const [a,e]=pairs3[i];const z=(1-t)*a+t*e;x.fillStyle=a<0?C('--pink'):C('--green');x.beginPath();x.arc(X(t),Y(z),3.2,0,7);x.fill();}
+  // histogram on right
+  const HL=W1+16,HW=x.W-HL-8;const bins=new Array(50).fill(0);pairs3.forEach(([a,e])=>{const z=(1-t)*a+t*e;const b=Math.floor((z+5)/0.2);if(b>=0&&b<50)bins[b]++;});const mx=Math.max(...bins);
+  x.fillStyle=C('--blue');bins.forEach((c,i)=>{const yy=Y(-5+(i+1)*0.2),h=ph/50;x.globalAlpha=0.7;x.fillRect(HL,yy,HW*c/mx,h-1);x.globalAlpha=1;});
+  x.fillStyle=C('--muted');x.fillText('p_t 直方图',HL,12);}
+$('f3-t').oninput=drawF3;
+$('f3-play').onclick=()=>{if(reduce){$('f3-t').value=1;drawF3();return;}let t=0;loop('f3',()=>{t+=0.006;$('f3-t').value=Math.min(1,t);drawF3();return t<1;});};
+
+/* ---------- F4 one pair ---------- */
+function drawF4(){const a=+$('f4-x').value,e=+$('f4-e').value,u=e-a;$('f4-read').textContent=`u = ε - x0 = ${e.toFixed(1)} - (${a.toFixed(1)}) = ${u.toFixed(1)}`;
+  const x=ctx('f4');x.clearRect(0,0,x.W,x.H);const o={L:30,R:14,T:14,B:24,xmin:0,xmax:1,ymin:-4,ymax:4,xt:[0,0.25,0.5,0.75,1],yt:[-4,-2,0,2,4],xl:'t'};const {X,Y}=axes(x,o);
+  x.strokeStyle=C('--blue');x.lineWidth=2.5;x.beginPath();x.moveTo(X(0),Y(a));x.lineTo(X(1),Y(e));x.stroke();
+  x.fillStyle=C('--pink');x.beginPath();x.arc(X(0),Y(a),5,0,7);x.fill();x.fillStyle=C('--muted');x.beginPath();x.arc(X(1),Y(e),5,0,7);x.fill();
+  x.fillStyle=C('--heading');x.fillText('x0（图片）',X(0)+8,Y(a)-8);x.fillText('ε（噪声）',X(1)-62,Y(e)-10);
+  for(const t of [0.2,0.4,0.6,0.8]){const z=(1-t)*a+t*e;const dt=0.12;arrow(x,X(t),Y(z),X(t+dt),Y(z+u*dt),C('--orange'),2);}
+  x.fillStyle=C('--orange');x.fillText('箭头：速度 u（每处都相同）',X(0.32),o.T+12);}
+['f4-x','f4-e'].forEach(id=>$(id).oninput=drawF4);
+
+/* ---------- F5a crossing ---------- */
+let f5a=1;
+function drawF5a(){const x=ctx('f5a');x.clearRect(0,0,x.W,x.H);const o={L:30,R:14,T:14,B:24,xmin:0,xmax:1,ymin:-4,ymax:4,xt:[0,0.25,0.5,0.75,1],yt:[-4,-2,0,2,4],xl:'t'};const {X,Y}=axes(x,o);
+  const P=[{a:-3,e:1,c:C('--pink'),n:'A'},{a:3,e:-1,c:C('--green'),n:'B'}];
+  P.forEach(p=>{x.strokeStyle=p.c;x.lineWidth=2;x.beginPath();x.moveTo(X(0),Y(p.a));x.lineTo(X(1),Y(p.e));x.stroke();});
+  const t=f5a;P.forEach(p=>{const z=(1-t)*p.a+t*p.e;x.fillStyle=p.c;x.beginPath();x.arc(X(t),Y(z),6,0,7);x.fill();x.fillText(p.n,X(t)+8,Y(z)+(p.n==='A'?14:-8));});
+  if(t<=0.76){const cx=X(0.75),cy=Y(0);arrow(x,cx,cy,cx+40,cy-4*20,C('--pink'),2);arrow(x,cx,cy,cx+40,cy+4*20,C('--green'),2);arrow(x,cx,cy,cx+50,cy,C('--muted'),2.5);
+    x.fillStyle=C('--pink');x.fillText('A: +4',cx+44,cy-80);x.fillStyle=C('--green');x.fillText('B: -4',cx+44,cy+86);x.fillStyle=C('--muted');x.fillText('平均 0',cx+56,cy+4);}
+  $('f5a-read').textContent='t = '+t.toFixed(2);}
+$('f5a-play').onclick=()=>{if(reduce){f5a=0.75;drawF5a();return;}f5a=1;loop('f5a',()=>{f5a=Math.max(0,f5a-0.004);drawF5a();if(Math.abs(f5a-0.75)<0.003){f5a=0.749;drawF5a();return false;}return f5a>0;});};
+
+/* ---------- F5b marginal flow ---------- */
+let parts=[],f5bT=1;
+function resetF5b(){parts=[];for(let i=0;i<70;i++){parts.push({y:gauss(),tr:[]});}f5bT=1;parts.forEach(p=>p.tr=[[1,p.y]]);drawF5b();}
+function drawF5b(){const x=ctx('f5b');x.clearRect(0,0,x.W,x.H);const o={L:30,R:14,T:14,B:24,xmin:0,xmax:1,ymin:-5,ymax:5,xt:[0,0.25,0.5,0.75,1],yt:[-4,-2,0,2,4],xl:'t'};const {X,Y}=axes(x,o);
+  if($('f5b-field').checked){for(let i=1;i<20;i++)for(let j=0;j<=20;j++){const t=i/20,z=-5+j*0.5;const u=uMarg(z,t);const dt=-0.03;const len=Math.hypot(X(t+dt)-X(t),Y(z+u*dt)-Y(z));const k=Math.min(1,14/len);
+    x.globalAlpha=0.45;arrow(x,X(t),Y(z),X(t)+(X(t+dt)-X(t))*k,Y(z)+(Y(z+u*dt)-Y(z))*k,C('--muted'),1);x.globalAlpha=1;}}
+  parts.forEach(p=>{const col=p.y<0?C('--pink'):C('--green');x.strokeStyle=col;x.globalAlpha=0.55;x.lineWidth=1.2;x.beginPath();p.tr.forEach((q,i)=>i?x.lineTo(X(q[0]),Y(q[1])):x.moveTo(X(q[0]),Y(q[1])));x.stroke();x.globalAlpha=1;x.fillStyle=col;x.beginPath();x.arc(X(f5bT),Y(p.y),3,0,7);x.fill();});
+  x.fillStyle=C('--heading');x.fillText(f5bT<=0.001?'到达 t=0：分成了 -3 和 +3 两堆':'t = '+f5bT.toFixed(2),o.L+6,o.T+12);}
+function stepF5b(dt){parts.forEach(p=>{const u=uMarg(p.y,f5bT);p.y=p.y-dt*u;});f5bT=Math.max(0,f5bT-dt);parts.forEach(p=>p.tr.push([f5bT,p.y]));}
+$('f5b-play').onclick=()=>{if(f5bT<=0)resetF5b();if(reduce){while(f5bT>0)stepF5b(0.0025);drawF5b();return;}loop('f5b',()=>{for(let k=0;k<2&&f5bT>0;k++)stepF5b(0.0025);drawF5b();return f5bT>0;});};
+$('f5b-reset').onclick=()=>{if(anims.f5b)cancelAnimationFrame(anims.f5b);resetF5b();};
+$('f5b-field').onchange=drawF5b;
+
+/* ---------- F6 squared error ---------- */
+const sets={a:[4,-4],b:[4,-4,-4],c:[1,2,6]};
+function drawF6(){const g=+$('f6-g').value,S=sets[$('f6-set').value];const mean=S.reduce((a,b)=>a+b,0)/S.length;const loss=v=>S.reduce((a,s)=>a+(v-s)**2,0)/S.length;
+  $('f6-read').textContent=`平均罚分 ${loss(g).toFixed(2)} · 最好是 g = ${mean.toFixed(2)}（罚分 ${loss(mean).toFixed(2)}）`;
+  const x=ctx('f6');x.clearRect(0,0,x.W,x.H);const ymax=Math.max(...[-6,6].map(loss));const o={L:40,R:14,T:14,B:24,xmin:-6,xmax:6,ymin:0,ymax:ymax,xt:[-6,-4,-2,0,2,4,6],yt:[0,Math.round(ymax/2),Math.round(ymax)],xl:'g'};const {X,Y}=axes(x,o);
+  x.strokeStyle=C('--blue');x.lineWidth=2.2;x.beginPath();for(let i=0;i<=240;i++){const v=-6+i/20;i?x.lineTo(X(v),Y(loss(v))):x.moveTo(X(v),Y(loss(v)));}x.stroke();
+  S.forEach(s=>{x.fillStyle=C('--accent');x.beginPath();x.arc(X(s),Y(0)-6,5,0,7);x.fill();});
+  x.fillStyle=C('--green');x.beginPath();x.arc(X(mean),Y(loss(mean)),6,0,7);x.fill();x.fillText('平均值',X(mean)-18,Y(loss(mean))-12);
+  x.fillStyle=C('--orange');x.beginPath();x.arc(X(g),Y(loss(g)),6,0,7);x.fill();x.strokeStyle=C('--orange');x.setLineDash([3,3]);x.beginPath();x.moveTo(X(g),Y(loss(g)));x.lineTo(X(g),Y(0));x.stroke();x.setLineDash([]);}
+$('f6-g').oninput=drawF6;$('f6-set').onchange=drawF6;
+
+/* ---------- F6b SGD at the crossing ---------- */
+let f6b={w:3,hist:[3],tg:[],it:0};
+function drawF6b(){const x=ctx('f6b');x.clearRect(0,0,x.W,x.H);const n=200;const o={L:30,R:14,T:14,B:24,xmin:0,xmax:n,ymin:-5,ymax:5,xt:[0,50,100,150,200],yt:[-4,0,4],xl:'训练步数'};const {X,Y}=axes(x,o);
+  f6b.tg.forEach((v,i)=>{x.fillStyle=v>0?C('--pink'):C('--green');x.globalAlpha=0.5;x.beginPath();x.arc(X(i+1),Y(v),2.4,0,7);x.fill();x.globalAlpha=1;});
+  x.strokeStyle=C('--heading');x.lineWidth=2.2;x.beginPath();f6b.hist.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));x.stroke();
+  x.strokeStyle=C('--muted');x.setLineDash([4,4]);x.beginPath();x.moveTo(o.L,Y(0));x.lineTo(x.W-o.R,Y(0));x.stroke();x.setLineDash([]);
+  $('f6b-read').textContent=`第 ${f6b.it} 步 · 网络输出 ${f6b.w.toFixed(2)}`;}
+function stepF6b(){const target=rnd()<0.5?4:-4;f6b.w=f6b.w-0.05*2*(f6b.w-target)/2;f6b.tg.push(target);f6b.hist.push(f6b.w);f6b.it++;}
+$('f6b-play').onclick=()=>{if(f6b.it>=200)$('f6b-reset').onclick();if(reduce){while(f6b.it<200)stepF6b();drawF6b();return;}let acc=0;loop('f6b',()=>{acc++;if(acc%2===0&&f6b.it<200)stepF6b();drawF6b();return f6b.it<200;});};
+$('f6b-reset').onclick=()=>{if(anims.f6b)cancelAnimationFrame(anims.f6b);f6b={w:3,hist:[3],tg:[],it:0};drawF6b();};
+
+/* ---------- F7 u_t(z) shape ---------- */
+function drawF7(){const t=+$('f7-t').value;$('f7-tv').textContent='t = '+t.toFixed(2);const x=ctx('f7');x.clearRect(0,0,x.W,x.H);
+  const o={L:34,R:14,T:14,B:24,xmin:-5,xmax:5,ymin:-6,ymax:6,xt:[-4,-2,0,2,4],yt:[-6,-3,0,3,6],xl:'z'};const {X,Y}=axes(x,o);
+  x.strokeStyle=C('--line-strong');x.setLineDash([5,4]);x.lineWidth=1;[v=>-v,v=>v].forEach(f=>{x.beginPath();x.moveTo(X(-5),Y(f(-5)));x.lineTo(X(5),Y(f(5)));x.stroke();});x.setLineDash([]);
+  x.fillStyle=C('--muted');x.fillText('-z',X(4.2),Y(-4.4));x.fillText('z',X(4.4),Y(4.0));
+  x.strokeStyle=C('--blue');x.lineWidth=2.5;x.beginPath();for(let i=0;i<=400;i++){const z=-5+i/40;const u=Math.max(-6,Math.min(6,uMarg(z,t)));i?x.lineTo(X(z),Y(u)):x.moveTo(X(z),Y(u));}x.stroke();
+  x.fillStyle=C('--blue');x.fillText('u_t(z)',o.L+6,o.T+12);}
+$('f7-t').oninput=drawF7;
+$('f7-play').onclick=()=>{if(reduce)return;let t=0.02;loop('f7',()=>{t+=0.004;$('f7-t').value=Math.min(0.98,t);drawF7();return t<0.98;});};
+
+/* ---------- F8 samplers ---------- */
+let f8h=null;
+function drawF8(){const m=+$('f8-m').value,s=+$('f8-s').value,ms=+$('f8-ms').value;$('f8-mv').textContent=m.toFixed(2);$('f8-sv').textContent=s.toFixed(2);$('f8-msv').textContent=ms.toFixed(2);
+  const x=ctx('f8');x.clearRect(0,0,x.W,x.H);const o={L:30,R:14,T:14,B:24,xmin:0,xmax:1,ymin:0,ymax:4,xt:[0,0.25,0.5,0.75,1],yt:[0,1,2,3,4],xl:'t'};const {X,Y}=axes(x,o);
+  if(f8h){const nb=40,bw=1/nb;x.fillStyle=C('--blue-soft');f8h.forEach((c,i)=>{const d=c/(f8h.total*bw);x.fillRect(X(i*bw)+1,Y(Math.min(4,d)),X(bw)-X(0)-2,Y(0)-Y(Math.min(4,d)));});}
+  const Yc=v=>Y(Math.min(4,v));const line=(pts,col,dash)=>{x.strokeStyle=col;x.lineWidth=2.2;x.setLineDash(dash||[]);x.beginPath();pts.forEach((p,i)=>i?x.lineTo(X(p[0]),Yc(p[1])):x.moveTo(X(p[0]),Yc(p[1])));x.stroke();x.setLineDash([]);};
+  line([[0,1],[1,1]],C('--muted'),[5,4]);
+  const ln=[];for(let i=1;i<400;i++){const t=i/400,lg=Math.log(t/(1-t));ln.push([t,Math.exp(-((lg-m)**2)/(2*s*s))/(s*Math.sqrt(2*Math.PI)*t*(1-t))]);}line(ln,C('--blue'));
+  const md=[];for(let i=1;i<400;i++){const u=i/400;const t=1-u-ms*(Math.cos(Math.PI*u/2)**2-1+u);const fp=-1-ms*(-(Math.PI/2)*Math.sin(Math.PI*u)+1);md.push([t,1/Math.abs(fp)]);}md.sort((a,b)=>a[0]-b[0]);line(md,C('--orange'));
+  const cm=[];for(let i=0;i<=400;i++){const t=i/400;cm.push([t,2/(Math.PI-2*Math.PI*t+2*Math.PI*t*t)]);}line(cm,C('--green'));}
+['f8-m','f8-s','f8-ms'].forEach(id=>$(id).oninput=()=>{f8h=null;drawF8();});
+$('f8-play').onclick=()=>{const m=+$('f8-m').value,s=+$('f8-s').value;f8h=new Array(40).fill(0);f8h.total=0;let left=2000;const add=k=>{for(let i=0;i<k&&left>0;i++,left--){const t=1/(1+Math.exp(-(m+s*gauss())));const b=Math.min(39,Math.floor(t*40));f8h[b]++;f8h.total++;}};
+  if(reduce){add(2000);drawF8();return;}loop('f8',()=>{add(40);drawF8();return left>0;});};
+
+/* ---------- F9 pareto toy ---------- */
+const P9=[{n:'A',fid:60,clip:0.250},{n:'B',fid:52,clip:0.244},{n:'C',fid:70,clip:0.256},{n:'D',fid:66,clip:0.246},{n:'E',fid:80,clip:0.249},{n:'F',fid:58,clip:0.238}];
+const R9=(()=>{const r={},left=P9.slice();let k=1;while(left.length){const fr=left.filter(a=>!left.some(b=>b!==a&&b.fid<=a.fid&&b.clip>=a.clip&&(b.fid<a.fid||b.clip>a.clip)));fr.forEach(a=>{r[a.n]=k;left.splice(left.indexOf(a),1);});k++;}return r;})();
+const maxR9=Math.max(...Object.values(R9));let shown9=0;
+function drawF9(){const x=ctx('f9');x.clearRect(0,0,x.W,x.H);const o={L:48,R:14,T:14,B:26,xmin:45,xmax:85,ymin:0.235,ymax:0.26,xt:[50,60,70,80],yt:[0.24,0.25,0.26],xl:'FID（越小越好）'};const {X,Y}=axes(x,o);
+  const cols=[C('--blue'),C('--green'),C('--orange'),C('--muted')];
+  for(let k=1;k<=shown9;k++){const fr=P9.filter(p=>R9[p.n]===k).sort((a,b)=>a.fid-b.fid);x.strokeStyle=cols[Math.min(k-1,3)];x.lineWidth=1.5;x.setLineDash([4,3]);x.beginPath();fr.forEach((p,i)=>i?x.lineTo(X(p.fid),Y(p.clip)):x.moveTo(X(p.fid),Y(p.clip)));x.stroke();x.setLineDash([]);}
+  P9.forEach(p=>{const rk=R9[p.n],on=rk<=shown9;x.fillStyle=on?cols[Math.min(rk-1,3)]:C('--line-strong');x.beginPath();x.arc(X(p.fid),Y(p.clip),7,0,7);x.fill();x.fillStyle=C('--heading');x.fillText(p.n+(on?'  第 '+rk+' 层':''),X(p.fid)+10,Y(p.clip)+4);});
+  $('f9-read').textContent=shown9===0?'先看所有点':shown9>=maxR9?'排完了：名次就是所在的层':'第 '+shown9+' 层：剩下的点里没有被别人在两个指标上同时打败的';}
+$('f9-next').onclick=()=>{shown9=Math.min(maxR9,shown9+1);drawF9();};$('f9-reset').onclick=()=>{shown9=0;drawF9();};
+
+/* ---------- init + theme ---------- */
+resetF5b();
+function all(){drawF1();drawF2();drawF3();drawF4();drawF5a();drawF5b();drawF6();drawF6b();drawF7();drawF8();drawF9();}
+all();
+const mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',all);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,150);});
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+</body>
+</html>
