@@ -97,6 +97,7 @@ p.readout{min-height:1.6em;line-height:1.6}
 .mm-text h3{font-size:18px} .mm-text p{font-size:15.5px}
 .mm-shape{font-family:var(--f-mono);font-size:13px;color:var(--heading);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;overflow-wrap:anywhere}
 .mm-ref{font-size:14px;color:var(--pink)}
+.mm-note{font-size:14.5px;color:var(--heading);background:var(--blue-soft);border-radius:6px;padding:6px 10px}
 .mm-list summary{cursor:pointer;color:var(--heading);font-weight:600;font-size:15px}
 .mm-list ol{margin-top:8px;gap:2px;font-size:14px} .mm-list li.on .mm-jump{color:var(--orange);font-weight:700}
 .mm-jump{border:0;background:none;padding:2px 0;text-align:left;color:var(--ink);font-size:14px;cursor:pointer}
@@ -168,13 +169,15 @@ p.readout{min-height:1.6em;line-height:1.6}
 
 <!-- ===================================================== MM ANIMATION -->
 <section class="lesson" id="lmm">
-  <div class="lesson-head"><span class="no">全流程动画</span><h2>MM-DiT 一次前向，逐步拆开看</h2><p class="goal">从三个输入到输出速度，29 步。每一步显示正在做的操作、张量的真实形状、和论文的对应位置。先看一遍整体，再往下逐段读原文。</p></div>
+  <div class="lesson-head"><span class="no">全流程动画</span><h2>MM-DiT 一次前向，逐步拆开看（含 5.2.3 比较的其他结构）</h2><p class="goal">默认是 SD3 的 MM-DiT，从三个输入到输出速度共 29 步。用"结构"下拉框可以切换到 §5.2.3 里一起比较的另外四种：三套权重的 MM-DiT、DiT、CrossDiT、UViT，看它们的全流程哪里不一样。每一步显示正在做的操作、张量的真实形状和论文对应位置。</p></div>
   <figure class="mm-fig">
     <div class="controls">
+      <label>结构 <select id="mm-arch"><option value="mm2" selected>MM-DiT（两套权重，SD3）</option><option value="mm3">MM-DiT（三套权重）</option><option value="dit">DiT（拼接，一套权重）</option><option value="cross">CrossDiT（交叉注意力）</option><option value="uvit">UViT（UNet + Transformer）</option></select></label>
       <button type="button" id="mm-prev">上一步</button><button type="button" id="mm-next">下一步</button><button type="button" id="mm-play">自动播放</button>
       <label>分辨率 <select id="mm-res"><option value="256">256²</option><option value="512">512²</option><option value="1024" selected>1024²</option></select></label>
       <label>深度 \(d\) <select id="mm-d"><option>15</option><option>18</option><option selected>24</option><option>30</option><option>38</option></select></label>
     </div>
+    <p class="mm-note" id="mm-arch-note"></p>
     <div class="mm-progress" aria-hidden="true"><div id="mm-bar"></div></div>
     <div class="mm-wrap"><canvas id="mm" width="640" height="420"></canvas></div><p class="mm-hint">手机上可以左右滑动画面。</p>
     <div class="mm-text">
@@ -184,7 +187,7 @@ p.readout{min-height:1.6em;line-height:1.6}
       <p class="mm-shape" id="mm-shape"></p>
       <p class="mm-ref" id="mm-ref"></p>
     </div>
-    <details class="mm-list"><summary>全部 29 步（点任意一步跳过去）</summary><ol id="mm-steps"></ol></details>
+    <details class="mm-list"><summary>全部 <span id="mm-count">29</span> 步（点任意一步跳过去）</summary><ol id="mm-steps"></ol></details>
     <figcaption>粉色是文字流（\(c\)），蓝色是图片流（\(x\)），绿色是条件向量 \(y\)，灰色方框是操作。张量画成长条：高度大致代表 token 个数（按平方根缩放），宽度代表每个 token 的维数（按对数缩放）。形状里的 \(h=64d\) 是隐藏维度，\(N_x\) 是图片 token 数，154 是文字 token 数。标着"论文未写"的细节，是论文没有给出的实现选择，这里只说明位置，不作断言。</figcaption>
   </figure>
 </section>
@@ -471,6 +474,7 @@ p.readout{min-height:1.6em;line-height:1.6}
     <li><span class="q">"only a small gain when using three parameter sets … opt for the former"</span>："the former" 指两套。三套的收益抵不过多出来的参数和显存。</li>
   </ol>
   <div class="box warn"><b>证据强度：</b>Fig. 4 是小规模、单次训练的曲线，没有误差范围。"三套收益小"是看曲线的定性判断，论文没给数字。另外这些结构参数量不完全相同（MM-DiT 两套权重参数更多），论文没有做"同参数量"的对照。</div>
+  <div class="box sd3"><b>看这五种结构的完整流程：</b>页面开头的<a href="#lmm">全流程动画</a>可以切换结构：<button type="button" onclick="mmArch('dit');location.hash='lmm'">DiT</button> <button type="button" onclick="mmArch('cross');location.hash='lmm'">CrossDiT</button> <button type="button" onclick="mmArch('uvit');location.hash='lmm'">UViT</button> <button type="button" onclick="mmArch('mm3');location.hash='lmm'">MM-DiT 三套</button> <button type="button" onclick="mmArch('mm2');location.hash='lmm'">MM-DiT 两套</button></div>
   <details class="quiz"><summary>自测：在 CrossDiT 里，第 10 层的文字 token 和第 1 层的有什么区别？</summary><p>没有区别。交叉注意力里文字只提供 K、V，不被更新，每一层看到的都是同一份文字表示。MM-DiT 里文字 token 每层都经过注意力和 MLP，会被图片信息更新。</p></details>
 </section>
 
@@ -887,19 +891,152 @@ const STEPS=[
   const X0=420,Y0=110,W=180,H=150;x.strokeStyle=C('--line');x.strokeRect(X0,Y0,W,H);txt(x,'采样：t 从 1 走到 0',X0+W/2,Y0-10,C('--heading'),'center',FS,true);const n=Math.max(1,Math.round(u*8));x.strokeStyle=BL();x.lineWidth=2;x.beginPath();for(let i=0;i<=n;i++){const tt=1-i/8;const yy=Y0+H/2+40*Math.sin(3*tt)*tt;const xx=X0+W*(1-tt);i?x.lineTo(xx,yy):x.moveTo(xx,yy);}x.stroke();txt(x,'t=1',X0+W-10,Y0+H+16,C('--muted'));txt(x,'t=0',X0+10,Y0+H+16,C('--muted'));txt(x,`第 ${n} 步：调用 1 次网络`,X0+W/2,Y0+H+34,C('--orange'));}},
 ];
 
+/* ---- other architectures compared in §5.2.3 ---- */
+const MM2=STEPS;
+function heatN(x,X,Y,S,parts,u,rowOn,colOn){const N=parts.reduce((a,p)=>a+p.n,0);const fr=parts.map(p=>Math.max(0.1,Math.sqrt(p.n/N)));const tot=fr.reduce((a,b)=>a+b,0);const sz=fr.map(f=>S*f/tot);const k=6;let yy=Y;
+  parts.forEach((pr,i)=>{let xx=X;parts.forEach((pc,j)=>{const on=(!rowOn||rowOn[i])&&(!colOn||colOn[j])&&(!pr.mask||pr.mask[j]);for(let a=0;a<k;a++)for(let b=0;b<k;b++){const v=0.5+0.5*Math.sin((i*k+a)*1.7+(j*k+b)*2.3+a*b*0.3);x.globalAlpha=on?(0.15+0.7*v)*Math.min(1,u*1.5):0.04;x.fillStyle=pr.col;x.fillRect(xx+b*sz[j]/k,yy+a*sz[i]/k,sz[j]/k+0.5,sz[i]/k+0.5);}x.globalAlpha=1;
+    x.strokeStyle=C('--line-strong');x.lineWidth=1;x.strokeRect(xx,yy,sz[j],sz[i]);xx+=sz[j];});yy+=sz[i];});
+  x.strokeStyle=C('--heading');x.lineWidth=1.5;x.strokeRect(X,Y,S,S);let o=Y;parts.forEach((p,i)=>{txt(x,p.lab,X-8,o+sz[i]/2+4,p.col,'right',FS-1,true);o+=sz[i];});return sz;}
+const OR=()=>C('--orange');
+
+/* MM-DiT with three weight sets */
+const M3=[
+{s:'文字编码',t:'三套权重：CLIP 和 T5 各自一路',
+ d:p=>`和两套权重的唯一区别：文字不再合成一路，而是 CLIP 的 77 个 token（77×2048，补零到 4096）和 T5 的 77 个 token（77×4096）各走一路，各有自己的线性层，变成两个 77×\\(h\\) 的流。加上图片流，一共三个流、三套权重。`,
+ sh:p=>`CLIP 流：77×${p.h} · T5 流：77×${p.h} · 图片流：${p.nx}×${p.h}`,r:'§5.2.3："three sets of weights, where the latter handles the CLIP and T5 tokens (c.f. Section 4) separately"',
+ f:(x,u,p)=>{txt(x,'CLIP 流',90,16,PK(),'center',FS,true);txt(x,'T5 流',230,16,OR(),'center',FS,true);txt(x,'图片流 x',IX,16,BL(),'center',FS,true);
+  ten(x,90,120,77,4096,PK(),'CLIP 部分','77×4096',1,6);ten(x,230,120,77,4096,OR(),'T5 部分','77×4096',1,6);op(x,90,210,'Linear①',true,80);op(x,230,210,'Linear②',true,80);flow(x,90,150,90,198,u,PK());flow(x,230,150,230,198,u,OR());
+  ten(x,90,300,77,p.h,PK(),'',`77×${p.h}`,Math.min(1,u*1.5),6);ten(x,230,300,77,p.h,OR(),'',`77×${p.h}`,Math.min(1,u*1.5),6);ten(x,IX,220,p.nx,p.h,BL(),'x',`${p.nx}×${p.h}`,1,10);}},
+{s:'三套权重 · 一个块',t:'三个流各自 LN、调制、算 Q/K/V',
+ d:p=>`每个块里，三个流各有自己的 LayerNorm、调制线性层（从 \\(y\\) 算 6 个向量）和 \\(W_Q,W_K,W_V\\)。结构和两套权重时一样，只是多了一列。`,
+ sh:p=>`Q/K/V：CLIP 77×${p.h}，T5 77×${p.h}，图片 ${p.nx}×${p.h}`,r:'§5.2.3；结构同 Fig. 2b，只是多一个流',
+ f:(x,u,p)=>{txt(x,'CLIP 流',90,16,PK(),'center',FS,true);txt(x,'T5 流',230,16,OR(),'center',FS,true);txt(x,'图片流 x',IX,16,BL(),'center',FS,true);
+  [[90,77,PK()],[230,77,OR()],[IX,p.nx,BL()]].forEach(([cx,n,col],i)=>{op(x,cx,70,'LN·调制',true,80);op(x,cx,110,'自己的 Linear',true,110);['Q','K','V'].forEach((q,j)=>{const v=Math.min(1,Math.max(0,u*2-j*0.2));if(i<2){ten(x,cx+8,175+j*62,n,p.h,col,'','',v,4);txt(x,q,cx-32,180+j*62,col,'center',FS,true);}else ten(x,cx-66+j*66,250,n,p.h,col,q,'',v,4);});});}},
+{s:'三套权重 · 联合注意力',t:'三个流拼起来做一次注意力：3×3 个区块',
+ d:p=>`三个流的 Q、K、V 在 token 方向拼成 \\(77+77+${p.nx}=${p.N}\\) 个 token，做一次联合注意力。分数矩阵现在分成 3×3 块：CLIP、T5、图片两两之间都能互相看见。之后拆回三个流，各自走输出层、门、残差、MLP。`,
+ sh:p=>`每头 ${p.N}×${p.N}（和两套权重时一样大，只是权重分得更细）`,r:'§5.2.3；Fig. 4 里 "MMDiT (3 sets)" 那条线',
+ f:(x,u,p)=>{const S=250;heatN(x,CX-S/2+40,80,S,[{n:77,col:PK(),lab:'CLIP 77'},{n:77,col:OR(),lab:'T5 77'},{n:p.nx,col:BL(),lab:`图片 ${p.nx}`}],u);txt(x,'行：提问的 token；列：被听的 token',CX+40,64,C('--muted'));}},
+{s:'三套权重 · 结论',t:'为什么最后没用三套',
+ d:p=>`Fig. 4 里三套权重的曲线只比两套好一点点，但参数和显存更多（每个块多出一整列的 LayerNorm、调制、Q/K/V、输出层和 MLP）。原文："We observe only a small gain when using three parameter sets instead of two … and thus opt for the former option"。`,
+ sh:p=>`每块参数约从 36h² 增到 54h²（按第 9 课的粗估，h=${p.h}）`,r:'§5.2.3 第 2 段最后一句；Fig. 4',
+ f:(x,u,p)=>{const bars=[['两套权重',36,BL()],['三套权重',54,PK()]];bars.forEach((b,i)=>{const w=L(0,b[1]*6,u);box(x,180,140+i*70,w,40,b[2]);txt(x,b[0],170,165+i*70,C('--heading'),'right',FS,true);txt(x,`${b[1]}h²/块`,190+w,165+i*70,C('--muted'),'left');});txt(x,'Fig. 4：效果只好一点点 → 选两套',CX,330,OR(),'center',FS+1,true);}},
+{s:'重复',t:'重复 \\(d\\) 个块（三个流）',
+ d:p=>`同样堆 \\(d=${p.d}\\) 个块。最后只取图片流输出速度。`,sh:p=>`${p.d} 个块`,r:'Fig. 2a 的块堆叠，换成三流版本',
+ f:(x,u,p)=>{const k=Math.max(1,Math.round(u*p.d));for(let i=0;i<6;i++){const yy=80+i*48;box(x,CX-200,yy,400,34,C('--accent'),(i<5?i+1:p.d)<=k?1:0.25);txt(x,i===4?'⋯':(i<5?`块 ${i+1}`:`块 ${p.d}`),CX,yy+22,C('--heading'));}
+  flow(x,CX-250,60,CX-250,370,u,PK());flow(x,CX-230,60,CX-230,370,u,OR());flow(x,CX+240,60,CX+240,370,u,BL());txt(x,`已走过 ${k} / ${p.d} 个块`,CX,388,OR(),'center',FS+1,true);}},
+];
+
+/* DiT: concatenation, one shared weight set */
+const DIT=[
+{s:'DiT · 拼接',t:'一开始就把文字和图片拼成一串',
+ d:p=>`DiT（按 §4 的拼接方式）：文字 token \\(c\\)（154×\\(h\\)）和图片 token \\(x\\)（${p.nx}×\\(h\\)）直接拼成一串 ${p.N} 个 token，之后当成一个普通 Transformer 处理，<b>所有 token 共用一套权重</b>。原文说它可以看成"只有一套权重的 MM-DiT"。`,
+ sh:p=>`[c; x]：${p.N}×${p.h}`,r:'§5.2.3："DiT (w/ concatenation of text and image tokens as in Section 4) can be interpreted as a special case of MM-DiT with one shared set of weights for all modalities"',
+ f:(x,u,p)=>{lanes(x,1,1,0);const Ht=sq(p.nt),Hx=sq(p.nx),W=wf(p.h);box(x,L(TX-W/2,CX-W/2,u),L(120,100,u),W,Ht,PK());box(x,L(IX-W/2,CX-W/2,u),L(120,100+Ht,u),W,Hx,BL());if(u>0.9){txt(x,'一串 token',CX,90,C('--heading'),'center',FS,true);txt(x,`${p.N}×${p.h}`,CX,100+Ht+Hx+18,C('--muted'));}}},
+{s:'DiT · 一个块',t:'一套调制参数给所有 token',
+ d:p=>`\\(y\\) → SiLU → Linear，只得到<b>一组</b> \\(\\alpha,\\beta,\\gamma,\\delta,\\epsilon,\\zeta\\)，文字和图片 token 用同一组。`,
+ sh:p=>`6×${p.h}（一套）`,r:'DiT 的 adaLN；§4 骨干第 1 段',
+ f:(x,u,p)=>{lanes(x,0,0,1);vec(x,CX,60,120,GR(),'y');op(x,CX,100,'SiLU → Linear',true,130);flow(x,CX,70,CX,88,u,GR());['α','β','γ','δ','ε','ζ'].forEach((n,i)=>{vec(x,CX-125+i*50,220,100,C('--accent'),'',Math.min(1,Math.max(0,u*2-i*0.12)),true);txt(x,n,CX-125+i*50,290,C('--heading'),'center',FS,true);});txt(x,'文字和图片共用这一组',CX,330,C('--muted'));}},
+{s:'DiT · 一个块',t:'同一套 LN、调制、\\(W_Q,W_K,W_V\\)',
+ d:p=>`整串 token 一起过同一个 LayerNorm、同一组 \\(\\alpha,\\beta\\)、同一个算 Q/K/V 的线性层。文字 token 和图片 token 在这里被"一视同仁"，这正是 MM-DiT 认为不合理的地方：两种 token 的统计特性差别很大。`,
+ sh:p=>`Q, K, V：各 ${p.N}×${p.h}`,r:'§4 Fig. 2 下方："Since text and image embeddings are conceptually quite different, we use two separate sets of weights"（MM-DiT 的动机，正好是 DiT 的反面）',
+ f:(x,u,p)=>{const Ht=sq(p.nt),Hx=sq(p.nx),W=wf(p.h);box(x,CX-180-W/2,90,W,Ht,PK());box(x,CX-180-W/2,90+Ht,W,Hx,BL());op(x,CX-60,170,'LN·调制',true,90);op(x,CX-60,210,'一个 Linear',true,100);flow(x,CX-180+W/2+4,170,CX-105,170,u);
+  ['Q','K','V'].forEach((q,i)=>{const v=Math.min(1,Math.max(0,u*2-i*0.2));const cx=CX+60+i*70;box(x,cx-W/2,90,W,Ht,PK(),v);box(x,cx-W/2,90+Ht,W,Hx,BL(),v);txt(x,q,cx,82,C('--heading'),'center',FS,true);});}},
+{s:'DiT · 一个块',t:'注意力：矩阵和 MM-DiT 一样满',
+ d:p=>`注意力矩阵同样是 ${p.N}×${p.N}，四块全算，所以"谁能看见谁"和 MM-DiT 完全一样。区别只在算 Q、K、V（以及后面的输出层、MLP）用的是不是同一套权重。图里四块都是同一种颜色，表示同一套权重。`,
+ sh:p=>`每头 ${p.N}×${p.N}`,r:'§5.2.3；对比精读 6 的图 7（选 DiT）',
+ f:(x,u,p)=>{const S=250;heatN(x,CX-S/2+40,80,S,[{n:p.nt,col:C('--accent'),lab:'文字 154'},{n:p.nx,col:C('--accent'),lab:`图片 ${p.nx}`}],u);txt(x,'同一套权重算出所有 Q、K、V',CX+40,355,C('--muted'));}},
+{s:'DiT · 一个块',t:'同一个输出层、门、残差、MLP',
+ d:p=>`注意力之后，整串 token 过同一个输出线性层，乘同一个 \\(\\gamma\\)，加残差；再过同一个 LN、\\(\\delta,\\epsilon\\) 调制、同一个 MLP（\\(h\\to4h\\to h\\)），乘 \\(\\zeta\\)，加残差。`,
+ sh:p=>`${p.N}×${p.h} → ${p.N}×${p.h}`,r:'DiT 块结构；Fig. 2b 只保留一列',
+ f:(x,u,p)=>{const Ht=sq(p.nt),Hx=sq(p.nx),W=wf(p.h);box(x,CX-200-W/2,100,W,Ht,PK());box(x,CX-200-W/2,100+Ht,W,Hx,BL());const ops=['Linear','∗γ ⊕','LN·δ,ε','MLP','∗ζ ⊕'];ops.forEach((o,i)=>{op(x,CX-90+i*62,170,o,true,58);});flow(x,CX-200+W/2+4,170,CX-120,170,u);box(x,CX+220-W/2,100,W,Ht,PK(),Math.min(1,u*1.5));box(x,CX+220-W/2,100+Ht,W,Hx,BL(),Math.min(1,u*1.5));}},
+{s:'重复',t:'重复 \\(d\\) 个块，最后取出图片部分',
+ d:p=>`堆 \\(d=${p.d}\\) 个块后，取出串里后 ${p.nx} 个（图片）token，经过最后的调制和线性层、拼回成速度。Fig. 4 的结论：普通 DiT 不如 UViT，在几种结构里偏差。`,
+ sh:p=>`${p.N}×${p.h} → 取后 ${p.nx} 个 → ${p.nx}×64`,r:'§5.2.3 第 2 段："Vanilla DiT underperforms UViT"',
+ f:(x,u,p)=>{const k=Math.max(1,Math.round(u*p.d));for(let i=0;i<5;i++){const yy=70+i*46;box(x,CX-180,yy,360,32,C('--accent'),(i<4?i+1:p.d)<=k?1:0.25);txt(x,i===3?'⋯':(i<4?`块 ${i+1}`:`块 ${p.d}`),CX,yy+21,C('--heading'));}
+  if(u>0.7){const Hx=sq(p.nx)*0.5,W=wf(p.h);box(x,CX-W/2,310,W,Hx,BL(),(u-0.7)*3);txt(x,`取出图片 ${p.nx} 个`,CX+W/2+10,330,BL(),'left',FS,true);}}},
+];
+
+/* CrossDiT: cross-attention */
+const CROSS=[
+{s:'CrossDiT · 文字',t:'文字只算一次，之后固定不变',
+ d:p=>`CrossDiT 是"不拼接、改用交叉注意力"的 DiT。文字 token \\(c\\)（154×\\(h\\)）只算一次，之后在每个块里只被"读"（提供 K、V），<b>从头到尾不更新</b>。只有图片 token 一层层往下走。具体块结构论文没写，这里按它引用的 PixArt-α 的做法画。`,
+ sh:p=>`c：154×${p.h}（固定） · x：${p.nx}×${p.h}（逐块更新）`,r:'§5.2.3："CrossDiT (DiT but with cross-attending to the text tokens instead of sequence-wise concatenation (Chen et al., 2023))"；Chen et al. 2023 = PixArt-α',
+ f:(x,u,p)=>{lanes(x,1,1,0);ten(x,TX,200,p.nt,p.h,PK(),'c（固定）',`154×${p.h}`,1,8);x.setLineDash([3,3]);x.strokeStyle=PK();x.strokeRect(TX-60,120,120,160);x.setLineDash([]);txt(x,'不进入块的更新',TX,300,C('--muted'));ten(x,IX,200,p.nx,p.h,BL(),'x（往下走）',`${p.nx}×${p.h}`,1,10);flow(x,IX,320,IX,380,u,BL());}},
+{s:'CrossDiT · 一个块',t:'调制参数只给图片流',
+ d:p=>`\\(y\\) → SiLU → Linear 得到一组调制参数，只用在图片 token 上。文字流没有自己的层，也就没有自己的调制。`,
+ sh:p=>`图片流 6×${p.h}`,r:'按 PixArt-α 的结构（adaLN 调制自注意力和 MLP）',
+ f:(x,u,p)=>{lanes(x,0,1,1);vec(x,CX,60,120,GR(),'y');op(x,CX,100,'SiLU → Linear',true,130);flow(x,CX+20,112,IX,170,u,GR());['α','β','γ','δ','ε','ζ'].forEach((n,i)=>{vec(x,IX-75+i*30,240,80,BL(),'',Math.min(1,Math.max(0,u*2-i*0.12)),true);txt(x,n,IX-75+i*30,296,BL(),'center',FS-1);});}},
+{s:'CrossDiT · 一个块',t:'① 自注意力：图片只看图片',
+ d:p=>`图片 token 先 LN、调制，再做自注意力：Q、K、V 全来自图片，分数矩阵 ${p.nx}×${p.nx}。文字不参与。之后乘 \\(\\gamma\\)、加残差。`,
+ sh:p=>`每头 ${p.nx}×${p.nx}`,r:'PixArt-α 块的第一部分；对比精读 6 图 7（选 CrossDiT）',
+ f:(x,u,p)=>{const S=240;heatN(x,CX-S/2+40,80,S,[{n:p.nt,col:PK(),lab:'文字 154'},{n:p.nx,col:BL(),lab:`图片 ${p.nx}`}],u,[false,true],[false,true]);txt(x,'只有右下"图→图"一块',CX+40,350,C('--muted'));}},
+{s:'CrossDiT · 一个块',t:'② 交叉注意力：图片问，文字答',
+ d:p=>`再做一次交叉注意力：Q 来自图片（${p.nx} 个），K、V 来自固定的文字 \\(c\\)（154 个）。分数矩阵 ${p.nx}×154，每一行在 154 个文字 token 上做 softmax，加权求和文字的 V，加回图片 token。只有图片被更新，文字不变。这就是 SD1、SDXL 的 UNet 用的方式。PixArt-α 里这一步不加调制。`,
+ sh:p=>`Q：${p.nx}×${p.h}（图片）· K, V：154×${p.h}（文字）· 每头 ${p.nx}×154`,r:'§5.2.3；§1："a fixed text representation is fed directly into the model (e.g., via cross-attention)… is not ideal"',
+ f:(x,u,p)=>{const S=240;heatN(x,CX-S/2+40,80,S,[{n:p.nt,col:PK(),lab:'文字 154'},{n:p.nx,col:BL(),lab:`图片 ${p.nx}`}],u,[false,true],[true,false]);txt(x,'只有左下"图→文"一块；没有文字的行',CX+40,350,C('--muted'));}},
+{s:'CrossDiT · 一个块',t:'③ MLP（只在图片流）',
+ d:p=>`图片 token 再 LN、\\(\\delta,\\epsilon\\) 调制、MLP、乘 \\(\\zeta\\)、加残差。一个块结束：图片被更新了两次（自注意力、交叉注意力），文字没变。`,
+ sh:p=>`x：${p.nx}×${p.h} → ${p.nx}×${p.h}`,r:'PixArt-α 块的最后部分',
+ f:(x,u,p)=>{lanes(x,1,1,0);ten(x,TX,200,p.nt,p.h,PK(),'c','没变',1,8);[['自注意力',100],['交叉注意力',170],['MLP',240]].forEach(([o,y],i)=>op(x,IX,y,o,i===2,110));flow(x,TX+40,200,IX-60,170,u,PK());ten(x,IX,340,p.nx,p.h,BL(),'','',Math.min(1,u*1.5),6);}},
+{s:'重复',t:'重复 \\(d\\) 个块：每块读的都是同一份文字',
+ d:p=>`堆 \\(d=${p.d}\\) 个块。每一块的交叉注意力读的都是同一份 \\(c\\)。Fig. 4：CrossDiT 比 UViT 好（虽然 UViT 前期学得快），但明显不如 MM-DiT。原文 §1 的判断是，这种"把固定的文字表示直接喂进去"的做法不理想。`,
+ sh:p=>`${p.d} 个块；c 始终 154×${p.h}`,r:'§5.2.3 第 2 段："CrossDiT achieves better performance than UViT … MM-DiT variant significantly outperforms the cross-attention and vanilla variants"',
+ f:(x,u,p)=>{const k=Math.max(1,Math.round(u*p.d));for(let i=0;i<5;i++){const yy=70+i*50;box(x,CX-100,yy,280,34,C('--accent'),(i<4?i+1:p.d)<=k?1:0.25);txt(x,i===3?'⋯':(i<4?`块 ${i+1}`:`块 ${p.d}`),CX+40,yy+22,C('--heading'));if(i!==3){x.strokeStyle=PK();x.setLineDash([3,3]);x.beginPath();x.moveTo(CX-180,yy+17);x.lineTo(CX-100,yy+17);x.stroke();x.setLineDash([]);}}
+  ten(x,CX-200,200,p.nt,p.h,PK(),'c（同一份）','',1,8);flow(x,CX+220,60,CX+220,330,u,BL());txt(x,`已走过 ${k} / ${p.d} 个块`,CX,380,OR(),'center',FS+1,true);}},
+];
+
+/* UViT (simple diffusion) */
+const UVIT=[
+{s:'UViT · 结构',t:'UViT：卷积的 U 形骨架，中间放 Transformer',
+ d:p=>`UViT 来自 Hoogeboom et al. (2023) 的 simple diffusion，论文称它是"UNet 和 Transformer 的混合"。高分辨率处用卷积（便宜），把特征图一路下采样到很小，在最低分辨率处堆 Transformer 块，再一路上采样回去，下采样每一级的特征通过跳连（skip connection）接到上采样对应的一级。注意它和 Bao et al. 的 "U-ViT" 不是同一个东西。SD3 论文没给它在这次比较里的具体配置（几级下采样、文字怎么接入），下面只画结构。`,
+ sh:p=>`输入 z_t：${p.lat}×${p.lat}×16（不先切成 2×2 token）`,r:'§5.2.3："we consider the UViT (Hoogeboom et al., 2023) architecture as a hybrid between the widely used UNets and transformer variants"',
+ f:(x,u,p)=>{const lv=[[60,120,90],[150,90,70],[240,62,50]];lv.forEach(([cx,s,_],i)=>{box(x,cx-s/2,140-s/2+i*25,s,s,BL(),Math.min(1,u*2-i*0.3));});box(x,CX-50,215,100,40,C('--accent'),Math.min(1,u*2-0.9));txt(x,'Transformer',CX,240,C('--heading'));
+  [[580,120],[490,90],[400,62]].forEach(([cx,s],i)=>{box(x,cx-s/2,140-s/2+i*25,s,s,BL(),Math.min(1,u*2-1.2-i*0.1));});
+  x.setLineDash([3,3]);x.strokeStyle=C('--line-strong');[[60,580,60],[150,490,90],[240,400,115]].forEach(([a,b,y])=>{x.beginPath();x.moveTo(a,y);x.lineTo(b,y);x.stroke();});x.setLineDash([]);txt(x,'跳连',CX,55,C('--muted'));txt(x,'下采样（卷积）',150,330,C('--muted'));txt(x,'上采样（卷积）',490,330,C('--muted'));}},
+{s:'UViT · 下采样',t:'卷积块 + 下采样：分辨率减半，通道加倍',
+ d:p=>`输入的潜变量先经过卷积，每一级用若干个卷积残差块处理，再把分辨率减半。每一级的输出都存下来，留给上采样时的跳连。时间 \\(t\\)（和整句大意）照样做成条件向量，送进各个块（具体方式这里不细究）。`,
+ sh:p=>`例如 ${p.lat}×${p.lat} → ${p.lat/2}×${p.lat/2} → ${p.lat/4}×${p.lat/4}（级数是示意）`,r:'Hoogeboom et al. 2023 的 U-ViT；SD3 论文未写配置',
+ f:(x,u,p)=>{const sizes=[p.lat,p.lat/2,p.lat/4];sizes.forEach((s,i)=>{const v=Math.min(1,Math.max(0,u*3-i));latent(x,120+i*180,200,140-i*40,BL(),8-i*2,v);txt(x,`${s}×${s}`,120+i*180,300,C('--muted'));if(i<2)flow(x,200+i*180,200,240+i*180,200,v,BL());});}},
+{s:'UViT · 中间',t:'最低分辨率处：拉平成 token，过 Transformer',
+ d:p=>`到最低分辨率时，特征图已经很小，把每个位置当成一个 token 拉平成序列，过一串 Transformer 块（自注意力、MLP）。这里 token 数少，注意力便宜，所以能堆很多层。文字如何在这里或卷积部分接入，SD3 论文没写。`,
+ sh:p=>`例如 ${p.lat/4}×${p.lat/4} = ${(p.lat/4)**2} 个 token（示意）`,r:'Hoogeboom et al. 2023；SD3 论文未写配置',
+ f:(x,u,p)=>{latent(x,130,200,60,BL(),4);flow(x,170,200,230,200,u,BL());const n=16;for(let k=0;k<n;k++){x.fillStyle=BL();x.globalAlpha=Math.min(1,u*2)*0.8;x.fillRect(250,110+k*11,40,9);}x.globalAlpha=1;for(let i=0;i<4;i++)box(x,330+i*55,150,45,100,C('--accent'),Math.min(1,u*2-0.5));txt(x,'Transformer 块',430,140,C('--heading'));}},
+{s:'UViT · 上采样',t:'上采样 + 跳连，回到原分辨率',
+ d:p=>`Transformer 的输出变回特征图，逐级上采样（分辨率加倍），每一级把下采样时存下的同分辨率特征拼进来（跳连），再过卷积块。最后一个卷积输出 \\(${p.lat}\\times${p.lat}\\times16\\) 的速度。`,
+ sh:p=>`→ ${p.lat}×${p.lat}×16`,r:'Hoogeboom et al. 2023；UNet 的标准结构',
+ f:(x,u,p)=>{const sizes=[p.lat/4,p.lat/2,p.lat];sizes.forEach((s,i)=>{const v=Math.min(1,Math.max(0,u*3-i));latent(x,120+i*180,230,60+i*40,BL(),2+i*2,v);txt(x,`${s}×${s}`,120+i*180,330,C('--muted'));if(i<2)flow(x,160+i*180,230,200+i*180,230,v,BL());x.setLineDash([3,3]);x.strokeStyle=C('--line-strong');x.beginPath();x.moveTo(120+i*180,80);x.lineTo(120+i*180,190-i*20);x.stroke();x.setLineDash([]);txt(x,'跳连',120+i*180,72,C('--muted'));});}},
+{s:'UViT · 结论',t:'Fig. 4 里的 UViT',
+ d:p=>`Fig. 4：UViT 前期学得最快，比普通 DiT 好；但 CrossDiT 训练久了超过它，MM-DiT 在 loss、CLIP、FID 上都最好。SD3 最终没有用 UNet 类结构，而是选了纯 Transformer 的 MM-DiT，这也方便第三部分按深度 \\(d\\) 统一放大。`,
+ sh:p=>`（结论页）`,r:'§5.2.3 第 2 段："although UViT seems to learn much faster initially"',
+ f:(x,u,p)=>{const o={X:80,Y:70,W:480,H:260};x.strokeStyle=C('--line');x.strokeRect(o.X,o.Y,o.W,o.H);txt(x,'示意：验证 loss 随训练步数（形状示意，不是论文数据）',CX,60,C('--muted'));
+  const curves=[['UViT',BL(),0.55,0.30],['DiT',C('--accent'),0.75,0.40],['CrossDiT',PK(),0.85,0.22],['MM-DiT',GR(),0.80,0.12]];curves.forEach(([n,col,a,b],i)=>{x.strokeStyle=col;x.lineWidth=2.2;x.beginPath();for(let k=0;k<=60*u;k++){const s=k/60;const v=b+(1-b)*Math.exp(-s*(i===0?9:4.5));const X=o.X+o.W*s,Y=o.Y+o.H*(1-v*0.9);k?x.lineTo(X,Y):x.moveTo(X,Y);}x.stroke();if(u>0.95){const v=b+(1-b)*Math.exp(-(i===0?9:4.5));txt(x,n,o.X+o.W+6,o.Y+o.H*(1-v*0.9)+4,col,'left',FS,true);}});}},
+];
+const OUT_U={s:'用起来',t:'训练和采样：和其他结构一样',d:MM2[28].d,sh:MM2[28].sh,r:MM2[28].r,f:MM2[28].f};
+const ARCH={
+ mm2:{name:'MM-DiT（两套权重，SD3）',note:'文字一套权重、图片一套权重，在注意力处拼接，两种模态互相看见、一起更新。',steps:MM2},
+ mm3:{name:'MM-DiT（三套权重）',note:'把文字再拆成 CLIP 和 T5 两路，三套权重。效果只好一点点，参数和显存更多，SD3 没采用。',steps:[...MM2.slice(0,4),M3[0],...MM2.slice(5,9),M3[1],M3[2],M3[3],M3[4],...MM2.slice(26)]},
+ dit:{name:'DiT（拼接，一套权重）',note:'文字和图片拼成一串，所有 token 共用一套权重。看得见的范围和 MM-DiT 一样，但权重不分模态。',steps:[...MM2.slice(0,9),...DIT,...MM2.slice(27)]},
+ cross:{name:'CrossDiT（交叉注意力）',note:'图片 token 自注意力 + 交叉注意力读文字；文字只算一次、从不更新。SD1/SDXL、PixArt-α 都是这种思路。',steps:[...MM2.slice(0,9),...CROSS,...MM2.slice(26)]},
+ uvit:{name:'UViT（UNet + Transformer 混合）',note:'高分辨率用卷积、最低分辨率用 Transformer 的 U 形结构，带跳连。SD3 论文没给这次比较的具体配置。',steps:[...MM2.slice(0,3),...MM2.slice(7,9),...UVIT,OUT_U]},
+};
+let arch='mm2';let STEPS_CUR=ARCH.mm2.steps;
+
 let step=0,anim=1,playing=false,playT=0;
-const list=$('mm-steps');STEPS.forEach((s,i)=>{const li=document.createElement('li');const a=document.createElement('button');a.type='button';a.className='mm-jump';a.innerHTML=s.t;a.onclick=()=>go(i);li.appendChild(a);list.appendChild(li);});
+const list=$('mm-steps');
+function buildList(){list.innerHTML='';STEPS_CUR.forEach((s,i)=>{const li=document.createElement('li');const a=document.createElement('button');a.type='button';a.className='mm-jump';a.innerHTML=s.t;a.onclick=()=>go(i);li.appendChild(a);list.appendChild(li);});$('mm-count').textContent=STEPS_CUR.length;$('mm-arch-note').textContent=ARCH[arch].note;typeset(list);}
 function typeset(el){if(window.MathJax&&MathJax.typesetPromise){MathJax.typesetClear&&MathJax.typesetClear([el]);MathJax.typesetPromise([el]).catch(()=>{});}}
-function text(){const s=STEPS[step],p=P();$('mm-stage').textContent=`第 ${step+1} / ${STEPS.length} 步 · ${s.s}`;$('mm-title').innerHTML=s.t;$('mm-desc').innerHTML=s.d(p);$('mm-shape').textContent='形状：'+s.sh(p);$('mm-ref').innerHTML='论文对照：'+s.r;$('mm-bar').style.width=((step+1)/STEPS.length*100)+'%';
+function text(){const s=STEPS_CUR[step],p=P();$('mm-stage').textContent=`${ARCH[arch].name} · 第 ${step+1} / ${STEPS_CUR.length} 步 · ${s.s}`;$('mm-title').innerHTML=s.t;$('mm-desc').innerHTML=s.d(p);$('mm-shape').textContent='形状：'+s.sh(p);$('mm-ref').innerHTML='论文对照：'+s.r;$('mm-bar').style.width=((step+1)/STEPS_CUR.length*100)+'%';
   [...list.children].forEach((li,i)=>li.classList.toggle('on',i===step));typeset(document.querySelector('.mm-text'));}
-function draw(){const x=ctxN('mm',330);x.clearRect(0,0,x.W,x.H);const s=Math.min(x.W/VW,x.H/VH);FS=x.W<560?15:12.5;x.save();x.translate((x.W-VW*s)/2,(x.H-VH*s)/2);x.scale(s,s);STEPS[step].f(x,ease(anim),P());x.restore();}
+function draw(){const x=ctxN('mm',330);x.clearRect(0,0,x.W,x.H);const s=Math.min(x.W/VW,x.H/VH);FS=x.W<560?15:12.5;x.save();x.translate((x.W-VW*s)/2,(x.H-VH*s)/2);x.scale(s,s);STEPS_CUR[step].f(x,ease(anim),P());x.restore();}
 const ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
-function go(i){step=(i+STEPS.length)%STEPS.length;anim=reduce?1:0;text();if(reduce){draw();return;}loop('mm',()=>{anim=Math.min(1,anim+0.02);draw();return anim<1||playing;});}
+function go(i){step=(i+STEPS_CUR.length)%STEPS_CUR.length;anim=reduce?1:0;text();if(reduce){draw();return;}loop('mm',()=>{anim=Math.min(1,anim+0.02);draw();return anim<1||playing;});}
 $('mm-next').onclick=()=>{stop();go(step+1);};$('mm-prev').onclick=()=>{stop();go(step-1);};
 function stop(){playing=false;$('mm-play').textContent='自动播放';clearInterval(playT);}
-$('mm-play').onclick=()=>{if(playing){stop();return;}playing=true;$('mm-play').textContent='暂停';go(step);playT=setInterval(()=>{if(step===STEPS.length-1){stop();return;}go(step+1);},5200);};
+$('mm-play').onclick=()=>{if(playing){stop();return;}playing=true;$('mm-play').textContent='暂停';go(step);playT=setInterval(()=>{if(step===STEPS_CUR.length-1){stop();return;}go(step+1);},5200);};
 $('mm-res').onchange=()=>{text();draw();};$('mm-d').onchange=()=>{text();draw();};
-window.drawMM=()=>draw();text();draw();
+$('mm-arch').onchange=()=>{stop();arch=$('mm-arch').value;STEPS_CUR=ARCH[arch].steps;buildList();go(0);};
+window.mmArch=(a)=>{$('mm-arch').value=a;$('mm-arch').onchange();};
+window.drawMM=()=>draw();buildList();text();draw();
 })();
 
 /* ---------- init + theme ---------- */

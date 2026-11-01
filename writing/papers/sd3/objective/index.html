@@ -382,6 +382,13 @@ td.b1{font-weight:700;color:var(--green)} td.b2{font-weight:700;color:var(--blue
     <li><span class="q">"DDPM uses … LDM uses …"</span>：DDPM 让 \(\beta\) 线性增长；LDM 让 \(\sqrt\beta\) 线性增长（再平方），即 SD 代码里的 "scaled linear"。eps/linear 就是 SD1、SDXL 的训练方式。</li>
   </ol>
   <figure>
+    <div class="fig-title">动画 A · 每种方法的路径：很多对（图片，噪声）怎么一起变成噪声</div>
+    <div class="controls"><label>方法 <select id="o6-m"><option value="rf">RF（Eq. 13）</option><option value="epscos">eps/cos（Eq. 17，预测 ε）</option><option value="vcos">v/cos（Eq. 17，预测 v）</option><option value="epslin">eps/linear（LDM，预测 ε）</option><option value="vlin">v/linear（LDM，预测 v）</option><option value="edm">EDM(−1.2, 1.2)（Eq. 14 到 16）</option></select></label><button type="button" id="o6-play">播放</button><label>\(t\) <input type="range" id="o6-t" min="0.01" max="0.99" step="0.01" value="0.35"></label></div>
+    <p class="readout" id="o6-read"></p>
+    <canvas id="o6" width="720" height="340"></canvas>
+    <figcaption>一维玩具数据：图片 \(x_0\) 在 −3（粉）和 +3（蓝）附近各一半，噪声 \(\epsilon\sim\mathcal N(0,1)\)。左：40 对的轨迹 \(z_t=a_tx_0+b_t\epsilon\)，橙色是其中一对，竖虚线是当前 \(t\)。右：1600 对在当前 \(t\) 的分布。点"播放"，\(t\) 在 0 和 1 之间来回走。看点：RF 的每条轨迹是直线；cosine 和 LDM-Linear 是弯的（先保留图片、后段才快速变成噪声）；EDM 的图片不缩小，噪声越加越大，点会冲出画面（纵轴已放大到 ±14）。读数里给出这种方法下网络此刻要预测的量和统一形式里的权重 \(w\)。LDM-Linear 用的 \(\beta\) 是 SD1 代码里的数（论文未给）。</figcaption>
+  </figure>
+  <figure>
     <div class="fig-title">图 2 · 把各方法的权重画在同一个横轴 \(\lambda\) 上（按 \(\lambda=0\) 处归一化，对数纵轴）</div>
     <div class="checks" id="o2-checks"></div>
     <div class="controls"><label>logit-normal \(m\) <input type="range" id="o2-m" min="-1" max="1" step="0.05" value="0"></label><label>\(s\) <input type="range" id="o2-s" min="0.2" max="2.2" step="0.05" value="1"></label></div>
@@ -448,6 +455,16 @@ td.b1{font-weight:700;color:var(--green)} td.b2{font-weight:700;color:var(--blue
     <li>反解：\(\tan(\frac\pi2u)=\frac{t}{1-t}\)，\(u=\frac2\pi\arctan\frac{t}{1-t}\)。</li>
     <li>求导：\(\frac{du}{dt}=\frac2\pi\cdot\frac{1}{1+(\frac{t}{1-t})^2}\cdot\frac{1}{(1-t)^2}=\frac{2}{\pi\big((1-t)^2+t^2\big)}=\frac{2}{\pi-2\pi t+2\pi t^2}\)。这是 Eq. 22。</li>
   </ol></details>
+  <figure>
+    <div class="fig-title">动画 B · 每种抽 \(t\) 的方式：从底层随机数 \(u\) 到 \(t\)</div>
+    <div class="controls"><label>方式 <select id="o7-s"><option value="uni">均匀（普通 rf，也是 mode 的 s=0）</option><option value="ln" selected>logit-normal（Eq. 19）</option><option value="mode">mode（Eq. 20）</option><option value="cos">CosMap（Eq. 21、22）</option></select></label>
+      <span id="o7-lnp"><label>\(m\) <input type="range" id="o7-m" min="-1" max="1" step="0.05" value="0"></label><label>\(s\) <input type="range" id="o7-sl" min="0.2" max="2.2" step="0.05" value="1"></label></span>
+      <span id="o7-mp" style="display:none"><label>mode \(s\) <input type="range" id="o7-ms" min="-1" max="1.75" step="0.01" value="1.29"></label></span>
+      <button type="button" id="o7-go">抽 3000 个</button><button type="button" id="o7-reset">清空</button></div>
+    <p class="readout" id="o7-read"></p>
+    <canvas id="o7" width="720" height="420"></canvas>
+    <figcaption>左上：横轴是底层随机数 \(u\)（logit-normal 抽正态，其余三种抽 0 到 1 的均匀数），绿线是把 \(u\) 变成 \(t\) 的函数。橙色小球从下面的 \(u\) 轴升到绿线上，再水平飞到右边，落进 \(t\) 的直方图（横向，纵轴就是 \(t\)）；蓝线是精确密度（Eq. 19、22；mode 用 \(1/|f'(u)|\) 数值算出）。下方是同一批 \(t\) 换算成 \(\lambda\) 后的分布，可以和精读 9 图 2 的横轴对照。看点：logit-normal 把小球集中到中间；mode 的 \(s>0\) 也偏中间，但两端始终有一点；CosMap 也偏中间，但比 logit-normal 平缓得多（密度在 \(t=0.5\) 是 \(4/\pi\approx1.27\)，两端是 \(2/\pi\approx0.64\)），因为它模仿的是 cosine 路径均匀抽 \(t\) 时的 \(\lambda\) 分布。</figcaption>
+  </figure>
   <div class="box ref"><b>Fig. 11 和附录 B.4</b><ul><li>Fig. 11（p.22）左边画 mode 在不同 \(s\) 下的密度，右边画 logit-normal 在不同 \((m,s)\) 下的密度，就是上面几句话描述的形状。</li><li>附录 B.4（p.21）只是复述：logit-normal 采样器超过了均匀的 RF、EDM 和 LDM-Linear，详见 5.1。</li></ul></div>
 </section>
 
@@ -705,8 +722,78 @@ function drawO5(){const x=ctxN('o5',520);x.clearRect(0,0,x.W,x.H);const d=+$('o5
   $('o5-read').textContent=o5k===0?'先看全部 10 个点':o5k>=max?`排完了，共 ${max} 层：括号里是名次`:`第 ${o5k} 层：剩下的点里，没有别的点在 CLIP 和 FID 上同时不差于它`;}
 $('o5-d').onchange=()=>{o5k=0;drawO5();};$('o5-next').onclick=()=>{o5k=Math.min(ranks(+$('o5-d').value).max,o5k+1);drawO5();};$('o5-reset').onclick=()=>{o5k=0;drawO5();};
 
+const L=(a,b,u)=>a+(b-a)*u;
+/* ---------- O6 path animation per method ---------- */
+const O6M={rf:{p:'rf',out:'v',name:'RF'},epscos:{p:'cos',out:'eps',name:'eps/cos'},vcos:{p:'cos',out:'vp',name:'v/cos'},epslin:{p:'ldm',out:'eps',name:'eps/linear'},vlin:{p:'ldm',out:'vp',name:'v/linear'},edm:{p:'edm',out:'F',name:'edm(−1.2, 1.2)'}};
+const O6pairs=(()=>{let s=2024;const r=()=>{s=(s*16807)%2147483647;return s/2147483647;};const g=()=>{let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};const a=[];for(let i=0;i<1600;i++)a.push([(r()<0.5?-3:3)+0.4*g(),g()]);return a;})();
+let o6t=0.35,o6play=false,o6dir=1;
+function o6w(m,t){const ab=path(O6M[m].p,t),l=lam(ab);if(m==='rf')return t/(1-t);if(m==='epscos')return 2/(Math.exp(l/2)+Math.exp(-l/2));if(m==='vcos'||m==='vlin')return Math.exp(-l/2);if(m==='edm')return npd(l,2.4,2.4)*(Math.exp(-l)+0.25);if(m==='epslin'){const d=1e-3,l2=lam(path('ldm',Math.min(0.999,t+d))),l1=lam(path('ldm',Math.max(0.001,t-d)));return -2/((l2-l1)/(2*d));}}
+function drawO6(){const x=ctxN('o6',620);x.clearRect(0,0,x.W,x.H);const m=$('o6-m').value,M=O6M[m],t=o6t,nar=x.W<560;
+  const ymax=M.p==='edm'?14:6;const wL=nar?x.W:x.W*0.6,hT=nar?x.H*0.55:x.H;
+  const A=sub({L:36,R:10,T:20,B:26,xmin:0,xmax:1,ymin:-ymax,ymax:ymax},wL,hT,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[-ymax,-ymax/2,0,ymax/2,ymax].forEach(v=>{x.beginPath();x.moveTo(A.X(0),A.Y(v));x.lineTo(A.X(1),A.Y(v));x.stroke();x.fillText(String(v),4,A.Y(v)+4);});[0,0.5,1].forEach(v=>x.fillText(String(v),A.X(v)-6,hT-6));
+  label(x,'每一对的轨迹 z_t（横轴 t：左数据，右噪声）',A.X(0)+4,12,C('--muted'));
+  for(let i=0;i<40;i++){const [x0,e]=O6pairs[i];x.strokeStyle=x0<0?C('--pink'):C('--blue');x.globalAlpha=0.35;x.lineWidth=1;x.beginPath();let st=false;for(let k=0;k<=80;k++){const tt=0.002+0.996*k/80;const ab=path(M.p,tt);const z=ab[0]*x0+ab[1]*e;if(Math.abs(z)>ymax){st=false;continue;}st?x.lineTo(A.X(tt),A.Y(z)):x.moveTo(A.X(tt),A.Y(z));st=true;}x.stroke();}x.globalAlpha=1;
+  const [hx0,he]=O6pairs[3];x.strokeStyle=C('--orange');x.lineWidth=2.6;x.beginPath();let st=false;for(let k=0;k<=120;k++){const tt=0.002+0.996*k/120;const ab=path(M.p,tt);const z=ab[0]*hx0+ab[1]*he;if(Math.abs(z)>ymax){st=false;continue;}st?x.lineTo(A.X(tt),A.Y(z)):x.moveTo(A.X(tt),A.Y(z));st=true;}x.stroke();
+  x.strokeStyle=C('--heading');x.setLineDash([3,3]);x.lineWidth=1;x.beginPath();x.moveTo(A.X(t),A.Y(-ymax));x.lineTo(A.X(t),A.Y(ymax));x.stroke();x.setLineDash([]);
+  const ab=path(M.p,t),zh=ab[0]*hx0+ab[1]*he;if(Math.abs(zh)<=ymax){x.fillStyle=C('--orange');x.beginPath();x.arc(A.X(t),A.Y(zh),6,0,7);x.fill();}
+  // histogram
+  const B=sub({L:nar?36:14,R:12,T:20,B:26,xmin:0,xmax:1,ymin:-ymax,ymax:ymax},nar?x.W:x.W-wL,nar?x.H-hT:hT,nar?0:wL,nar?hT:0);
+  const nb=48,bins=new Array(nb).fill(0);let out=0;O6pairs.forEach(([x0,e])=>{const z=ab[0]*x0+ab[1]*e;const b=Math.floor((z+ymax)/(2*ymax)*nb);if(b>=0&&b<nb)bins[b]++;else out++;});const mx=Math.max(...bins,1);
+  label(x,`t=${t.toFixed(2)} 时 z_t 的分布`,B.X(0)+4,(nar?hT:0)+12,C('--muted'));
+  bins.forEach((c,i)=>{const y0=B.Y(-ymax+(i+1)*2*ymax/nb),y1=B.Y(-ymax+i*2*ymax/nb);x.fillStyle=C('--accent');x.globalAlpha=0.6;x.fillRect(B.X(0),y0,(B.X(1)-B.X(0))*c/mx,y1-y0-0.5);});x.globalAlpha=1;
+  if(out>0)label(x,`${out} 个点超出画面`,B.X(0)+4,B.Y(-ymax)-4,C('--orange'));
+  // readout
+  const lm=lam(ab),eps=he,x0=hx0;let tgt,tname;
+  if(M.out==='v'){tgt=eps-x0;tname='速度 ε − x₀';}else if(M.out==='eps'){tgt=eps;tname='噪声 ε';}else if(M.out==='vp'){tgt=ab[0]*eps-ab[1]*x0;tname='v = a_t ε − b_t x₀';}else{tgt=NaN;tname='F（ε 与 x₀ 的组合，见 EDM）';}
+  $('o6-read').textContent=`${M.name} · t=${t.toFixed(2)} · a_t=${ab[0].toFixed(3)}，b_t=${ab[1].toFixed(3)}，λ_t=${lm.toFixed(2)} · 橙色这一对：x₀=${x0.toFixed(2)}，ε=${eps.toFixed(2)}，z_t=${zh.toFixed(2)} · 网络要预测 ${tname}${isFinite(tgt)?' = '+tgt.toFixed(2):''} · 统一形式的权重 w=${o6w(m,t).toPrecision(3)}`;
+  $('o6-t').value=t;}
+$('o6-m').onchange=drawO6;$('o6-t').oninput=()=>{o6t=+$('o6-t').value;drawO6();};
+$('o6-play').onclick=()=>{o6play=!o6play;$('o6-play').textContent=o6play?'暂停':'播放';if(!o6play)return;if(reduce){o6t=0.99;drawO6();o6play=false;$('o6-play').textContent='播放';return;}loop('o6',()=>{if(!o6play)return false;o6t+=0.004*o6dir;if(o6t>0.99){o6t=0.99;o6dir=-1;}if(o6t<0.01){o6t=0.01;o6dir=1;}drawO6();});};
+
+/* ---------- O7 timestep sampler animation ---------- */
+const sig=u=>1/(1+Math.exp(-u));
+const fmode=(u,s)=>1-u-s*(Math.cos(Math.PI*u/2)**2-1+u);
+const fcos=u=>1-1/(Math.tan(Math.PI*u/2)+1);
+let o7h=null,o7fly=[],o7left=0,o7seed=7;const o7r=()=>{o7seed=(o7seed*16807)%2147483647;return o7seed/2147483647;};const o7g=()=>{let u=0,v=0;while(!u)u=o7r();while(!v)v=o7r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+function o7cfg(){const k=$('o7-s').value,m=+$('o7-m').value,s=+$('o7-sl').value,ms=+$('o7-ms').value;
+  if(k==='ln')return {k,umin:m-3.5*s,umax:m+3.5*s,draw:()=>m+s*o7g(),g:u=>sig(u),dens:t=>npd(Math.log(t/(1-t)),m,s)/(t*(1-t)),ulab:`u ~ N(${m.toFixed(2)}, ${s.toFixed(2)}²)`,glab:'t = sigmoid(u)'};
+  if(k==='mode')return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>fmode(u,ms),dens:null,ulab:'u ~ U(0,1)',glab:`t = f_mode(u; s=${ms.toFixed(2)})`};
+  if(k==='cos')return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>fcos(u),dens:t=>2/(Math.PI-2*Math.PI*t+2*Math.PI*t*t),ulab:'u ~ U(0,1)',glab:'t = 1 − 1/(tan(πu/2)+1)'};
+  return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>u,dens:()=>1,ulab:'u ~ U(0,1)',glab:'t = u（普通 rf）'};}
+function modeDens(ms){const pts=[];for(let i=1;i<2000;i++){const u=i/2000,d=1e-4;const fp=(fmode(u+d,ms)-fmode(u-d,ms))/(2*d);pts.push([fmode(u,ms),1/Math.abs(fp)]);}return pts.sort((a,b)=>a[0]-b[0]);}
+function drawO7(){const x=ctxN('o7',640);x.clearRect(0,0,x.W,x.H);const c=o7cfg(),nar=x.W<560;
+  const wA=nar?x.W*0.55:x.W*0.42,hTop=nar?x.H*0.62:x.H*0.72;
+  const A=sub({L:34,R:8,T:22,B:30,xmin:c.umin,xmax:c.umax,ymin:0,ymax:1},wA,hTop,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[0,0.5,1].forEach(v=>{x.beginPath();x.moveTo(A.X(c.umin),A.Y(v));x.lineTo(A.X(c.umax),A.Y(v));x.stroke();x.fillText(String(v),6,A.Y(v)+4);});
+  [c.umin,(c.umin+c.umax)/2,c.umax].forEach(v=>x.fillText((Math.round(v*100)/100).toString(),A.X(v)-10,hTop-12));label(x,c.ulab,A.X(c.umin)+2,28,C('--muted'));label(x,c.glab,A.X(c.umin)+2,12,C('--heading'));
+  x.strokeStyle=C('--green');x.lineWidth=2.4;x.beginPath();for(let i=0;i<=200;i++){const u=c.umin+(c.umax-c.umin)*i/200;const t=c.g(u);i?x.lineTo(A.X(u),A.Y(t)):x.moveTo(A.X(u),A.Y(t));}x.stroke();
+  // histogram of t (horizontal bars aligned to t axis)
+  const Bx0=wA+6,Bw=x.W-Bx0-10;const nb=40;label(x,nar?'t 的直方图':'t 的直方图（横向）与精确密度',Bx0,12,C('--muted'));
+  const tot=o7h?o7h.total:0;let mxd=3;if(o7h){const m=Math.max(...o7h);if(tot)mxd=Math.max(mxd,m/tot*nb*1.1);}
+  const dscale=v=>Bw*Math.min(1,v/mxd);
+  if(o7h&&tot){o7h.forEach((n,i)=>{const d=n/tot*nb;const y0=A.Y((i+1)/nb),y1=A.Y(i/nb);x.fillStyle=C('--accent');x.globalAlpha=0.55;x.fillRect(Bx0,y0,dscale(d),y1-y0-0.5);});x.globalAlpha=1;}
+  x.strokeStyle=C('--blue');x.lineWidth=2;x.beginPath();const dp=c.k==='mode'?modeDens(+$('o7-ms').value):(()=>{const a=[];for(let i=1;i<400;i++){const t=i/400;a.push([t,c.dens(t)]);}return a;})();dp.forEach((q,i)=>{const X=Bx0+dscale(q[1]),Y=A.Y(q[0]);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();
+  x.strokeStyle=C('--line');x.beginPath();x.moveTo(Bx0,A.Y(0));x.lineTo(Bx0,A.Y(1));x.stroke();label(x,'t=0 数据',Bx0+4,A.Y(0)-4,C('--muted'));label(x,'t=1 噪声',Bx0+4,A.Y(1)+12,C('--muted'));
+  // flyers
+  o7fly.forEach(f=>{const u=f.u,t=c.g(u);let X,Y;if(f.p<0.5){X=A.X(u);Y=L(A.Y(0)+14,A.Y(t),f.p*2);}else{X=L(A.X(u),Bx0+4,(f.p-0.5)*2);Y=A.Y(t);}x.fillStyle=C('--orange');x.beginPath();x.arc(X,Y,3.5,0,7);x.fill();});
+  // lambda histogram
+  const Cy0=hTop+6,Ch=x.H-Cy0-22;const Cs=sub({L:34,R:10,T:16,B:18,xmin:-10,xmax:10,ymin:0,ymax:1},x.W,Ch+34,0,Cy0-16);
+  label(x,nar?'λ 的分布（左：噪声多）':'对应的 λ = 2 log((1−t)/t) 分布（左：噪声多，右：图片清楚）',Cs.X(-10),Cy0+8,C('--muted'));
+  if(o7h&&o7h.lam){const lb=o7h.lam,m2=Math.max(...lb,1);lb.forEach((n,i)=>{const X0=Cs.X(-10+i*0.5),X1=Cs.X(-10+(i+1)*0.5);const hh=(Cs.Y(0)-Cs.Y(1))*n/m2;x.fillStyle=C('--pink');x.globalAlpha=0.6;x.fillRect(X0,Cs.Y(0)-hh,X1-X0-0.5,hh);});x.globalAlpha=1;}
+  x.fillStyle=C('--muted');[-10,-5,0,5,10].forEach(v=>x.fillText(String(v),Cs.X(v)-6,x.H-4));
+  const mid=o7h&&tot?(o7h.slice(10,30).reduce((a,b)=>a+b,0)/tot*100).toFixed(1):'0';$('o7-read').textContent=`已抽 ${tot} 个 t · 落在中间 0.25 < t < 0.75 的比例 ${mid}%（均匀分布是 50%）`;}
+function o7reset(){o7h=new Array(40).fill(0);o7h.total=0;o7h.lam=new Array(40).fill(0);o7fly=[];o7left=0;}
+function o7add(u){const c=o7cfg();const t=c.g(u);if(!(t>0&&t<1))return;const b=Math.min(39,Math.floor(t*40));o7h[b]++;o7h.total++;const l=2*Math.log((1-t)/t);const lb=Math.floor((l+10)/0.5);if(lb>=0&&lb<40)o7h.lam[lb]++;}
+function o7run(n){if(!o7h)o7reset();o7left+=n;if(reduce){while(o7left-->0)o7add(o7cfg().draw());o7left=0;drawO7();return;}
+  loop('o7',()=>{const c=o7cfg();for(let k=0;k<3&&o7left>0;k++,o7left--)o7fly.push({u:c.draw(),p:0});const rest=Math.min(o7left,25);for(let k=0;k<rest;k++){o7add(c.draw());}o7left-=rest;
+    o7fly.forEach(f=>f.p+=0.035);o7fly.filter(f=>f.p>=1).forEach(f=>o7add(f.u));o7fly=o7fly.filter(f=>f.p<1);drawO7();return o7left>0||o7fly.length>0;});}
+$('o7-go').onclick=()=>o7run(3000);$('o7-reset').onclick=()=>{o7reset();drawO7();};
+['o7-s','o7-m','o7-sl','o7-ms'].forEach(id=>$(id).oninput=()=>{o7reset();const k=$('o7-s').value;$('o7-lnp').style.display=k==='ln'?'':'none';$('o7-mp').style.display=k==='mode'?'':'none';drawO7();});
+o7reset();
+
 /* ---------- init + theme ---------- */
-function all(){drawO1();drawO2();drawO4();drawO5();}
+function all(){drawO1();drawO2();drawO4();drawO5();drawO6();drawO7();}
 all();
 const mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',all);
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,150);});
