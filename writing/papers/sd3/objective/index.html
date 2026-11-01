@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>精读 SD3：训练目标 | Kaijing Ma</title>
+<meta name="description" content="SD3 论文精读第一部分：逐句解读 §1 的相关段落、§2、§3（含 3.1）和 §5.1 的实验与 Table 1、Table 2、Fig. 3，配完整推导和附录 B.1、B.3、B.4 对照。附交互图。">
+<style>
+/* Layout: one reading column of numbered lessons; each lesson = plain-language idea, one worked number example, an animated figure, a short self-check. */
+:root{
+  --page:#fcfcfa; --panel:#ffffff; --ink:#4a4f56; --heading:#22272d; --muted:#7a8087; --line:#e1e3e3; --line-strong:#cec7c0;
+  --accent:#796a5c; --blue:#2f5f93; --blue-soft:#e9eff7; --pink:#ab4265; --pink-soft:#f7e9ee; --orange:#a76425; --orange-soft:#f7eee4; --green:#397451; --green-soft:#e7f1ea;
+  --f-body:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-display:"Songti SC","Noto Serif SC","STSong",serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.9;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.site-header{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding-block:22px 0;font-size:14px}
+.site-header a{color:var(--muted);text-decoration:none} .site-header a:hover{color:var(--heading)}
+.site-header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+main{max-width:760px;margin:0 auto;padding-block:30px 90px;display:flex;flex-direction:column;gap:34px}
+h1,h2,h3{font-family:var(--f-display);color:var(--heading);text-wrap:balance;line-height:1.4;margin:0}
+h1{font-size:34px} h2{font-size:26px} h3{font-size:19px}
+p{margin:0} a{color:var(--blue)}
+.eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{font-size:17.5px;color:var(--muted)}
+.hero{display:flex;flex-direction:column;gap:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.toc a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:15px;line-height:1.5}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);outline:none}
+.toc .n{font-family:var(--f-mono);color:var(--accent);font-size:13px;min-width:2.2em}
+.lesson{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+.lesson-head{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-strong);padding-top:22px}
+.lesson-head .no{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.goal{font-size:15px;color:var(--muted)}
+.box{border-radius:8px;padding:12px 16px;font-size:15.5px;line-height:1.8}
+.box b{font-weight:700}
+.key{background:var(--green-soft)} .key b{color:var(--green)}
+.warn{background:var(--orange-soft)} .warn b{color:var(--orange)}
+.sd3{background:var(--blue-soft)} .sd3 b{color:var(--blue)}
+.math{overflow-x:auto;padding:4px 0;text-align:center}
+code{font-family:var(--f-mono);font-size:.9em}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.6}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{border-bottom:1.5px solid var(--heading);color:var(--heading)}
+tbody tr:last-child td{border-bottom:1.5px solid var(--heading)}
+ol,ul{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+figcaption{font-size:14px;color:var(--muted);line-height:1.7}
+.fig-title{font-weight:700;color:var(--heading);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:14px}
+.controls label{display:flex;align-items:center;gap:8px}
+input[type=range]{width:170px;accent-color:var(--accent)}
+button,select{font:inherit;font-size:14px;color:var(--heading);background:var(--page);border:1px solid var(--line-strong);border-radius:6px;padding:4px 12px;cursor:pointer}
+button:hover,button:focus-visible,select:focus-visible{border-color:var(--accent);outline:2px solid transparent}
+.readout{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr} h1{font-size:28px} h2{font-size:22px}}
+.two>*{min-width:0}
+details.quiz{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--panel)}
+details.quiz summary{cursor:pointer;color:var(--heading);font-weight:600}
+details.quiz p{margin-top:8px;font-size:15.5px}
+.card{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.card>div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card>div+div{border-left:1px solid var(--line-strong)}
+@media (max-width:620px){.card{grid-template-columns:1fr}.card>div+div{border-left:0;border-top:1px solid var(--line-strong)}}
+.card h3{font-size:17px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:0 8px;border-radius:999px}
+.tag.fm{background:var(--pink-soft);color:var(--pink)} .tag.cfm{background:var(--green-soft);color:var(--green)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+
+.orig{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 8px 8px 0;padding:10px 16px;display:flex;flex-direction:column;gap:4px}
+.orig .loc{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+.orig p{font-family:Georgia,"Times New Roman",var(--f-display);font-size:15.5px;line-height:1.75;color:var(--heading)}
+ol.read{gap:10px} ol.read .q{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--heading)}
+.bg{background:var(--panel);border:1px dashed var(--line-strong)} .bg b{color:var(--heading)}
+.der{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-size:15.5px}
+.der summary{cursor:pointer;color:var(--heading);font-weight:600}
+.der ol{margin-top:8px}
+p.readout{min-height:1.6em;line-height:1.6}
+.ref{background:var(--pink-soft)} .ref b{color:var(--pink)}
+.ref ul{margin-top:4px;gap:2px}
+.parts{display:flex;flex-wrap:wrap;gap:8px;font-size:14px}
+.parts a,.parts span{padding:4px 12px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--panel)}
+.parts span{border-color:var(--accent);color:var(--heading);font-weight:600}
+.map td:first-child{min-width:7em;font-size:14px;color:var(--accent)}
+.lesson,.tbl{min-width:0;max-width:100%}
+@media (max-width:620px){table{font-size:14px} th,td{padding:6px 6px}}
+.num td:not(:first-child),.num th:not(:first-child){text-align:right}
+td.b1{font-weight:700;color:var(--green)} td.b2{font-weight:700;color:var(--blue)} td.b3{font-weight:700;color:var(--orange)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 16px}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="/">Kaijing Ma</a>
+  <nav aria-label="网站导航"><a href="/writing/">Paper Notes</a><a href="/writing/papers/sd3/">SD3 概念笔记</a><a href="/writing/papers/sd3/annotated/">SD3 中英对照</a><a href="/#writing">Writing</a></nav>
+</header>
+<main>
+
+<section class="hero">
+  <span class="eyebrow">SD3 论文精读 · 第一部分 · §1、§2、§3、§5.1、附录 B.1、B.3、B.4</span>
+  <h1>精读 SD3：训练目标</h1>
+  <div class="parts"><a href="/writing/papers/sd3/primer/">入门课 · 从零读懂 Flow Matching</a><span>第一部分 · 训练目标</span><a href="/writing/papers/sd3/architecture/">第二部分 · 模型结构</a><a href="/writing/papers/sd3/scaling/">第三部分 · 训练到 8B</a></div>
+  <p class="lede">这一页按论文原文的顺序，一句一句读 §2（Simulation-Free Training of Flows）、§3（Flow Trajectories，含 3.1 的三种抽 \(t\) 分布）和 §5.1（61 种训练方式的比较，含 Table 1、Table 2、Fig. 3 的原文分析），开头先读 §1 里交代动机的三段。每一节先给原文位置和原句，再逐句解读；公式都给出完整推导，可以展开看。</p>
+  <p class="lede">直观的动画讲解在 <a href="/writing/papers/sd3/primer/">入门课</a>（一维玩具例子），这一页只在需要时链接过去。建议左边开着论文 PDF 或本站的 <a href="/writing/papers/sd3/annotated/">中英对照版</a>，读一句对一句。</p>
+  <nav class="toc" aria-label="目录">
+    <a href="#l0"><span class="n">地图</span>要读的全部原文位置</a>
+    <a href="#l1"><span class="n">精读 1</span>§1：为什么路径的选择重要</a>
+    <a href="#l2"><span class="n">精读 2</span>§2 第 1 段：ODE 与"免模拟"</a>
+    <a href="#l3"><span class="n">精读 3</span>§2 Eq. 2、3：前向路径与边际分布</a>
+    <a href="#l4"><span class="n">精读 4</span>§2 Eq. 4、5：条件路径与条件速度</a>
+    <a href="#l5"><span class="n">精读 5</span>§2 Eq. 6：边际速度</a>
+    <a href="#l6"><span class="n">精读 6</span>§2 Eq. 7、8：FM 与 CFM</a>
+    <a href="#l7"><span class="n">精读 7</span>§2 Eq. 9、10：显式形式与 log-SNR</a>
+    <a href="#l8"><span class="n">精读 8</span>§2 Eq. 11、12 与 \(\mathcal L_w\)：统一的加权损失</a>
+    <a href="#l9"><span class="n">精读 9</span>§3：RF、EDM、Cosine、LDM-Linear</a>
+    <a href="#l10"><span class="n">精读 10</span>§3.1 第 1 段与 Eq. 18</a>
+    <a href="#l11"><span class="n">精读 11</span>§3.1：logit-normal、mode、CosMap</a>
+    <a href="#l12"><span class="n">精读 12</span>§5.1：实验设置与 61 个变体</a>
+    <a href="#l13"><span class="n">精读 13</span>§5.1.1：怎么排名，Table 1</a>
+    <a href="#l14"><span class="n">精读 14</span>Table 2 与 Fig. 3</a>
+    <a href="#l15"><span class="n">总结</span>第一个贡献讲了什么、证据多强</a>
+  </nav>
+</section>
+
+<!-- ===================================================== MAP -->
+<section class="lesson" id="l0">
+  <div class="lesson-head"><span class="no">论文阅读地图</span><h2>要读的全部原文位置</h2><p class="goal">按论文顺序排列，页码按 arXiv 2403.03206v1 的 PDF。</p></div>
+  <div class="tbl"><table class="map">
+    <thead><tr><th>论文位置</th><th>讲了什么</th><th>本页</th></tr></thead>
+    <tbody>
+      <tr><td>§1 第 2、3 段 + 贡献 (i)（p.2）</td><td>路径选择影响训练和采样；直路一步就能走；RF 理论好但实践中没站稳；SD3 的做法是给 RF 重新加权</td><td>精读 1</td></tr>
+      <tr><td>§2 第 1 段，Eq. 1（p.2）</td><td>用 ODE 定义生成模型；直接解 ODE 太贵，改为回归一个向量场</td><td>精读 2</td></tr>
+      <tr><td>§2 Eq. 2、3（p.2 到 3）</td><td>前向路径 \(z_t=a_tx_0+b_t\epsilon\)；边界条件；边际分布 \(p_t\)</td><td>精读 3</td></tr>
+      <tr><td>§2 Eq. 4、5（p.3）</td><td>条件路径 \(\psi_t(\cdot\mid\epsilon)\)、条件速度 \(u_t(z\mid\epsilon)\)</td><td>精读 4</td></tr>
+      <tr><td>§2 Eq. 6（p.3）+ 附录 B.1 Eq. 26 到 29（p.20）</td><td>边际速度；它为什么能推动 \(p_t\)</td><td>精读 5</td></tr>
+      <tr><td>§2 Eq. 7、8（p.3）+ 附录 B.1 Eq. 30 到 36（p.20）</td><td>FM 损失、CFM 损失、两者等价</td><td>精读 6</td></tr>
+      <tr><td>§2 Eq. 9、10（p.3）</td><td>把条件速度写成显式形式；log-SNR \(\lambda_t\)</td><td>精读 7</td></tr>
+      <tr><td>§2 Eq. 11、12 + \(\mathcal L_w\)（p.3）</td><td>改写成噪声预测；统一的加权损失；"权重不改变最优解"</td><td>精读 8</td></tr>
+      <tr><td>§3 Eq. 13 到 17（p.3）+ LDM-Linear 段（p.4）</td><td>RF、EDM、Cosine、(LDM-)Linear 四种路径各自的 \(a_t,b_t\) 和权重</td><td>精读 9</td></tr>
+      <tr><td>§3.1 第 1 段 + Eq. 18（p.4）</td><td>中间的 \(t\) 最难；换抽样分布 = 加权</td><td>精读 10</td></tr>
+      <tr><td>§3.1 Eq. 19 到 22（p.4）+ Fig. 11（p.22）+ 附录 B.4（p.21）</td><td>logit-normal、mode、CosMap 三种分布</td><td>精读 11</td></tr>
+      <tr><td>§5.1 第 1 段（p.5）+ 附录 B.3（p.21）</td><td>控制变量、为什么不比 loss、评测指标、训练细节</td><td>精读 12</td></tr>
+      <tr><td>§5.1.1 变体列表（p.5 到 6）</td><td>61 个变体分别是什么</td><td>精读 12</td></tr>
+      <tr><td>§5.1.1 排名方法 + Table 1 + 结论两段（p.6）</td><td>非支配排序、24 种情况取平均、主要结论</td><td>精读 13</td></tr>
+      <tr><td>§5.1.1 Table 2 段 + Fig. 3 段（p.6 到 7）</td><td>两个指标的取舍；少步数时 RF 的优势</td><td>精读 14</td></tr>
+      <tr><td>§5.2 第 1 句（p.6）</td><td>对 5.1 的一句话总结</td><td>总结</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box warn"><b>先排三个雷：</b>① 论文的时间方向：\(t=0\) 是数据，\(t=1\) 是噪声；生成时从 \(t=1\) 走到 \(t=0\)。② 论文 §2 第一句把噪声样本叫 \(x_1\)，后面又用 \(\epsilon\) 表示同一个东西。③ 撇号 \('\) 一律表示对 \(t\) 求导，比如 \(a_t'=\frac{da_t}{dt}\)。</div>
+</section>
+
+<!-- ===================================================== 1 -->
+<section class="lesson" id="l1">
+  <div class="lesson-head"><span class="no">精读 1 · §1 第 2、3 段 + 贡献 (i)</span><h2>为什么路径的选择重要</h2><p class="goal">读完这几段，你应该能说出 SD3 第一个贡献要解决的问题，以及"重新加权"这个关键词从哪来。</p></div>
+  <div class="orig"><span class="loc">原文 · §1 第 2 段（p.2）</span><p>"While specifying a forward path from data to noise leads to efficient training, it also raises the question of which path to choose. This choice can have important implications for sampling. For example, a forward process that fails to remove all noise from the data can lead to a discrepancy in training and test distribution and result in artifacts such as gray image samples (Lin et al., 2024)."</p></div>
+  <ol class="read">
+    <li><span class="q">"specifying a forward path from data to noise leads to efficient training"</span>：扩散模型的训练办法是先人为规定"图片怎么一步步变成噪声"（前向路径），再让网络学着倒回去。规定好路径后，训练时只要抽一个时刻、按公式直接算出混合结果，不用一步步模拟，所以高效。这就是 §2 标题 "Simulation-Free" 的意思（精读 2）。</li>
+    <li><span class="q">"which path to choose"</span>：路径有无数种（每个时刻图片占多少、噪声占多少），选哪一种是个真问题。§3 列出了四种常见选择。</li>
+    <li><span class="q">"fails to remove all noise from the data"</span>：原文说的是前向过程"没能把数据完全变成噪声"，也就是到了 \(t=1\) 还残留一点图片信号。训练时网络从没见过纯噪声，但生成时却从纯噪声出发，训练和测试的输入分布不一致。</li>
+    <li><span class="q">"gray image samples (Lin et al., 2024)"</span>：Lin et al. 发现 SD 系列因此很难生成很亮或很暗的图，结果偏灰。这说明路径的端点必须设对，这也是 Eq. 3 前边界条件 \(a_1=0,b_1=1\) 的意义（精读 3）。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §1 第 2 段（续）</span><p>"Importantly, the choice of the forward process also influences the learned backward process and, thus, the sampling efficiency. While curved paths require many integration steps to simulate the process, a straight path could be simulated with a single step and is less prone to error accumulation. Since each step corresponds to an evaluation of the neural network, this has a direct impact on the sampling speed."</p></div>
+  <ol class="read">
+    <li><span class="q">"influences the learned backward process"</span>：网络学到的是"倒回去"的速度场，前向路径决定了这个速度场长什么样。</li>
+    <li><span class="q">"curved paths require many integration steps … a straight path could be simulated with a single step"</span>：采样就是用 Euler 法沿速度场走（入门课第 2 课图 2）。路弯，每一步都会走偏，只能切细；路直，一步就到。</li>
+    <li><span class="q">"each step corresponds to an evaluation of the neural network"</span>：每走一步要调用一次网络。步数少 = 生成快。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §1 第 3 段（p.2）</span><p>"A particular choice for the forward path is a so-called Rectified Flow …, which connects data and noise on a straight line. Although this model class has better theoretical properties, it has not yet become decisively established in practice. So far, some advantages have been empirically demonstrated in small and medium-sized experiments (Ma et al., 2024), but these are mostly limited to class-conditional models. In this work, we change this by introducing a re-weighting of the noise scales in rectified flow models, similar to noise-predictive diffusion models (Ho et al., 2020). Through a large-scale study, we compare our new formulation to existing diffusion formulations and demonstrate its benefits."</p></div>
+  <ol class="read">
+    <li><span class="q">"connects data and noise on a straight line"</span>：RF 的路径是 \(z_t=(1-t)x_0+t\epsilon\)，每一对（图片，噪声）之间一条直线（Eq. 13）。</li>
+    <li><span class="q">"not yet become decisively established in practice"</span>：当时主流文生图（SD1、SDXL、DALL-E 等）都还用传统扩散的路径。RF 的优势只在中小规模、类别条件（比如 ImageNet 按类别生成）上被验证过，Ma et al. (2024) 就是 SiT。</li>
+    <li><span class="q">"a re-weighting of the noise scales"</span>：这是 SD3 第一个贡献的核心。"noise scales" 指不同的时刻 \(t\)（不同的噪声强度）。重新加权 = 训练时让某些噪声强度更重要。§3.1 说明这等价于"多抽某些 \(t\)"（Eq. 18）。</li>
+    <li><span class="q">"similar to noise-predictive diffusion models (Ho et al., 2020)"</span>：DDPM 的 ε 预测损失本身就隐含了一种对噪声强度的加权，而它在实践中效果很好。SD3 想给 RF 也找一个好的加权。</li>
+    <li><span class="q">"Through a large-scale study, we compare"</span>：这就是 §5.1 的 61 个变体比较。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §1 贡献 (i)（p.2）</span><p>"(i) We conduct a large-scale, systematic study on different diffusion model and rectified flow formulations to identify the best setting. For this purpose, we introduce new noise samplers for rectified flow models that improve performance over previously known samplers."</p></div>
+  <ol class="read">
+    <li><span class="q">"new noise samplers"</span>：就是 §3.1 的抽 \(t\) 分布（logit-normal、mode、CosMap）。论文里 "sampler" 有两个意思：这里指<b>训练时抽 \(t\) 的方式</b>；§5.1 的 "sampler settings" 指<b>生成时的采样设置</b>（步数、CFG）。别混。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 2 -->
+<section class="lesson" id="l2">
+  <div class="lesson-head"><span class="no">精读 2 · §2 第 1 段，Eq. 1</span><h2>ODE 与"免模拟"训练</h2><p class="goal">读完这段，你应该能解释 §2 标题 "Simulation-Free Training of Flows" 的每个词。</p></div>
+  <div class="orig"><span class="loc">原文 · §2 第 1 段（p.2）</span><p>"We consider generative models that define a mapping between samples \(x_1\) from a noise distribution \(p_1\) to samples \(x_0\) from a data distribution \(p_0\) in terms of an ordinary differential equation (ODE), \(dy_t=v_\Theta(y_t,t)\,dt\), (1) where the velocity \(v\) is parameterized by the weights \(\Theta\) of a neural network."</p></div>
+  <ol class="read">
+    <li><span class="q">"a mapping between samples \(x_1\) … to samples \(x_0\)"</span>：生成模型 = 一个把噪声样本变成数据样本的映射。下标 1 是噪声，0 是数据。</li>
+    <li><span class="q">"in terms of an ordinary differential equation"</span>：这个映射不是一步到位，而是由一个 ODE 描述的连续运动：点 \(y_t\) 在每个时刻按速度 \(v_\Theta(y_t,t)\) 移动。从 \(t=1\) 的噪声出发，沿 ODE 走到 \(t=0\)，就得到数据。</li>
+    <li><span class="q">"\(v\) is parameterized by the weights \(\Theta\) of a neural network"</span>：速度场就是神经网络：输入位置和时刻，输出速度。\(\Theta\) 是网络参数。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §2 第 1 段（续）</span><p>"Prior work by Chen et al. (2018) suggested to directly solve Equation (1) via differentiable ODE solvers. However, this process is computationally expensive, especially for large network architectures that parameterize \(v_\Theta(y_t,t)\). A more efficient alternative is to directly regress a vector field \(u_t\) that generates a probability path between \(p_0\) and \(p_1\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"directly solve Equation (1) via differentiable ODE solvers"</span>：Chen et al. (2018) 是 Neural ODE。做法是：训练的每一步都真的把 ODE 从头积分一遍（"模拟"），看终点对不对，再把误差反向传播回每一步。</li>
+    <li><span class="q">"computationally expensive"</span>：积分一次要调用网络几十上百次，训练一步就要这么多次前向和反向。网络一大，根本训不动。</li>
+    <li><span class="q">"directly regress a vector field \(u_t\)"</span>：替代办法：如果事先知道"正确的速度场" \(u_t\) 在每个点的值，就可以像普通回归一样，随便抽一个点、让网络输出去逼近 \(u_t\)，不用积分。这就是 <b>simulation-free（免模拟）</b>：训练时不模拟 ODE。</li>
+    <li><span class="q">"that generates a probability path between \(p_0\) and \(p_1\)"</span>："generates" 是术语：如果所有点按 \(u_t\) 走，它们在每个时刻的整体分布正好是 \(p_t\)，就说 \(u_t\) 生成了概率路径 \(p_t\)。下面几节就是在构造这样一个 \(u_t\)，并说明怎么回归它。</li>
+  </ol>
+  <div class="box sd3"><b>标题拆解：</b>Simulation-Free（训练时不积分 ODE）+ Training（训练方法）+ of Flows（flow = 由 ODE 定义的连续变换）。§5.1 第 1 句又把它叫 "simulation-free training of normalizing flows"，说的是同一件事（连续的 normalizing flow 就是 ODE 定义的 flow）。直观演示见 <a href="/writing/papers/sd3/primer/#l2">入门课第 2 课</a>。</div>
+</section>
+
+<!-- ===================================================== 3 -->
+<section class="lesson" id="l3">
+  <div class="lesson-head"><span class="no">精读 3 · §2 Eq. 2、3</span><h2>前向路径与边际分布</h2><p class="goal">读完这段，你应该能解释 Eq. 2 每个符号、边界条件的作用，以及 \(p_t(z_t\mid\epsilon)\) 和 \(p_t(z_t)\) 的区别。</p></div>
+  <div class="orig"><span class="loc">原文 · §2 第 1 段（末）+ Eq. 2（p.2）</span><p>"To construct such a \(u_t\), we define a forward process, corresponding to a probability path \(p_t\) between \(p_0\) and \(p_1=\mathcal N(0,1)\), as \(z_t=a_tx_0+b_t\epsilon\) where \(\epsilon\sim\mathcal N(0,I)\). (2)"</p></div>
+  <ol class="read">
+    <li><span class="q">"To construct such a \(u_t\), we define a forward process"</span>：思路是倒着来：先规定"数据怎么变成噪声"，再从这个过程反推出速度场。</li>
+    <li><span class="q">"\(p_1=\mathcal N(0,1)\)"</span>：噪声分布是标准正态（高维时是 \(\mathcal N(0,I)\)，每个维度独立）。</li>
+    <li><span class="q">"\(z_t=a_tx_0+b_t\epsilon\)"</span>：时刻 \(t\) 的样本 = \(a_t\) 份图片 + \(b_t\) 份噪声。\(x_0\) 从数据里取，\(\epsilon\) 现抽。\(a_t,b_t\) 是两个只跟 \(t\) 有关的数，选不同的 \(a_t,b_t\) 就是不同的扩散方法（§3）。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Eq. 3（p.3）</span><p>"For \(a_0=1,b_0=0,a_1=0\) and \(b_1=1\), the marginals, \(p_t(z_t)=\mathbb E_{\epsilon\sim\mathcal N(0,I)}\,p_t(z_t\mid\epsilon)\), (3) are consistent with the data and noise distribution."</p></div>
+  <ol class="read">
+    <li><span class="q">"\(a_0=1,b_0=0,a_1=0,b_1=1\)"</span>：边界条件：\(t=0\) 时 \(z_0=x_0\)（纯图片），\(t=1\) 时 \(z_1=\epsilon\)（纯噪声）。精读 1 里"灰图"问题就是 \(a_1\neq0\) 造成的。注意 EDM（\(a_t\equiv1\)）不满足这一条，它靠 \(b_t\) 变得极大来近似。</li>
+    <li><span class="q">"\(p_t(z_t\mid\epsilon)\)"</span>：<b>条件分布</b>：噪声 \(\epsilon\) 固定，只让图片 \(x_0\) 随机，\(z_t\) 的分布。它就是整个数据分布被缩小 \(a_t\) 倍、再平移 \(b_t\epsilon\)。\(t=1\) 时缩成 \(\epsilon\) 这一个点。</li>
+    <li><span class="q">"\(p_t(z_t)=\mathbb E_\epsilon\,p_t(z_t\mid\epsilon)\)"</span>：<b>边际分布</b>：把所有可能的 \(\epsilon\) 平均起来。也就是"图片和噪声都随机时，\(z_t\) 的分布"。入门课第 3 课图 3 右边的直方图就是它。</li>
+    <li><span class="q">"consistent with the data and noise distribution"</span>：代入边界条件：\(p_0\) 就是数据分布，\(p_1\) 就是 \(\mathcal N(0,I)\)。所以 \(p_t\) 是一条从数据连续变到噪声的"概率路径"。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 1 · §3 四种路径的 \(a_t\)、\(b_t\)、\(\lambda_t\)</div>
+    <div class="controls"><label>路径 <select id="o1-p"><option value="rf">RF（Eq. 13）</option><option value="cos">Cosine（Eq. 17）</option><option value="ldm">LDM-Linear</option><option value="edm">EDM(−1.2, 1.2)（Eq. 14、15）</option></select></label><label>\(t\) <input type="range" id="o1-t" min="0.01" max="0.99" step="0.01" value="0.5"></label></div>
+    <p class="readout" id="o1-read"></p>
+    <canvas id="o1" width="720" height="300"></canvas>
+    <figcaption>左：图片份量 \(a_t\)（蓝）和噪声份量 \(b_t\)（粉），超过 3 的部分截断。右：log-SNR \(\lambda_t=\log\frac{a_t^2}{b_t^2}\)（精读 7），截断在 ±15。LDM-Linear 用的 \(\beta_0=0.00085,\ \beta_{T-1}=0.012,\ T=1000\) 是 SD1 代码里的数，论文只写了公式没写数值；EDM 用论文提到的原始参数 \((P_m,P_s)=(-1.2,1.2)\)。</figcaption>
+  </figure>
+</section>
+
+<!-- ===================================================== 4 -->
+<section class="lesson" id="l4">
+  <div class="lesson-head"><span class="no">精读 4 · §2 Eq. 4、5</span><h2>条件路径与条件速度</h2><p class="goal">读完这段，你应该能读懂 \(\psi_t(\cdot\mid\epsilon)\) 和 \(u_t(z\mid\epsilon)\) 的写法，并能自己算出 RF 的条件速度。</p></div>
+  <div class="orig"><span class="loc">原文 · Eq. 4、5（p.3）</span><p>"To express the relationship between \(z_t\), \(x_0\) and \(\epsilon\), we introduce \(\psi_t\) and \(u_t\) as \(\psi_t(\cdot\mid\epsilon):x_0\mapsto a_tx_0+b_t\epsilon\) (4), \(u_t(z\mid\epsilon):=\psi_t'(\psi_t^{-1}(z\mid\epsilon)\mid\epsilon)\) (5)."</p></div>
+  <ol class="read">
+    <li><span class="q">"\(\psi_t(\cdot\mid\epsilon):x_0\mapsto a_tx_0+b_t\epsilon\)"</span>：\(\psi_t\) 是一个函数。竖线后的 \(\epsilon\) 是固定的条件，点 "\(\cdot\)" 是空着的输入位置，\(\mapsto\) 读作"映射到"。整句：噪声固定为 \(\epsilon\) 时，把图片 \(x_0\) 送到时刻 \(t\) 的位置 \(a_tx_0+b_t\epsilon\)。</li>
+    <li><span class="q">"\(\psi_t^{-1}(z\mid\epsilon)\)"</span>：反函数：已知噪声 \(\epsilon\) 和现在的位置 \(z\)，倒推出起点 \(x_0=\frac{z-b_t\epsilon}{a_t}\)。</li>
+    <li><span class="q">"\(\psi_t'(\cdots\mid\epsilon)\)"</span>：对 \(t\) 求导：\(\psi_t'(x_0\mid\epsilon)=a_t'x_0+b_t'\epsilon\)，就是起点为 \(x_0\) 的那条路在时刻 \(t\) 的速度。</li>
+    <li><b>合起来</b>：\(u_t(z\mid\epsilon)\) = "噪声是 \(\epsilon\)、现在在 \(z\)：先倒推出起点，再求那条路此刻的速度"。它对每个 \(z\) 都有定义，是一整张速度地图。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Eq. 5 之后（p.3）</span><p>"Since \(z_t\) can be written as solution to the ODE \(z_t'=u_t(z_t\mid\epsilon)\), with initial value \(z_0=x_0\), \(u_t(\cdot\mid\epsilon)\) generates \(p_t(\cdot\mid\epsilon)\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"\(z_t\) can be written as solution to the ODE \(z_t'=u_t(z_t\mid\epsilon)\), with initial value \(z_0=x_0\)"</span>：从 \(x_0\) 出发、按 \(u_t(\cdot\mid\epsilon)\) 走，走出来的轨迹正好就是 \(z_t=a_tx_0+b_t\epsilon\)。这是按定义成立的：\(u_t\) 就是从这条轨迹求导得来的。</li>
+    <li><span class="q">"\(u_t(\cdot\mid\epsilon)\) generates \(p_t(\cdot\mid\epsilon)\)"</span>：所有图片 \(x_0\sim p_0\) 一起按这张地图走，任意时刻它们的整体分布就是条件分布 \(p_t(\cdot\mid\epsilon)\)。</li>
+  </ol>
+  <details class="der" open><summary>推导：RF 的条件速度</summary><ol>
+    <li>RF：\(a_t=1-t,\ b_t=t\)，所以 \(a_t'=-1,\ b_t'=1\)。</li>
+    <li>倒推起点：\(x_0=\frac{z-t\epsilon}{1-t}\)。</li>
+    <li>求速度：\(u_t(z\mid\epsilon)=-x_0+\epsilon=\epsilon-\frac{z-t\epsilon}{1-t}=\frac{\epsilon-z}{1-t}\)。</li>
+    <li>读法：终点是 \(\epsilon\)，从 \(z\) 出发朝它直走，速度 = 剩余距离 ÷ 剩余时间。</li>
+    <li>如果 \(z\) 就在这一对的直线上（\(z=(1-t)x_0+t\epsilon\)），代入得 \(\epsilon-x_0\)。这就是 RF 的训练目标。</li>
+  </ol></details>
+  <div class="box key"><b>为什么条件写 "\(\mid\epsilon\)"：</b>知道了 \(\epsilon\) 和当前位置 \(z\)，起点 \(x_0\) 就唯一确定（第 2 步），所以"以 \(\epsilon\) 为条件"等于"知道是哪一对"。在交叉点 \(t=0.75,z=0\)：\(\epsilon=1\) 时速度 \((1-0)/0.25=+4\)，\(\epsilon=-1\) 时 \(-4\)。同一个位置，条件不同，答案不同。动画见 <a href="/writing/papers/sd3/primer/#l4">入门课第 4 课</a>。</div>
+</section>
+
+<!-- ===================================================== 5 -->
+<section class="lesson" id="l5">
+  <div class="lesson-head"><span class="no">精读 5 · §2 Eq. 6 + 附录 B.1 Eq. 26 到 29</span><h2>边际速度：把条件平均掉</h2><p class="goal">读完这段，你应该能读懂 Eq. 6 里的权重 \(\frac{p_t(z\mid\epsilon)}{p_t(z)}\)，并大致说出附录 B.1 前半在证明什么。</p></div>
+  <div class="orig"><span class="loc">原文 · Eq. 6（p.3）</span><p>"Remarkably, one can construct a marginal vector field \(u_t\) which generates the marginal probability paths \(p_t\) (Lipman et al., 2023) (see B.1), using the conditional vector fields \(u_t(\cdot\mid\epsilon)\): \(u_t(z)=\mathbb E_{\epsilon\sim\mathcal N(0,I)}\,u_t(z\mid\epsilon)\frac{p_t(z\mid\epsilon)}{p_t(z)}\) (6)"</p></div>
+  <ol class="read">
+    <li><span class="q">"Remarkably"</span>：值得惊讶的地方：每个 \(\epsilon\) 各有一张条件地图，各自只负责"自己那一族"的分布；但把它们按适当的权重平均，得到的一张地图就能推动<b>整体</b>的边际分布 \(p_t\)。</li>
+    <li><span class="q">"marginal vector field \(u_t\) which generates the marginal probability paths \(p_t\)"</span>：我们真正需要的是它：从 \(p_1\)（纯噪声）出发按 \(u_t\) 倒着走，每个时刻分布都是 \(p_t\)，到 \(t=0\) 就是数据分布。</li>
+    <li><span class="q">"\(\frac{p_t(z\mid\epsilon)}{p_t(z)}\)"</span>：权重。分子：噪声是 \(\epsilon\) 时，\(z_t\) 落在 \(z\) 的可能性；分母：不管噪声是什么，落在 \(z\) 的总可能性。比值就是"在所有经过 \(z\) 的路里，噪声为 \(\epsilon\) 的路占多大比例"。按贝叶斯公式，\(p(\epsilon)\frac{p_t(z\mid\epsilon)}{p_t(z)}=p(\epsilon\mid z_t=z)\)。</li>
+    <li><b>所以 Eq. 6 就是</b> \(u_t(z)=\mathbb E\big[u_t(z\mid\epsilon)\ \big|\ z_t=z\big]\)：所有可能经过 \(z\) 的路的条件速度，按"经过的可能性"加权平均。交叉点上 A、B 各占一半：\(\tfrac12(+4)+\tfrac12(-4)=0\)。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 B.1 第 1 段，Eq. 26 到 29（p.20）</span><p>"Following (Lipman et al., 2023), to see that \(u_t(z)\) generates \(p_t\), we note that the continuity equation provides a necessary and sufficient condition: \(\frac{d}{dt}p_t(x)+\nabla\cdot[p_t(x)v_t(x)]=0\leftrightarrow v_t\) generates probability density path \(p_t\). (26) Therefore it suffices to show that \(-\nabla\cdot[u_t(z)p_t(z)]=\dots=\frac{d}{dt}p_t(z)\) (27 to 29)"</p></div>
+  <ol class="read">
+    <li><span class="q">"continuity equation"</span>：连续性方程，物理里的"质量守恒"：某处密度变化的速度 = 流进来减流出去（\(\nabla\cdot\) 是散度，表示净流出）。一个速度场生成某条概率路径，当且仅当它们满足这个方程。</li>
+    <li><b>证明思路（Eq. 27 到 29）</b>：把 Eq. 6 代进 \(u_t(z)p_t(z)\)，分母 \(p_t(z)\) 正好消掉，得到 \(\mathbb E_\epsilon[u_t(z\mid\epsilon)p_t(z\mid\epsilon)]\)。每个条件场都满足自己的连续性方程（精读 4 最后一句），对 \(\epsilon\) 取平均后，再用 Eq. 3 把条件分布平均成边际分布，就得到边际场满足连续性方程。</li>
+  </ol>
+  <div class="box warn"><b>Eq. 6 的问题：</b>要算 \(u_t(z)\)，得知道所有可能的 \(x_0\) 和 \(\epsilon\) 中哪些会经过 \(z\)，也就是要对整个数据分布积分。真实图片的分布没有公式，算不出来。下一节的 Eq. 7 后面紧接着就说了这一点。按边际速度走的动画见 <a href="/writing/papers/sd3/primer/#l5">入门课第 5 课图 5b</a>。</div>
+</section>
+
+<!-- ===================================================== 6 -->
+<section class="lesson" id="l6">
+  <div class="lesson-head"><span class="no">精读 6 · §2 Eq. 7、8 + 附录 B.1 Eq. 30 到 36</span><h2>FM 与 CFM</h2><p class="goal">读完这段，你应该能读懂两个损失期望下标的区别，并一步步跟下附录 B.1 的等价证明。</p></div>
+  <div class="orig"><span class="loc">原文 · Eq. 7、8（p.3）</span><p>"While regressing \(u_t\) with the Flow Matching objective \(\mathcal L_{FM}=\mathbb E_{t,p_t(z)}\lVert v_\Theta(z,t)-u_t(z)\rVert_2^2\) (7) directly is intractable due to the marginalization in Equation 6, Conditional Flow Matching (see B.1), \(\mathcal L_{CFM}=\mathbb E_{t,p_t(z\mid\epsilon),p(\epsilon)}\lVert v_\Theta(z,t)-u_t(z\mid\epsilon)\rVert_2^2\) (8) with the conditional vector fields \(u_t(z\mid\epsilon)\) provides an equivalent yet tractable objective."</p></div>
+  <ol class="read">
+    <li><span class="q">"\(\mathbb E_{t,p_t(z)}\)"</span>：FM 的期望下标：抽一个 \(t\)，从边际分布 \(p_t\) 抽一个 \(z\)。标签是边际速度 \(u_t(z)\)。</li>
+    <li><span class="q">"intractable due to the marginalization in Equation 6"</span>：intractable = 算不出来。原因就是 Eq. 6 里要对 \(\epsilon\)（等价地，对所有数据）求平均。</li>
+    <li><span class="q">"\(\mathbb E_{t,p_t(z\mid\epsilon),p(\epsilon)}\)"</span>：CFM 的期望下标：抽 \(t\)，抽噪声 \(\epsilon\sim p(\epsilon)\)，再在这个噪声下抽 \(z\sim p_t(z\mid\epsilon)\)，也就是取一张图 \(x_0\)、算 \(z=a_tx_0+b_t\epsilon\)。标签是条件速度 \(u_t(z\mid\epsilon)\)，RF 下是 \(\epsilon-x_0\)。训练时每一批都这样抽，用这一批的平均代替期望。</li>
+    <li><span class="q">"equivalent yet tractable"</span>：等价（最优解和梯度都一样，下面证明）且算得出来。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 B.1 第 2 段，Eq. 30 到 33（p.20）</span><p>"The equivalence of objectives \(\mathcal L_{FM}\leftrightharpoons\mathcal L_{CFM}\) follows from \(\mathcal L_{FM}(\Theta)=\mathbb E_{t,p_t(z)}\lVert v_\Theta-u_t(z)\rVert^2\) (30) \(=\mathbb E\lVert v_\Theta\rVert^2-2\mathbb E_{t,p_t(z)}\langle v_\Theta\mid u_t(z)\rangle+c\) (31) \(=\mathbb E\lVert v_\Theta\rVert^2-2\mathbb E_{t,p_t(z\mid\epsilon),p(\epsilon)}\langle v_\Theta\mid u_t(z\mid\epsilon)\rangle+c\) (32) \(=\mathbb E_{t,p_t(z\mid\epsilon),p(\epsilon)}\lVert v_\Theta-u_t(z\mid\epsilon)\rVert^2+c'=\mathcal L_{CFM}(\Theta)+c'\) (33) where \(c,c'\) do not depend on \(\Theta\) …"</p></div>
+  <details class="der" open><summary>逐行解读 Eq. 30 到 36</summary><ol>
+    <li><b>Eq. 30 → 31</b>：平方展开 \(\lVert v-u\rVert^2=\lVert v\rVert^2-2\langle v,u\rangle+\lVert u\rVert^2\)。最后一项和网络参数 \(\Theta\) 无关，记作常数 \(c\)。</li>
+    <li><b>第一项 \(\mathbb E\lVert v_\Theta\rVert^2\)</b>：只依赖 \(z\) 的分布。按 FM 的方式抽 \(z\)（从 \(p_t\)）和按 CFM 的方式抽（先 \(\epsilon\) 后 \(z\)），\(z\) 的分布都是 \(p_t\)（Eq. 3），所以两种写法相等。</li>
+    <li><b>Eq. 31 → 32，关键一步</b>：交叉项里把边际速度换成条件速度，靠的是 Eq. 34 到 36。</li>
+    <li><b>Eq. 34</b>：把条件版的交叉项写成积分 \(\int dz\,d\epsilon\ p_t(z\mid\epsilon)p(\epsilon)\langle v_\Theta(z,t)\mid u_t(z\mid\epsilon)\rangle\)。</li>
+    <li><b>Eq. 35</b>：乘上再除以 \(p_t(z)\)，并把对 \(\epsilon\) 的积分挪到内积的右边：\(\int dz\,p_t(z)\langle v_\Theta\mid\int d\epsilon\ \frac{p_t(z\mid\epsilon)}{p_t(z)}p(\epsilon)u_t(z\mid\epsilon)\rangle\)。（能挪是因为 \(v_\Theta(z,t)\) 不依赖 \(\epsilon\)。）</li>
+    <li><b>Eq. 36</b>：内层积分正是 Eq. 6 的边际速度 \(u_t(z)\)，所以等于 FM 的交叉项 \(\mathbb E_{p_t(z)}\langle v_\Theta\mid u_t(z)\rangle\)。</li>
+    <li><b>Eq. 32 → 33</b>：再把平方配回去，只不过这次配的是条件速度，多出来的 \(\lVert u_t(z\mid\epsilon)\rVert^2\) 也和 \(\Theta\) 无关。所以 \(\mathcal L_{FM}=\mathcal L_{CFM}+c'\)，梯度相同，最优解相同。</li>
+  </ol></details>
+  <div class="box key"><b>数值检验（交叉点）：</b>只看 \(t=0.75,z=0\)，A、B 各一半，网络输出 \(v\)。FM：\((v-0)^2=v^2\)。CFM：\(\tfrac12(v-4)^2+\tfrac12(v+4)^2=v^2+16\)。差一个常数 16，梯度都是 \(2v\)，最小值都在 \(v=0\)。训练时"每次随机抽一对"的含义和动画见 <a href="/writing/papers/sd3/primer/#l6">入门课第 6 课</a>。</div>
+</section>
+
+<!-- ===================================================== 7 -->
+<section class="lesson" id="l7">
+  <div class="lesson-head"><span class="no">精读 7 · §2 Eq. 9、10</span><h2>显式形式与 log-SNR</h2><p class="goal">读完这段，你应该能自己从 Eq. 5 推出 Eq. 9 和 Eq. 10，并说清 \(\lambda_t\) 的含义。</p></div>
+  <div class="orig"><span class="loc">原文 · Eq. 9（p.3）</span><p>"To convert the loss into an explicit form we insert \(\psi_t'(x_0\mid\epsilon)=a_t'x_0+b_t'\epsilon\) and \(\psi_t^{-1}(z\mid\epsilon)=\frac{z-b_t\epsilon}{a_t}\) into (5) \(z_t'=u_t(z_t\mid\epsilon)=\frac{a_t'}{a_t}z_t-\epsilon b_t\big(\frac{a_t'}{a_t}-\frac{b_t'}{b_t}\big)\). (9)"</p></div>
+  <details class="der" open><summary>推导 Eq. 9</summary><ol>
+    <li>Eq. 5：\(u_t(z\mid\epsilon)=\psi_t'(x_0\mid\epsilon)\)，其中 \(x_0=\psi_t^{-1}(z\mid\epsilon)=\frac{z-b_t\epsilon}{a_t}\)。</li>
+    <li>代入：\(u=a_t'\cdot\frac{z-b_t\epsilon}{a_t}+b_t'\epsilon=\frac{a_t'}{a_t}z-\frac{a_t'b_t}{a_t}\epsilon+b_t'\epsilon\)。</li>
+    <li>把含 \(\epsilon\) 的两项合并并提出 \(b_t\)：\(-\epsilon b_t\big(\frac{a_t'}{a_t}-\frac{b_t'}{b_t}\big)\)。得到 Eq. 9。</li>
+    <li>RF 检验：\(\frac{a_t'}{a_t}=\frac{-1}{1-t}\)，\(\frac{b_t'}{b_t}=\frac1t\)，\(u=\frac{-z}{1-t}+\epsilon t\big(\frac{1}{1-t}+\frac1t\big)=\frac{\epsilon-z}{1-t}\)，和精读 4 一致。</li>
+  </ol></details>
+  <ol class="read">
+    <li><span class="q">"explicit form"</span>：Eq. 5 是抽象定义，Eq. 9 是能直接代数的式子。要点：速度 = 一项只和 \(z\) 有关（网络看得到）+ 一项正比于噪声 \(\epsilon\)（网络看不到，要猜）。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Eq. 10（p.3）</span><p>"Now, consider the signal-to-noise ratio \(\lambda_t:=\log\frac{a_t^2}{b_t^2}\). With \(\lambda_t'=2\big(\frac{a_t'}{a_t}-\frac{b_t'}{b_t}\big)\), we can rewrite Equation (9) as \(u_t(z_t\mid\epsilon)=\frac{a_t'}{a_t}z_t-\frac{b_t}{2}\lambda_t'\epsilon\) (10)"</p></div>
+  <ol class="read">
+    <li><span class="q">"signal-to-noise ratio \(\lambda_t:=\log\frac{a_t^2}{b_t^2}\)"</span>：严格说这是信噪比的对数（log-SNR）。\(a_t^2\) 是信号（图片）的"能量"，\(b_t^2\) 是噪声的能量。\(\lambda_t\) 大 = 图片清楚，小 = 几乎全是噪声。满足边界条件时，\(t\) 从 0 到 1，\(\lambda_t\) 从 \(+\infty\) 降到 \(-\infty\)（LDM-Linear 是离散的有限步，\(\lambda\) 只在约 +7 到 −5.4 之间，见图 1）。RF 下 \(\lambda_t=2\log\frac{1-t}{t}\)，\(t=0.5\) 时为 0。</li>
+    <li><span class="q">"\(\lambda_t'=2\big(\frac{a_t'}{a_t}-\frac{b_t'}{b_t}\big)\)"</span>：求导：\(\lambda_t=2\log a_t-2\log b_t\)，\((\log a_t)'=\frac{a_t'}{a_t}\)。所以 Eq. 9 括号里那一坨正好是 \(\frac{\lambda_t'}{2}\)。</li>
+    <li><span class="q">"rewrite Equation (9) as …"</span>：代进去就是 Eq. 10。好处是：不同方法的 \(a_t,b_t\) 千差万别，但都能用同一个量 \(\lambda_t\) 来描述"现在有多吵"。图 1 右边就是四种路径的 \(\lambda_t\)。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 8 -->
+<section class="lesson" id="l8">
+  <div class="lesson-head"><span class="no">精读 8 · §2 Eq. 11、12 + \(\mathcal L_w\)</span><h2>改写成噪声预测，统一的加权损失</h2><p class="goal">读完这段，你应该能推出 Eq. 12、\(\mathcal L_w\) 里 \(w_t\) 的来历，并理解"加权不改变最优解"。</p></div>
+  <div class="orig"><span class="loc">原文 · Eq. 11、12（p.3）</span><p>"Next, we use Equation (10) to reparameterize Equation (8) as a noise-prediction objective: \(\mathcal L_{CFM}=\mathbb E\lVert v_\Theta(z,t)-\frac{a_t'}{a_t}z+\frac{b_t}{2}\lambda_t'\epsilon\rVert_2^2\) (11) \(=\mathbb E\big(-\frac{b_t}{2}\lambda_t'\big)^2\lVert\epsilon_\Theta(z,t)-\epsilon\rVert_2^2\) (12) where we defined \(\epsilon_\Theta:=\frac{-2}{\lambda_t'b_t}\big(v_\Theta-\frac{a_t'}{a_t}z\big)\)."</p></div>
+  <details class="der" open><summary>推导 Eq. 11、12</summary><ol>
+    <li>Eq. 11：把 Eq. 10 的条件速度代进 CFM（Eq. 8）的 \(u_t(z\mid\epsilon)\)，减号分配进去。</li>
+    <li>定义 \(\epsilon_\Theta\)：让网络的速度输出"翻译"成一个噪声猜测：\(v_\Theta-\frac{a_t'}{a_t}z=-\frac{b_t\lambda_t'}{2}\epsilon_\Theta\)。</li>
+    <li>代回 Eq. 11：\(v_\Theta-\frac{a_t'}{a_t}z+\frac{b_t}{2}\lambda_t'\epsilon=-\frac{b_t\lambda_t'}{2}\epsilon_\Theta+\frac{b_t\lambda_t'}{2}\epsilon=-\frac{b_t\lambda_t'}{2}(\epsilon_\Theta-\epsilon)\)。</li>
+    <li>取平方范数：\(\big(\frac{b_t}{2}\lambda_t'\big)^2\lVert\epsilon_\Theta-\epsilon\rVert^2\)。这就是 Eq. 12。</li>
+  </ol></details>
+  <ol class="read">
+    <li><span class="q">"reparameterize … as a noise-prediction objective"</span>：速度和噪声之间只差一个已知的线性变换。所以"让网络预测速度"和"让网络预测噪声"本质相同，只是损失前面多了一个随 \(t\) 变的系数 \(\big(\frac{b_t}{2}\lambda_t'\big)^2\)。这个系数就是 CFM 隐含的权重。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Eq. 12 之后 + \(\mathcal L_w\)（p.3）</span><p>"Note that the optimum of the above objective does not change when introducing a time-dependent weighting. Thus, one can derive various weighted loss functions that provide a signal towards the desired solution but might affect the optimization trajectory. For a unified analysis of different approaches, including classic diffusion formulations, we can write the objective in the following form (following Kingma &amp; Gao (2023)): \(\mathcal L_w(x_0)=-\frac12\mathbb E_{t\sim\mathcal U(t),\epsilon\sim\mathcal N(0,I)}\big[w_t\lambda_t'\lVert\epsilon_\Theta(z_t,t)-\epsilon\rVert^2\big]\), where \(w_t=-\frac12\lambda_t'b_t^2\) corresponds to \(\mathcal L_{CFM}\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"the optimum … does not change when introducing a time-dependent weighting"</span>：最优解是"在每个 \(t\)、每个 \(z\) 上，猜成条件平均"（精读 6）。给不同 \(t\) 乘不同的正数权重，每个 \(t\) 自己的最优解不变，所以整体最优解不变。</li>
+    <li><span class="q">"provide a signal towards the desired solution but might affect the optimization trajectory"</span>：但网络的能力是有限的，训练也不会真的达到最优。权重决定网络"把力气花在哪些 \(t\) 上"，所以会影响实际训练出的模型。这就是后面要比较不同权重的原因。</li>
+    <li><span class="q">"\(\mathcal L_w\) … \(t\sim\mathcal U(t)\)"</span>：统一形式：\(t\) 均匀抽，每个 \(t\) 乘权重 \(w_t\)。前面的 \(-\frac12\lambda_t'\) 是为了让 \(w_t\) 能直接看成"在 \(\lambda\) 上的权重"（下面的进阶框）。因为 \(\lambda_t'<0\)，这个系数是正的。</li>
+    <li><span class="q">"\(w_t=-\frac12\lambda_t'b_t^2\) corresponds to \(\mathcal L_{CFM}\)"</span>：让 \(\mathcal L_w\) 和 Eq. 12 相等：\(-\frac12w_t\lambda_t'=\frac{b_t^2}{4}\lambda_t'^2\)，两边除以 \(-\frac12\lambda_t'\) 得 \(w_t=-\frac12\lambda_t'b_t^2\)。</li>
+  </ol>
+  <div class="box bg"><b>进阶：为什么说 \(w\) 是"在 \(\lambda\) 上的权重"</b>（Kingma &amp; Gao, 2023 的观点，论文引用了这个形式）<br>换元 \(d\lambda=\lambda_t'\,dt\)：\(\mathcal L_w=-\frac12\int_0^1 w_t\lambda_t'\,\mathbb E\lVert\epsilon_\Theta-\epsilon\rVert^2dt=\frac12\int_{-\infty}^{\infty}w(\lambda)\,\mathbb E\lVert\epsilon_\Theta-\epsilon\rVert^2d\lambda\)。也就是说，每种方法最终都等价于"在各个噪声强度 \(\lambda\) 上，对噪声预测误差按 \(w(\lambda)\) 加权"。这样就能把不同路径放在同一个横轴上比较，见精读 9 的图 2。</div>
+</section>
+
+<!-- ===================================================== 9 -->
+<section class="lesson" id="l9">
+  <div class="lesson-head"><span class="no">精读 9 · §3 Flow Trajectories（Eq. 13 到 17 + LDM-Linear）</span><h2>四种路径：RF、EDM、Cosine、LDM-Linear</h2><p class="goal">读完这节，你应该能说出每种方法的 \(a_t,b_t\)、网络输出什么、权重是什么，并推出 RF 的 \(w_t=\frac{t}{1-t}\)。</p></div>
+  <div class="orig"><span class="loc">原文 · §3 第 1 段 + Rectified Flow（p.3）</span><p>"In this work, we consider different variants of the above formalism … Rectified Flows (RFs) … define the forward process as straight paths between the data distribution and a standard normal distribution, i.e. \(z_t=(1-t)x_0+t\epsilon\), (13) and uses \(\mathcal L_{CFM}\) which then corresponds to \(w_t^{RF}=\frac{t}{1-t}\). The network output directly parameterizes the velocity \(v_\Theta\)."</p></div>
+  <details class="der" open><summary>推导 \(w_t^{RF}=\frac{t}{1-t}\)</summary><ol>
+    <li>\(\lambda_t=\log\frac{(1-t)^2}{t^2}=2\log\frac{1-t}{t}\)。</li>
+    <li>\(\lambda_t'=2\big(\frac{-1}{1-t}-\frac1t\big)=\frac{-2}{t(1-t)}\)。</li>
+    <li>\(w_t=-\frac12\lambda_t'b_t^2=-\frac12\cdot\frac{-2}{t(1-t)}\cdot t^2=\frac{t}{1-t}\)。</li>
+    <li>换成 \(\lambda\)：\(\frac{t}{1-t}=e^{-\lambda/2}\)。噪声越多（\(\lambda\) 越小）权重越大。</li>
+  </ol></details>
+  <ol class="read">
+    <li><span class="q">"uses \(\mathcal L_{CFM}\)"</span>：普通 RF 就是 CFM，\(t\) 均匀抽，不额外加权。</li>
+    <li><span class="q">"directly parameterizes the velocity"</span>：网络直接输出速度 \(v_\Theta\)，训练标签是 \(\epsilon-x_0\)。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §3 EDM（p.3）</span><p>"EDM (Karras et al., 2022) uses a forward process of the form \(z_t=x_0+b_t\epsilon\) (14) where \(b_t=\exp F_{\mathcal N}^{-1}(t\mid P_m,P_s^2)\) with \(F_{\mathcal N}^{-1}\) being the quantile function of the normal distribution with mean \(P_m\) and variance \(P_s^2\). Note that this choice results in \(\lambda_t\sim\mathcal N(-2P_m,(2P_s)^2)\) for \(t\sim\mathcal U(0,1)\) (15). The network is parameterized through an F-prediction … and the loss can be written as \(\mathcal L_{w_t^{EDM}}\) with \(w_t^{EDM}=\mathcal N(\lambda_t\mid-2P_m,(2P_s)^2)(e^{-\lambda_t}+0.5^2)\) (16)"</p></div>
+  <ol class="read">
+    <li><span class="q">"\(z_t=x_0+b_t\epsilon\)"</span>：图片不缩小（\(a_t\equiv1\)），只往上叠噪声。所以 \(t=1\) 时并不是纯噪声，而是噪声大到把图片淹没（图 1 里 EDM 的 \(b_t\) 冲出上界）。</li>
+    <li><span class="q">"quantile function"</span>：分位函数是累积分布函数的反函数：\(F^{-1}(0.5)=P_m\)，\(t\) 接近 0 或 1 时趋向 \(\mp\infty\)。</li>
+    <li><span class="q">"results in \(\lambda_t\sim\mathcal N(-2P_m,(2P_s)^2)\)"</span>：推导：\(a_t=1\)，所以 \(\lambda_t=-2\log b_t=-2F^{-1}(t)\)。\(t\) 均匀时 \(F^{-1}(t)\) 服从 \(\mathcal N(P_m,P_s^2)\)（逆变换采样），乘以 \(-2\) 就是 \(\mathcal N(-2P_m,(2P_s)^2)\)。所以 EDM 的 \(P_m,P_s\) 直接控制"训练时噪声强度的分布"：\(P_m\) 越大越偏向高噪声。</li>
+    <li><span class="q">"F-prediction"</span>：EDM 的网络输出是噪声和图片的一种按 \(\lambda\) 变化的组合，不必细究，统一形式里只看权重。</li>
+    <li><span class="q">"\((e^{-\lambda_t}+0.5^2)\)"</span>：0.5 是 EDM 假设的数据标准差 \(\sigma_{data}\)。前面的正态密度就是 Eq. 15 的抽样分布。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §3 Cosine（p.3）</span><p>"(Nichol &amp; Dhariwal, 2021) proposed a forward process of the form \(z_t=\cos(\frac\pi2t)x_0+\sin(\frac\pi2t)\epsilon\). (17) In combination with an \(\epsilon\)-parameterization and loss, this corresponds to a weighting \(w_t=\mathrm{sech}(\lambda_t/2)\). When combined with a v-prediction loss (Kingma &amp; Gao, 2023), the weighting is given by \(w_t=e^{-\lambda_t/2}\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"\(\cos(\frac\pi2t)x_0+\sin(\frac\pi2t)\epsilon\)"</span>：\(a_t^2+b_t^2=1\)，叫"方差保持"（variance preserving）：混合后的总方差不变。\(\lambda_t=2\log\cot(\frac\pi2t)\)。</li>
+    <li><span class="q">"\(\epsilon\)-parameterization and loss … \(\mathrm{sech}(\lambda_t/2)\)"</span>：网络预测噪声、损失就是 \(\lVert\epsilon_\Theta-\epsilon\rVert^2\)（不额外加权）。代进统一形式：\(-\frac12w_t\lambda_t'=1\)，\(w_t=\frac{-2}{\lambda_t'}\)。cosine 下 \(\lambda_t'=\frac{-2\pi}{\sin(\pi t)}\)，\(w_t=\frac{\sin(\pi t)}{\pi}\)，而 \(\mathrm{sech}(\lambda_t/2)=\frac{2}{\cot+\tan}=\sin(\pi t)\)，只差常数 \(\pi\)。</li>
+    <li><span class="q">"v-prediction … \(e^{-\lambda_t/2}\)"</span>：v 预测是让网络输出 \(a_t\epsilon-b_tx_0\)（Salimans &amp; Ho 提出），对应的权重是 \(e^{-\lambda/2}\)。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §3 (LDM-)Linear（p.4）</span><p>"LDM (Rombach et al., 2022) uses a modification of the DDPM schedule (Ho et al., 2020). Both are variance preserving schedules, i.e. \(b_t=\sqrt{1-a_t^2}\), and define \(a_t\) for discrete timesteps \(t=0,\dots,T-1\) in terms of diffusion coefficients \(\beta_t\) as \(a_t=(\prod_{s=0}^t(1-\beta_s))^{\frac12}\). For given boundary values \(\beta_0\) and \(\beta_{T-1}\), DDPM uses \(\beta_t=\beta_0+\frac{t}{T-1}(\beta_{T-1}-\beta_0)\) and LDM uses \(\beta_t=\big(\sqrt{\beta_0}+\frac{t}{T-1}(\sqrt{\beta_{T-1}}-\sqrt{\beta_0})\big)^2\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"variance preserving … \(b_t=\sqrt{1-a_t^2}\)"</span>：和 cosine 一样方差保持，只是 \(a_t\) 的曲线不同。</li>
+    <li><span class="q">"discrete timesteps … \(a_t=(\prod(1-\beta_s))^{1/2}\)"</span>：DDPM 是离散的 \(T\) 步（通常 1000 步），每一步把信号乘 \(\sqrt{1-\beta_s}\)，累乘起来就是 \(a_t\)。</li>
+    <li><span class="q">"DDPM uses … LDM uses …"</span>：DDPM 让 \(\beta\) 线性增长；LDM 让 \(\sqrt\beta\) 线性增长（再平方），即 SD 代码里的 "scaled linear"。eps/linear 就是 SD1、SDXL 的训练方式。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">动画 A · 每种方法的路径：很多对（图片，噪声）怎么一起变成噪声</div>
+    <div class="controls"><label>方法 <select id="o6-m"><option value="rf">RF（Eq. 13）</option><option value="epscos">eps/cos（Eq. 17，预测 ε）</option><option value="vcos">v/cos（Eq. 17，预测 v）</option><option value="epslin">eps/linear（LDM，预测 ε）</option><option value="vlin">v/linear（LDM，预测 v）</option><option value="edm">EDM(−1.2, 1.2)（Eq. 14 到 16）</option></select></label><button type="button" id="o6-play">播放</button><label>\(t\) <input type="range" id="o6-t" min="0.01" max="0.99" step="0.01" value="0.35"></label></div>
+    <p class="readout" id="o6-read"></p>
+    <canvas id="o6" width="720" height="340"></canvas>
+    <figcaption>一维玩具数据：图片 \(x_0\) 在 −3（粉）和 +3（蓝）附近各一半，噪声 \(\epsilon\sim\mathcal N(0,1)\)。左：40 对的轨迹 \(z_t=a_tx_0+b_t\epsilon\)，橙色是其中一对，竖虚线是当前 \(t\)。右：1600 对在当前 \(t\) 的分布。点"播放"，\(t\) 在 0 和 1 之间来回走。看点：RF 的每条轨迹是直线；cosine 和 LDM-Linear 是弯的（先保留图片、后段才快速变成噪声）；EDM 的图片不缩小，噪声越加越大，点会冲出画面（纵轴已放大到 ±14）。读数里给出这种方法下网络此刻要预测的量和统一形式里的权重 \(w\)。LDM-Linear 用的 \(\beta\) 是 SD1 代码里的数（论文未给）。</figcaption>
+  </figure>
+  <figure>
+    <div class="fig-title">图 2 · 把各方法的权重画在同一个横轴 \(\lambda\) 上（按 \(\lambda=0\) 处归一化，对数纵轴）</div>
+    <div class="checks" id="o2-checks"></div>
+    <div class="controls"><label>logit-normal \(m\) <input type="range" id="o2-m" min="-1" max="1" step="0.05" value="0"></label><label>\(s\) <input type="range" id="o2-s" min="0.2" max="2.2" step="0.05" value="1"></label></div>
+    <p class="readout" id="o2-read"></p>
+    <canvas id="o2" width="720" height="320"></canvas>
+    <figcaption>横轴 \(\lambda\)：左边噪声多，右边图片清楚。每条线是一种方法的 \(w(\lambda)\)，按 \(\lambda=0\) 时为 1 归一化（只看形状，整体倍数不影响最优解）。RF 是 \(e^{-\lambda/2}\)；RF+logit-normal 是 \(e^{-\lambda/2}\pi_{ln}(t(\lambda))\)（精读 10、11）；eps/cos 是 \(\mathrm{sech}(\lambda/2)\)；EDM 按 Eq. 16；eps/linear 按"均匀抽离散步、不加权"数值算出 \(-2/\lambda_t'\)，用的是图 1 同样的 \(\beta\) 假设。</figcaption>
+  </figure>
+  <div class="box sd3"><b>从图 2 能看出的事（我的分析，论文没有画这张图）：</b>① 普通 RF 的权重一路往高噪声端涨，中间没有任何"凸起"。② v/cos 的权重 \(e^{-\lambda/2}\) 和 RF 完全一样，但 Table 1 里 rf 是 5.67、v/cos 是 9.17，说明除了 \(\lambda\) 上的权重，路径本身（网络输入的尺度）和网络输出什么也会影响结果。③ logit-normal 在 \(\lambda=0\) 附近加了一个凸起，两边压下去，这就是"多练中间"。</div>
+</section>
+
+<!-- ===================================================== 10 -->
+<section class="lesson" id="l10">
+  <div class="lesson-head"><span class="no">精读 10 · §3.1 第 1 段 + Eq. 18</span><h2>中间最难；换抽样分布就是加权</h2><p class="goal">读完这段，你应该能解释"两端的最优预测是均值"这句话，并推出 Eq. 18。</p></div>
+  <div class="orig"><span class="loc">原文 · §3.1 第 1 段（p.4）</span><p>"The RF loss trains the velocity \(v_\Theta\) uniformly on all timesteps in \([0,1]\). Intuitively, however, the resulting velocity prediction target \(\epsilon-x_0\) is more difficult for \(t\) in the middle of \([0,1]\), since for \(t=0\), the optimal prediction is the mean of \(p_1\), and for \(t=1\) the optimal prediction is the mean of \(p_0\)."</p></div>
+  <ol class="read">
+    <li><span class="q">"trains … uniformly on all timesteps"</span>：普通 RF 里 \(t\sim\mathcal U(0,1)\)，每个时刻一样重要。</li>
+    <li><span class="q">"for \(t=0\), the optimal prediction is the mean of \(p_1\)"</span>：\(t=0\) 时 \(z=x_0\)，网络完全知道图片，未知的只有噪声 \(\epsilon\)。目标是 \(\epsilon-x_0\)，平方误差下最好的猜法是 \(\mathbb E[\epsilon]-x_0=-x_0\)，也就是"噪声猜成它的均值 0"。原文说"最优预测是 \(p_1\) 的均值"指的就是这一点：对未知部分只能猜均值。</li>
+    <li><span class="q">"for \(t=1\) the optimal prediction is the mean of \(p_0\)"</span>：\(t=1\) 时 \(z=\epsilon\)，噪声完全知道，未知的是图片，最好的猜法是 \(\epsilon-\mathbb E[x_0]\)，即把图片猜成数据的平均。</li>
+    <li><span class="q">"more difficult for \(t\) in the middle"</span>：两端都只要猜一个固定的平均值，函数很简单（接近线性）；中间图片和噪声混在一起，网络得判断"这到底是哪类图"，函数复杂。入门课第 7 课图 7 画出了这个形状变化。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Eq. 18（p.4）</span><p>"In general, changing the distribution over \(t\) from the commonly used uniform distribution \(\mathcal U(t)\) to a distribution with density \(\pi(t)\) is equivalent to a weighted loss \(\mathcal L_{w_t^\pi}\) with \(w_t^\pi=\frac{t}{1-t}\pi(t)\) (18). Thus, we aim to give more weight to intermediate timesteps by sampling them more frequently."</p></div>
+  <details class="der" open><summary>推导 Eq. 18</summary><ol>
+    <li>RF 在每个 \(t\) 上的损失记作 \(L(t)\)。均匀抽 \(t\)：总损失 \(\int_0^1 L(t)\,dt\)。按 \(\pi(t)\) 抽：\(\int_0^1\pi(t)L(t)\,dt\)。</li>
+    <li>后者等于"均匀抽，再乘权重 \(\pi(t)\)"。</li>
+    <li>RF 自己在统一形式里的权重是 \(\frac{t}{1-t}\)（精读 9），再乘 \(\pi(t)\)，就是 \(w_t^\pi=\frac{t}{1-t}\pi(t)\)。</li>
+  </ol></details>
+  <ol class="read">
+    <li><span class="q">"give more weight to intermediate timesteps by sampling them more frequently"</span>：为什么用"多抽"而不是"乘权重"：两者期望相同，但乘大权重会让个别样本的梯度很大、方差大；多抽则每个样本权重一样，训练更稳。论文没展开这一点，这是常见的理由。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 11 -->
+<section class="lesson" id="l11">
+  <div class="lesson-head"><span class="no">精读 11 · §3.1 Eq. 19 到 22 + Fig. 11 + 附录 B.4</span><h2>三种抽 \(t\) 的分布</h2><p class="goal">读完这段，你应该能推出 logit-normal 的密度、说明 mode 的参数范围从哪来，并推出 CosMap 的 Eq. 21、22。</p></div>
+  <div class="orig"><span class="loc">原文 · Logit-Normal Sampling，Eq. 19（p.4）</span><p>"One option for a distribution that puts more weight on intermediate steps is the logit-normal distribution … Its density, \(\pi_{ln}(t;m,s)=\frac{1}{s\sqrt{2\pi}}\frac{1}{t(1-t)}\exp\big(-\frac{(\mathrm{logit}(t)-m)^2}{2s^2}\big)\), (19) where \(\mathrm{logit}(t)=\log\frac{t}{1-t}\), has a location parameter, \(m\), and a scale parameter, \(s\). The location parameter enables us to bias the training timesteps towards either data \(p_0\) (negative \(m\)) or noise \(p_1\) (positive \(m\)). As shown in Figure 11, the scale parameters controls how wide the distribution is. In practice, we sample the random variable \(u\) from a normal distribution \(u\sim\mathcal N(u;m,s)\) and map it through the standard logistic function."</p></div>
+  <details class="der" open><summary>推导 Eq. 19（换元）</summary><ol>
+    <li>抽 \(u\sim\mathcal N(m,s^2)\)，令 \(t=\frac{1}{1+e^{-u}}\)（logistic 函数），则 \(u=\mathrm{logit}(t)\)。</li>
+    <li>密度换元：\(\pi(t)=p_u(\mathrm{logit}(t))\cdot\big|\frac{d\,\mathrm{logit}(t)}{dt}\big|\)。</li>
+    <li>\(\frac{d}{dt}\log\frac{t}{1-t}=\frac1t+\frac{1}{1-t}=\frac{1}{t(1-t)}\)。</li>
+    <li>代入正态密度即得 Eq. 19。</li>
+  </ol></details>
+  <ol class="read">
+    <li><span class="q">"towards either data \(p_0\) (negative \(m\)) or noise \(p_1\) (positive \(m\))"</span>：\(m<0\) 时 \(u\) 多为负，\(t\) 多小于 0.5，偏数据端；\(m>0\) 偏噪声端。</li>
+    <li><span class="q">"the scale parameters controls how wide"</span>：\(s\) 小 = 集中在 \(t=\mathrm{sigmoid}(m)\) 附近（\(m=0\) 时就是中间）；\(s\) 很大时，\(u\) 经常很大或很小，\(t\) 反而堆到两端。</li>
+    <li><span class="q">"In practice, we sample \(u\) … and map it through the standard logistic function"</span>：实现只有两行：抽正态，过 sigmoid。SD3 最后用 \(m=0,s=1\)（高分辨率时再加平移，见<a href="/writing/papers/sd3/scaling/#l5">第三部分精读 5</a>）。交互演示见 <a href="/writing/papers/sd3/primer/#l8">入门课第 8 课图 8</a>。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Mode Sampling with Heavy Tails，Eq. 20（p.4）</span><p>"The logit-normal density always vanishes at the endpoints 0 and 1. To study whether this has adverse effects on the performance, we also use a timestep sampling distribution with strictly positive density on \([0,1]\). For a scale parameter \(s\), we define \(f_{mode}(u;s)=1-u-s\cdot\big(\cos^2(\frac\pi2u)-1+u\big)\). (20) For \(-1\le s\le\frac{2}{\pi-2}\), this function is monotonic, and we can use it to sample from the implied density \(\pi_{mode}(t;s)=\big|\frac{d}{dt}f_{mode}^{-1}(t)\big|\). As seen in Figure 11, the scale parameter controls the degree to which either the midpoint (positive \(s\)) or the endpoints (negative \(s\)) are favored during sampling. This formulation also includes a uniform weighting \(\pi_{mode}(t;s=0)=\mathcal U(t)\) for \(s=0\), which has been used widely in previous works on Rectified Flows."</p></div>
+  <ol class="read">
+    <li><span class="q">"always vanishes at the endpoints"</span>：logit-normal 在 \(t=0\) 和 \(t=1\) 附近密度趋于 0，那两端几乎不被训练。作者担心这会有害，于是设计了一个两端密度始终为正的分布来对照。</li>
+    <li><span class="q">"\(f_{mode}(u;s)\)"</span>：做法是"均匀抽 \(u\)，再用 \(f_{mode}\) 变换成 \(t\)"。检查端点：\(u=0\) 时 \(t=1\)，\(u=1\) 时 \(t=0\)。\(s=0\) 时 \(t=1-u\)，还是均匀分布。</li>
+    <li><span class="q">"\(-1\le s\le\frac{2}{\pi-2}\) … monotonic"</span>：只有单调时，变换才是一一对应，才能定义密度。推导见下框。§5.1 里 mode 的 \(s\) 取在 \(-1\) 到 \(1.75\) 之间，应该就是这个原因（推测，论文没明说）。</li>
+    <li><span class="q">"midpoint (positive \(s\)) or the endpoints (negative \(s\))"</span>：\(s>0\) 偏中间，\(s<0\) 偏两端。</li>
+  </ol>
+  <details class="der" open><summary>推导：mode 的参数范围 \(-1\le s\le\frac{2}{\pi-2}\)</summary><ol>
+    <li>求导：\(f_{mode}'(u)=-1-s\big(-\tfrac\pi2\sin(\pi u)+1\big)=-(1+s)+\tfrac{s\pi}{2}\sin(\pi u)\)（用了 \(\frac{d}{du}\cos^2(\frac\pi2u)=-\frac\pi2\sin(\pi u)\)）。</li>
+    <li>要单调递减，需要对所有 \(u\) 都有 \(f'\le0\)。\(\sin(\pi u)\) 在 0 到 1 之间变化，所以只要两个极端都满足。</li>
+    <li>\(\sin=0\)：\(-(1+s)\le0\)，即 \(s\ge-1\)。</li>
+    <li>\(\sin=1\)：\(-(1+s)+\frac{s\pi}{2}\le0\)，即 \(s(\frac\pi2-1)\le1\)，\(s\le\frac{2}{\pi-2}\approx1.752\)。</li>
+  </ol></details>
+  <div class="orig"><span class="loc">原文 · CosMap，Eq. 21、22（p.4）</span><p>"Finally, we also consider the cosine schedule from Section 3 in the RF setting. In particular, we are looking for a mapping \(f:u\mapsto f(u)=t,\ u\in[0,1]\), such that the log-snr matches that of the cosine schedule: \(2\log\frac{\cos(\frac\pi2u)}{\sin(\frac\pi2u)}=2\log\frac{1-f(u)}{f(u)}\). Solving for \(f\), we obtain for \(u\sim\mathcal U(u)\) \(t=f(u)=1-\frac{1}{\tan(\frac\pi2u)+1}\), (21) from which we obtain the density \(\pi_{CosMap}(t)=\big|\frac{d}{dt}f^{-1}(t)\big|=\frac{2}{\pi-2\pi t+2\pi t^2}\). (22)"</p></div>
+  <details class="der" open><summary>推导 Eq. 21、22</summary><ol>
+    <li>目标：RF 路径不变，但让"抽到的 \(\lambda\)"的分布和 cosine 路径均匀抽 \(t\) 时一样。</li>
+    <li>令两边 log-SNR 相等：\(\frac{1-t}{t}=\cot(\frac\pi2u)\)，即 \(\frac1t=1+\cot\)，\(t=\frac{1}{1+\cot}=\frac{\tan}{\tan+1}=1-\frac{1}{\tan(\frac\pi2u)+1}\)。这是 Eq. 21。</li>
+    <li>反解：\(\tan(\frac\pi2u)=\frac{t}{1-t}\)，\(u=\frac2\pi\arctan\frac{t}{1-t}\)。</li>
+    <li>求导：\(\frac{du}{dt}=\frac2\pi\cdot\frac{1}{1+(\frac{t}{1-t})^2}\cdot\frac{1}{(1-t)^2}=\frac{2}{\pi\big((1-t)^2+t^2\big)}=\frac{2}{\pi-2\pi t+2\pi t^2}\)。这是 Eq. 22。</li>
+  </ol></details>
+  <figure>
+    <div class="fig-title">动画 B · 每种抽 \(t\) 的方式：从底层随机数 \(u\) 到 \(t\)</div>
+    <div class="controls"><label>方式 <select id="o7-s"><option value="uni">均匀（普通 rf，也是 mode 的 s=0）</option><option value="ln" selected>logit-normal（Eq. 19）</option><option value="mode">mode（Eq. 20）</option><option value="cos">CosMap（Eq. 21、22）</option></select></label>
+      <span id="o7-lnp"><label>\(m\) <input type="range" id="o7-m" min="-1" max="1" step="0.05" value="0"></label><label>\(s\) <input type="range" id="o7-sl" min="0.2" max="2.2" step="0.05" value="1"></label></span>
+      <span id="o7-mp" style="display:none"><label>mode \(s\) <input type="range" id="o7-ms" min="-1" max="1.75" step="0.01" value="1.29"></label></span>
+      <button type="button" id="o7-go">抽 3000 个</button><button type="button" id="o7-reset">清空</button></div>
+    <p class="readout" id="o7-read"></p>
+    <canvas id="o7" width="720" height="420"></canvas>
+    <figcaption>左上：横轴是底层随机数 \(u\)（logit-normal 抽正态，其余三种抽 0 到 1 的均匀数），绿线是把 \(u\) 变成 \(t\) 的函数。橙色小球从下面的 \(u\) 轴升到绿线上，再水平飞到右边，落进 \(t\) 的直方图（横向，纵轴就是 \(t\)）；蓝线是精确密度（Eq. 19、22；mode 用 \(1/|f'(u)|\) 数值算出）。下方是同一批 \(t\) 换算成 \(\lambda\) 后的分布，可以和精读 9 图 2 的横轴对照。看点：logit-normal 把小球集中到中间；mode 的 \(s>0\) 也偏中间，但两端始终有一点；CosMap 也偏中间，但比 logit-normal 平缓得多（密度在 \(t=0.5\) 是 \(4/\pi\approx1.27\)，两端是 \(2/\pi\approx0.64\)），因为它模仿的是 cosine 路径均匀抽 \(t\) 时的 \(\lambda\) 分布。</figcaption>
+  </figure>
+  <div class="box ref"><b>Fig. 11 和附录 B.4</b><ul><li>Fig. 11（p.22）左边画 mode 在不同 \(s\) 下的密度，右边画 logit-normal 在不同 \((m,s)\) 下的密度，就是上面几句话描述的形状。</li><li>附录 B.4（p.21）只是复述：logit-normal 采样器超过了均匀的 RF、EDM 和 LDM-Linear，详见 5.1。</li></ul></div>
+</section>
+
+<!-- ===================================================== 12 -->
+<section class="lesson" id="l12">
+  <div class="lesson-head"><span class="no">精读 12 · §5.1 第 1 段 + 附录 B.3 + §5.1.1 变体列表</span><h2>实验设置与 61 个变体</h2><p class="goal">读完这段，你应该能说出 5.1 控制了什么、为什么不能比 loss、用什么指标，以及 61 个变体怎么数出来。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.1 第 1 段（p.5）</span><p>"We aim to understand which of the approaches for simulation-free training of normalizing flows as in Equation 1 is the most efficient. To enable comparisons across different approaches, we control for the optimization algorithm, the model architecture, the dataset and samplers. In addition, the losses of different approaches are incomparable and also do not necessarily correlate with the quality of output samples; hence we need evaluation metrics that allow for a comparison between approaches."</p></div>
+  <ol class="read">
+    <li><span class="q">"which of the approaches … is the most efficient"</span>：问题：§3 那么多路径和权重，哪个最好。</li>
+    <li><span class="q">"we control for the optimization algorithm, the model architecture, the dataset and samplers"</span>：控制变量：优化器、网络结构、数据、采样器全部相同，只换训练方式。具体数值在附录 B.3。论文没写 5.1 用的具体网络结构。</li>
+    <li><span class="q">"the losses of different approaches are incomparable"</span>：不同方法的权重 \(w_t\) 不同，loss 的数值尺度完全不同（比如 RF 的权重在高噪声端很大），直接比 loss 没意义。</li>
+    <li><span class="q">"do not necessarily correlate with the quality of output samples"</span>：而且 loss 低不等于生成的图好，所以必须看生成图的指标。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.1 第 1 段（续，p.5）</span><p>"We train models on ImageNet and CC12M, and evaluate both the training and the EMA weights of the models during training using validation losses, CLIP scores, and FID under different sampler settings (different guidance scales and sampling steps). We calculate the FID on CLIP features as proposed by (Sauer et al., 2021). All metrics are evaluated on the COCO-2014 validation split. Full details on the training and sampling hyperparameters are provided in Appendix B.3."</p></div>
+  <ol class="read">
+    <li><span class="q">"ImageNet and CC12M"</span>：附录 B.3：ImageNet 本来是分类数据，作者给每张图配了 "a photo of a 〈class name〉" 的标题，当作简单的文生图数据；CC12M 是约一千二百万对网上抓取的图文，更接近真实文生图。</li>
+    <li><span class="q">"training and the EMA weights"</span>：EMA 是参数的指数滑动平均（B.3：每 100 个 batch 更新一次，衰减 0.99），通常生成质量更稳。两种都评。</li>
+    <li><span class="q">"CLIP scores, and FID"</span>：CLIP score 衡量图和文字对不对得上（越高越好）；FID 衡量生成图整体分布和真实图像不像（越低越好）。</li>
+    <li><span class="q">"FID on CLIP features"</span>：普通 FID 用 Inception 网络的特征，这里改用 CLIP 的图像特征。B.3：每种设置只生成 1000 张图。所以这里的 FID 数值（约 45 到 150）和其他论文里常见的个位数 FID 不可比。</li>
+    <li><span class="q">"different sampler settings (different guidance scales and sampling steps)"</span>：B.3：都用 Euler 法，6 种设置：50 步配 CFG 1.0、2.5、5.0，以及 CFG 5.0 配 5、10、25 步。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 B.3 "Optimization"（p.21）</span><p>"… we train all models using a global batch size of 1024 using the AdamW optimizer with a learning rate of \(10^{-4}\) and 1000 linear warmup steps. We use mixed-precision training and keep a copy of the model weights which gets updated every 100 training batches with an exponential moving average (EMA) using a decay factor of 0.99. For unconditional diffusion guidance, we set the outputs of each of the three text encoders independently to zero with a probability of 46.4%, such that we roughly train an unconditional model in 10% of all steps."</p></div>
+  <ol class="read">
+    <li>batch 1024、AdamW、学习率 \(10^{-4}\)、前 1000 步线性 warmup、混合精度。</li>
+    <li>每个文本编码器各自以 46.4% 置零，三个同时为零的概率 \(0.464^3\approx10\%\)，用于 CFG。</li>
+    <li>B.3 "Evaluation" 还有一句：loss 按 \(t\) 分层评估，"on eight equally spaced values in the time interval \([0,1]\)"，因为不同 \(t\) 的 loss 差得太多。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.1.1 变体列表（p.5 到 6）</span><p>"We train each of 61 different formulations on the two datasets. We include the following variants from Section 3: • Both \(\epsilon\)- and v-prediction loss with linear (eps/linear, v/linear) and cosine (eps/cos, v/cos) schedule. • RF loss with \(\pi_{mode}(t;s)\) (rf/mode(s)) with 7 values for \(s\) chosen uniformly between −1 and 1.75, and additionally for \(s=1.0\) and \(s=0\) which corresponds to uniform timestep sampling (rf/mode). • RF loss with \(\pi_{ln}(t;m,s)\) (rf/lognorm(m, s)) with 30 values for \((m,s)\) in the grid with \(m\) uniform between −1 and 1, and \(s\) uniform between 0.2 and 2.2. • RF loss with \(\pi_{CosMap}(t)\) (rf/cosmap). • EDM (edm(\(P_m,P_s\))) with 15 values for \(P_m\) chosen uniformly between −1.2 and 1.2 and \(P_s\) uniform between 0.6 and 1.8. Note that \(P_m,P_s=(-1.2,1.2)\) corresponds to the parameters in (Karras et al., 2022). • EDM with a schedule such that it matches the log-SNR weighting of rf (edm/rf) and one that matches the log-SNR weighting of v/cos (edm/cos)."</p></div>
+  <div class="tbl"><table class="num">
+    <thead><tr><th>变体族</th><th>个数</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>eps/linear、v/linear、eps/cos、v/cos</td><td>4</td><td>经典扩散：两种路径 × 两种网络输出</td></tr>
+      <tr><td>rf/mode(s)</td><td>9</td><td>\(s\) 在 −1 到 1.75 之间取 7 个，再加 \(s=1.0\) 和 \(s=0\)（\(s=0\) 就是普通 rf）</td></tr>
+      <tr><td>rf/lognorm(m, s)</td><td>30</td><td>\(m\in[-1,1]\)、\(s\in[0.2,2.2]\) 的网格</td></tr>
+      <tr><td>rf/cosmap</td><td>1</td><td>Eq. 21、22</td></tr>
+      <tr><td>edm(P_m, P_s)</td><td>15</td><td>\(P_m\in[-1.2,1.2]\)、\(P_s\in[0.6,1.8]\)；(−1.2, 1.2) 是 EDM 原论文的参数</td></tr>
+      <tr><td>edm/rf、edm/cos</td><td>2</td><td>EDM 路径，但 log-SNR 权重调成和 rf、v/cos 一样</td></tr>
+      <tr><td><b>合计</b></td><td><b>61</b></td><td></td></tr>
+    </tbody>
+  </table></div>
+  <ol class="read">
+    <li><span class="q">"edm/rf … edm/cos"</span>：这两个是很巧的对照：权重（在 \(\lambda\) 上的）和 rf、v/cos 相同，只有路径不同。如果它们和 rf、v/cos 表现差很多，说明路径本身有影响。Table 1 里 edm/rf 是 13.04，rf 是 5.67（精读 13）。</li>
+    <li><b>注意命名</b>：论文里的 "rf" 单独出现时，都指 \(s=0\) 的均匀抽样，也就是普通 RF。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 13 -->
+<section class="lesson" id="l13">
+  <div class="lesson-head"><span class="no">精读 13 · §5.1.1 排名方法 + Table 1 + 结论两段</span><h2>怎么排名，Table 1 怎么读</h2><p class="goal">读完这段，你应该能复述排名的全部步骤，读懂 Table 1 的三列，并说出原文的两个结论和一个提醒。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.1.1（p.6）</span><p>"For each run, we select the step with minimal validation loss when evaluated with EMA weights and then collect CLIP scores and FID obtained with 6 different sampler settings both with and without EMA weights. For all 24 combinations of sampler settings, EMA weights, and dataset choice, we rank the different formulations using a non-dominated sorting algorithm. For this, we repeatedly compute the variants that are Pareto optimal according to CLIP and FID scores, assign those variants the current iteration index, remove those variants, and continue with the remaining ones until all variants get ranked. Finally, we average those ranks over the 24 different control settings."</p></div>
+  <ol class="read">
+    <li><span class="q">"select the step with minimal validation loss when evaluated with EMA weights"</span>：每个变体训练过程中存了很多 checkpoint，选 EMA 权重验证 loss 最低的那一步。注意：这里 loss 只在<b>同一个变体内部</b>比，所以没有"loss 不可比"的问题。</li>
+    <li><span class="q">"24 combinations"</span>：6 种采样设置 × 用不用 EMA（2）× 两个数据集（2）= 24。</li>
+    <li><span class="q">"Pareto optimal according to CLIP and FID"</span>：Pareto 最优 = 没有别的变体在两个指标上同时不比它差且至少一个更好。</li>
+    <li><span class="q">"assign those variants the current iteration index, remove those variants, and continue"</span>：第一轮的 Pareto 最优全部记名次 1，拿掉；剩下的再找 Pareto 最优，记名次 2……直到排完。这就是非支配排序，图 4 用 Table 2 的真实数字演示。</li>
+    <li><span class="q">"average those ranks over the 24 different control settings"</span>：每个变体在 24 种情况下各有一个名次，取平均。每种情况下的名次是整数（第几层，同层并列）；对 24 种情况取平均后才出现小数。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.1.1（续）+ Table 1 图注</span><p>"We present the results in Tab. 1, where we only show the two best-performing variants for those variants that were evaluated with different hyperparameters. We also show ranks where we restrict the averaging over sampler settings with 5 steps and with 50 steps." / Table 1: "Global ranking of variants. For this ranking, we apply non-dominated sorting averaged over EMA and non-EMA weights, two datasets and different sampling settings."</p></div>
+  <ol class="read">
+    <li><span class="q">"only show the two best-performing variants for those variants that were evaluated with different hyperparameters"</span>：原文说有超参数的族只列最好的两个，但实际的表并不完全这样：rf/lognorm 列了 4 个，edm 列了 3 个（多出来的是 EDM 原参数 (−1.20, 1.20) 作为参照），rf/mode 列了 (1.29)、(1.75) 两个，外加 \(s=0\) 的普通 rf。所以 Table 1 共 16 行，不是 61 行。eps/cos 没出现在表里，论文没说明原因。</li>
+    <li><span class="q">"restrict the averaging over sampler settings with 5 steps and with 50 steps"</span>：论文没说具体平均了哪些情况。"5 steps" 只可能是 CFG 5.0、5 步这一种设置（乘 EMA 与否、两个数据集，共 4 种情况）。"50 steps" 有三种 CFG，但从数值看，这一列 16 个数全是 0.25 的倍数（如果平均 12 种情况，应该是 1/12 的倍数），所以很可能也只平均了某一种 50 步设置的 4 种情况（推测）。作为对照，"all" 列的数是 1/24 的倍数（1.54 = 37/24），正好对应 24 种情况。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 3 · Table 1：平均名次（越短越好）</div>
+    <div class="controls"><label>列 <select id="o4-c"><option value="0">all（24 种情况）</option><option value="1">5 steps</option><option value="2">50 steps</option></select></label></div>
+    <canvas id="o4" width="720" height="420"></canvas>
+    <figcaption>数字全部来自 Table 1。绿色是 RF 系列，蓝色是 eps/v 经典扩散，橙色是 EDM 系列。切换列，看 rf/lognorm(0.50, 0.60) 在 5 步和 50 步之间的大起大落。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · Table 1 之后第 1 段（p.6）</span><p>"We observe that rf/lognorm(0.00, 1.00) consistently achieves a good rank. It outperforms a rectified flow formulation with uniform timestep sampling (rf) and thus confirms our hypothesis that intermediate timesteps are more important. Among all the variants, only rectified flow formulations with modified timestep sampling perform better than the LDM-Linear (Rombach et al., 2022) formulation (eps/linear) used previously."</p></div>
+  <ol class="read">
+    <li><span class="q">"consistently achieves a good rank"</span>：rf/lognorm(0.00, 1.00) 三列分别是 1.54、1.25、1.50，全部靠前。"consistently" 是关键词：不是每列第一，但每列都好。</li>
+    <li><span class="q">"outperforms … rf and thus confirms our hypothesis"</span>：rf 是 5.67。唯一的区别是抽 \(t\) 的分布，所以这个对比直接支持"中间的 \(t\) 更重要"（§3.1）。</li>
+    <li><span class="q">"only rectified flow formulations with modified timestep sampling perform better than … eps/linear"</span>：eps/linear 是 2.88，排在它前面的五个全是 RF + 改过的抽样。普通 rf 和所有 EDM 变体都在它后面。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · Table 1 之后第 2 段（p.6）</span><p>"We also observe that some variants perform well in some settings but worse in others, e.g. rf/lognorm(0.50, 0.60) is the best-performing variant with 50 sampling steps but much worse (average rank 8.5) with 5 sampling steps."</p></div>
+  <ol class="read">
+    <li>rf/lognorm(0.50, 0.60)：50 步列 1.00（每种情况都在第一层），5 步列 8.50。\(m=0.5\) 偏向高噪声端、\(s=0.6\) 很窄。这提醒我们：选训练方式不能只看一种采样设置，这也是作者用 24 种情况平均的原因。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 14 -->
+<section class="lesson" id="l14">
+  <div class="lesson-head"><span class="no">精读 14 · §5.1.1 Table 2 段 + Fig. 3 段</span><h2>两个指标的取舍；少步数时的优势</h2><p class="goal">读完这段，你应该能读懂 Table 2 的两组、验证原文"第三名两次、第二名一次"的说法，并读懂 Fig. 3。</p></div>
+  <div class="orig"><span class="loc">原文 · Table 2 段（p.6）+ 图注</span><p>"We observe a similar behavior with respect to the two metrics in Tab. 2. The first group shows representative variants and their metrics on both datasets with 25 sampling steps. The next group shows the variants that achieve the best CLIP and FID scores. With the exception of rf/mode(1.75), these variants typically perform very well in one metric but relatively badly in the other. In contrast, we once again observe that rf/lognorm(0.00, 1.00) achieves good performance across metrics and datasets, where it obtains the third-best scores two out of four times and once the second-best performance." / Table 2: "Metrics for different variants. FID and CLIP scores of different variants with 25 sampling steps. We highlight the best, second best, and third best entries."</p></div>
+  <div class="tbl"><table class="num">
+    <thead><tr><th>Table 2（25 步）</th><th>ImageNet CLIP ↑</th><th>ImageNet FID ↓</th><th>CC12M CLIP ↑</th><th>CC12M FID ↓</th></tr></thead>
+    <tbody>
+      <tr><td>rf</td><td>0.247</td><td>49.70</td><td>0.217</td><td>94.90</td></tr>
+      <tr><td>edm(−1.20, 1.20)</td><td>0.236</td><td>63.12</td><td>0.200</td><td>116.60</td></tr>
+      <tr><td>eps/linear</td><td>0.245</td><td>48.42</td><td>0.222</td><td class="b3">90.34</td></tr>
+      <tr><td>v/cos</td><td>0.244</td><td>50.74</td><td>0.209</td><td>97.87</td></tr>
+      <tr><td>v/linear</td><td>0.246</td><td>51.68</td><td>0.217</td><td>100.76</td></tr>
+      <tr><td>rf/lognorm(0.50, 0.60)</td><td class="b1">0.256</td><td>80.41</td><td class="b2">0.233</td><td>120.84</td></tr>
+      <tr><td>rf/mode(1.75)</td><td class="b3">0.253</td><td class="b1">44.39</td><td>0.218</td><td>94.06</td></tr>
+      <tr><td>rf/lognorm(1.00, 0.60)</td><td class="b2">0.254</td><td>114.26</td><td class="b1">0.234</td><td>147.69</td></tr>
+      <tr><td>rf/lognorm(−0.50, 1.00)</td><td>0.248</td><td class="b2">45.64</td><td>0.219</td><td class="b1">89.70</td></tr>
+      <tr><td>rf/lognorm(0.00, 1.00)</td><td>0.250</td><td class="b3">45.78</td><td class="b3">0.224</td><td class="b2">89.91</td></tr>
+    </tbody>
+  </table></div>
+  <p class="readout">颜色：绿 = 该列第一，蓝 = 第二，橙 = 第三（我按数字标的，和原文的说法一致）。</p>
+  <ol class="read">
+    <li><span class="q">"The first group shows representative variants"</span>：前 5 行：rf、EDM 原参数、三个经典扩散，作为参照。</li>
+    <li><span class="q">"The next group shows the variants that achieve the best CLIP and FID scores"</span>：后 5 行：在某个指标上拿过前三的 RF 变体。</li>
+    <li><span class="q">"perform very well in one metric but relatively badly in the other"</span>：比如 rf/lognorm(1.00, 0.60)：CLIP 两个数据集第二、第一，但 FID 高达 114.26 和 147.69，是全表最差。这种偏向高噪声端的抽样，可能让模型更擅长整体构图和对上文字，但细节质量差（这是我的推测，论文没解释）。</li>
+    <li><span class="q">"With the exception of rf/mode(1.75)"</span>：它 ImageNet 上 FID 第一、CLIP 第三，两个指标都好（CC12M 上则不突出）。</li>
+    <li><span class="q">"third-best scores two out of four times and once the second-best"</span>：rf/lognorm(0.00, 1.00) 在四个格子里：ImageNet FID 第三、CC12M CLIP 第三、CC12M FID 第二。和原文吻合。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 4 · 用 Table 2 的真实数字演示非支配排序</div>
+    <div class="controls"><label>数据集 <select id="o5-d"><option value="0">ImageNet</option><option value="1">CC12M</option></select></label><button type="button" id="o5-next">剥下一层</button><button type="button" id="o5-reset">重来</button></div>
+    <p class="readout" id="o5-read"></p>
+    <canvas id="o5" width="720" height="360"></canvas>
+    <figcaption>横轴 FID（越左越好），纵轴 CLIP（越上越好），每个点是 Table 2 的一行。点"剥下一层"，按原文的规则一层层找 Pareto 最优。注意：真实的排名是在全部 61 个变体、24 种情况下做的；这里只用 Table 2 的 10 个变体、25 步这一种设置演示规则。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · Fig. 3 段（p.6）+ Fig. 3 图注（p.7）</span><p>"Finally, we illustrate the qualitative behavior of different formulations in Figure 3, where we use different colors for different groups of formulations (edm, rf, eps and v). Rectified flow formulations generally perform well and, compared to other formulations, their performance degrades less when reducing the number of sampling steps." / Fig. 3: "Rectified flows are sample efficient. Rectified Flows perform better then other formulations when sampling fewer steps. For 25 and more steps, only rf/lognorm(0.00, 1.00) remains competitive to eps/linear."</p></div>
+  <ol class="read">
+    <li><b>怎么读 Fig. 3</b>：横轴采样步数（5、10、25、50），纵轴 FID。粗线是图例里的六个代表：edm(−1.20, 1.20)、eps/linear、rf/lognorm(0.00, 1.00)、rf、v/cos、v/linear；细淡线（从图上看）是同组的其他变体，按组配色（edm 橙、rf 绿、eps 紫、v 粉）。</li>
+    <li><span class="q">"their performance degrades less when reducing the number of sampling steps"</span>：从右往左看（步数减少），绿色的 RF 线上升得最少；5 步时 RF 系列的 FID 明显低于其他组，eps/linear 和 EDM 涨得很高。这和"RF 路径更直，Euler 少走几步误差小"一致（精读 1）。</li>
+    <li><span class="q">"For 25 and more steps, only rf/lognorm(0.00, 1.00) remains competitive to eps/linear"</span>：步数多时 eps/linear 追了上来，只有 lognorm(0,1) 还能和它持平；rf 和 v 系列略差，EDM 明显差。所以 RF 的优势主要在少步数。</li>
+    <li><b>一个论文没讨论的细节</b>：图上几乎所有曲线从 25 步到 50 步 FID 反而上升。论文没解释。图注也没说这张图是哪个数据集、哪个 CFG 设置。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.2 第 1 句（p.6）</span><p>"Having found a formulation in the previous section that allows rectified flow models to not only compete with established diffusion formulations such as LDM-Linear or EDM, but even outperforms them, we now turn to the application of our formulation to high-resolution text-to-image synthesis."</p></div>
+  <ol class="read">
+    <li>这句话是作者对 5.1 的总结，也是第二部分的开头：RF + logit-normal 不仅能和 LDM-Linear、EDM 竞争，还超过了它们。接下来进入网络结构和表示（<a href="/writing/papers/sd3/architecture/">第二部分</a>）。</li>
+  </ol>
+</section>
+
+<!-- ===================================================== 15 -->
+<section class="lesson" id="l15">
+  <div class="lesson-head"><span class="no">总结</span><h2>第一个贡献讲了什么、证据多强</h2><p class="goal">合上论文，能用几句话讲清 §2、§3、§5.1 的逻辑链。</p></div>
+  <ol>
+    <li><b>§2 建立统一框架</b>：用 ODE 生成；规定前向路径 \(z_t=a_tx_0+b_t\epsilon\)；用条件速度构造边际速度；FM 算不出来，CFM 算得出来且等价；改写成噪声预测后，所有方法都是 \(\mathcal L_w\)：一条路径 + 一条权重曲线。</li>
+    <li><b>§3 把具体方法放进框架</b>：RF 是直线路径，权重 \(\frac{t}{1-t}\)；EDM、Cosine、LDM-Linear 各有自己的路径和权重。</li>
+    <li><b>§3.1 提出新东西</b>：中间的 \(t\) 最难；按 \(\pi(t)\) 抽 \(t\) 等价于乘 \(\pi(t)\) 的权重（Eq. 18）；提出 logit-normal、mode、CosMap 三种分布。</li>
+    <li><b>§5.1 验证</b>：61 个变体、2 个数据集、6 种采样设置、EMA 与否，用非支配排序在 CLIP 和 FID 上排名。rf/lognorm(0.00, 1.00) 一直靠前；普通 rf 不如 eps/linear；只有 RF + 改过的抽样超过 eps/linear；少步数时 RF 系列优势明显。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>① 小规模（batch 1024，数据是 ImageNet 和 CC12M）；论文没有报告重复训练或随机种子（推测每个变体只训一次），名次差 1 左右的变体未必真有差别。② FID 用 CLIP 特征、每次只 1000 张图，噪声较大。③ 大模型保留了 logit-normal(0, 1)，只是在 1024² 时按 §5.3.2 再做 \(\alpha=3\) 的时间步平移（几个平移值用人类偏好比较过）；61 种训练方式本身没有在大规模上重新比较。④ 有些变体的优劣依赖采样设置（lognorm(0.50, 0.60) 在 50 步第一、5 步 8.5），所以"最好"指的是"各种设置下平均最好"。</div>
+  <details class="quiz"><summary>最终自测：rf 和 rf/lognorm(0.00, 1.00) 的区别是什么？Table 1 的哪两个数说明这个区别有用？</summary><p>路径、网络输出、损失完全一样，只有训练时抽 \(t\) 的分布不同：rf 均匀抽，lognorm(0,1) 先抽标准正态再过 sigmoid，多抽中间的 \(t\)，等价于在 RF 权重上乘 \(\pi_{ln}(t)\)。Table 1 全局名次 rf 是 5.67，rf/lognorm(0.00, 1.00) 是 1.54。</p></details>
+</section>
+
+<footer>
+  <p>依据：Esser et al., "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis", ICML 2024（<a href="https://arxiv.org/abs/2403.03206v1">arXiv 2403.03206v1</a>）§1、§2、§3、§5.1、Table 1、Table 2、Fig. 3、Fig. 11 与附录 B.1、B.3、B.4；Lipman et al., "Flow Matching for Generative Modeling"（ICLR 2023）；Kingma &amp; Gao, "Understanding Diffusion Objectives as the ELBO with Simple Data Augmentation"（NeurIPS 2023）。引文为论文原句的节选。图 3、图 4 和表格的数字来自论文；图 1、图 2 按论文公式计算，其中 LDM-Linear 的 \(\beta\) 取值是 SD1 代码里的数（论文未给）。</p>
+  <p>入门课：<a href="/writing/papers/sd3/primer/">从零读懂 Flow Matching</a> · 下一部分：<a href="/writing/papers/sd3/architecture/">精读 SD3：模型结构</a></p>
+</footer>
+</main>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
+<script>
+(function(){
+"use strict";
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+function ctx(id){const c=$(id);const r=window.devicePixelRatio||1;if(!c._w){c._w=c.width;c._h=c.height;}const W=Math.round(c.clientWidth||c._w),H=Math.round(c._h*Math.max(0.72,Math.min(1,W/c._w)));if(c._cw!==W||c._ch!==H){c._cw=W;c._ch=H;c.width=W*r;c.height=H*r;c.style.height=H+'px';}const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.W=W;x.H=H;x.font='12px '+C('--f-mono');return x;}
+// seeded rng
+let seed=12345;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const SD=0.4;const dataSample=()=>(rnd()<0.5?-3:3)+SD*gauss();
+const npdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+// exact marginal RF velocity for the toy: x0 ~ 0.5N(-3,SD^2)+0.5N(3,SD^2), eps~N(0,1), z=(1-t)x0+t eps ; u = E[eps - x0 | z]
+function uMarg(z,t){let num=0,den=0;for(const mu of [-3,3]){const m=(1-t)*mu, v=(1-t)*(1-t)*SD*SD+t*t, s=Math.sqrt(v);const w=npdf(z,m,s);
+  const ex0=mu+(1-t)*SD*SD/v*(z-m), eeps=t/v*(z-m);num+=w*(eeps-ex0);den+=w;}return den>0?num/den:0;}
+function axes(x,o){ // o: {L,R,T,B,xmin,xmax,ymin,ymax,xt:[...],yt:[...],xl,yl}
+  const pw=x.W-o.L-o.R,ph=x.H-o.T-o.B;const X=v=>o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y=v=>o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');x.lineWidth=1;
+  (o.yt||[]).forEach(v=>{x.beginPath();x.moveTo(o.L,Y(v));x.lineTo(o.L+pw,Y(v));x.stroke();x.fillText(String(v),4,Y(v)+4);});
+  (o.xt||[]).forEach(v=>{x.fillText(String(v),X(v)-8,x.H-o.B+16);});
+  if(o.xl)x.fillText(o.xl,o.L+pw-x.measureText(o.xl).width,o.T+ph-6);
+  if(o.yl)x.fillText(o.yl,o.L+4,o.T-2>10?o.T-2:12);
+  return {X,Y,pw,ph};
+}
+function arrow(x,x1,y1,x2,y2,col,w){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w||2;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();const a=Math.atan2(y2-y1,x2-x1),h=Math.min(8,Math.hypot(x2-x1,y2-y1)*0.5);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-h*Math.cos(a-0.45),y2-h*Math.sin(a-0.45));x.lineTo(x2-h*Math.cos(a+0.45),y2-h*Math.sin(a+0.45));x.closePath();x.fill();}
+const anims={};function loop(name,step){if(anims[name])cancelAnimationFrame(anims[name]);const f=()=>{if(step()!==false)anims[name]=requestAnimationFrame(f);else anims[name]=0;};anims[name]=requestAnimationFrame(f);}
+
+function rr(x,X,Y,W,H,r,fill,stroke){x.beginPath();x.roundRect?x.roundRect(X,Y,W,H,r):x.rect(X,Y,W,H);if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=1.2;x.stroke();}}
+function label(x,t,X,Y,col,align){x.fillStyle=col||C('--heading');x.textAlign=align||'left';x.fillText(t,X,Y);x.textAlign='left';}
+function ctxN(id,hN){const c=$(id);if(!c._h0){c._w=c.width;c._h0=c.height;}c._h=(c.clientWidth||c._w)<560?hN:c._h0;return ctx(id);}
+function mkChecks(box,items,on){items.forEach((it,i)=>{const l=document.createElement('label');const c=document.createElement('input');c.type='checkbox';c.checked=on[i];c.dataset.i=i;l.appendChild(c);l.appendChild(document.createTextNode(' '+it));$(box).appendChild(l);});return ()=>[...$(box).querySelectorAll('input')].map(c=>c.checked);}
+function sub(o,W,H,ox,oy){const pw=W-o.L-o.R,ph=H-o.T-o.B;return {X:v=>ox+o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y:v=>oy+o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin)),pw,ph};}
+// inverse normal CDF (Acklam)
+function ndtri(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  q=p-0.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+// LDM linear schedule (SD1 values, assumption)
+const LDM=(()=>{const T=1000,b0=0.00085,b1=0.012;const a=[];let prod=1;for(let i=0;i<T;i++){const s=Math.sqrt(b0)+i/(T-1)*(Math.sqrt(b1)-Math.sqrt(b0));const beta=s*s;prod*=1-beta;a.push(Math.sqrt(prod));}return a;})();
+function path(name,t){if(name==='rf')return [1-t,t];if(name==='cos')return [Math.cos(Math.PI*t/2),Math.sin(Math.PI*t/2)];
+  if(name==='ldm'){const i=Math.min(999,Math.max(0,Math.round(t*999)));const a=LDM[i];return [a,Math.sqrt(1-a*a)];}
+  if(name==='edm'){return [1,Math.exp(ndtri(Math.min(0.9999,Math.max(1e-4,t)))*1.2-1.2)];}}
+const lam=(ab)=>Math.log(ab[0]*ab[0]/(ab[1]*ab[1]));
+
+/* ---------- O1 paths ---------- */
+function drawO1(){const x=ctxN('o1',560);x.clearRect(0,0,x.W,x.H);const p=$('o1-p').value,t=+$('o1-t').value,nar=x.W<560;
+  const hh=nar?x.H/2:x.H,w1=nar?x.W:x.W/2;
+  const A=sub({L:34,R:12,T:18,B:24,xmin:0,xmax:1,ymin:0,ymax:3},w1,hh,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[0,1,2,3].forEach(v=>{x.beginPath();x.moveTo(A.X(0),A.Y(v));x.lineTo(A.X(1),A.Y(v));x.stroke();x.fillText(String(v),6,A.Y(v)+4);});[0,0.5,1].forEach(v=>x.fillText(String(v),A.X(v)-6,hh-6));
+  const curve=(f,col,S,dash)=>{x.strokeStyle=col;x.lineWidth=2.2;x.setLineDash(dash||[]);x.beginPath();let st=false;for(let i=1;i<200;i++){const tt=i/200;const v=f(tt);if(!isFinite(v)||v<S.ymin||v>S.ymax){st=false;continue;}st?x.lineTo(S.Xf(tt),S.Yf(v)):x.moveTo(S.Xf(tt),S.Yf(v));st=true;}x.stroke();x.setLineDash([]);};
+  const SA={Xf:A.X,Yf:A.Y,ymin:0,ymax:3};curve(tt=>path(p,tt)[0],C('--blue'),SA);curve(tt=>path(p,tt)[1],C('--pink'),SA);
+  label(x,'a_t',A.X(0.02)+4,A.Y(2.8),C('--blue'));label(x,'b_t',A.X(0.02)+36,A.Y(2.8),C('--pink'));
+  x.strokeStyle=C('--heading');x.setLineDash([3,3]);x.beginPath();x.moveTo(A.X(t),A.Y(0));x.lineTo(A.X(t),A.Y(3));x.stroke();x.setLineDash([]);
+  const B=sub({L:40,R:12,T:18,B:24,xmin:0,xmax:1,ymin:-15,ymax:15},nar?x.W:x.W-w1,hh,nar?0:w1,nar?hh:0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[-15,-5,0,5,15].forEach(v=>{x.beginPath();x.moveTo(B.X(0),B.Y(v));x.lineTo(B.X(1),B.Y(v));x.stroke();x.fillText(String(v),B.X(0)-34,B.Y(v)+4);});[0,0.5,1].forEach(v=>x.fillText(String(v),B.X(v)-6,(nar?2*hh:hh)-6));
+  label(x,'λ_t',B.X(0)+4,B.Y(13),C('--muted'));
+  const SB={Xf:B.X,Yf:B.Y,ymin:-15,ymax:15};['rf','cos','ldm','edm'].forEach(q=>{if(q!==p)curve(tt=>lam(path(q,tt)),C('--line-strong'),SB,[4,3]);});curve(tt=>lam(path(p,tt)),C('--green'),SB);
+  x.strokeStyle=C('--heading');x.setLineDash([3,3]);x.beginPath();x.moveTo(B.X(t),B.Y(-15));x.lineTo(B.X(t),B.Y(15));x.stroke();x.setLineDash([]);
+  const ab=path(p,t);$('o1-read').textContent=`t=${t.toFixed(2)}：a_t=${ab[0].toFixed(3)}，b_t=${ab[1].toFixed(3)}，λ_t=${lam(ab).toFixed(2)}（灰虚线是其他三种路径的 λ_t）`;}
+$('o1-p').onchange=drawO1;$('o1-t').oninput=drawO1;
+
+/* ---------- O2 weights in lambda ---------- */
+const O2N=['RF（= v/cos）','RF + logit-normal','eps/cos','EDM(−1.2, 1.2)','EDM(0, 0.6)','eps/linear'];const o2get=mkChecks('o2-checks',O2N,[true,true,true,true,false,true]);
+const npd=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+const LDMw=(()=>{const L=LDM.map(a=>Math.log(a*a/(1-a*a)));const pts=[];for(let i=1;i<998;i++){const dl=(L[i+1]-L[i-1])/2;pts.push([L[i],-1/dl]);}return pts;})();
+function drawO2(){const x=ctx('o2');x.clearRect(0,0,x.W,x.H);const on=o2get(),m=+$('o2-m').value,s=+$('o2-s').value;
+  const o={L:46,R:12,T:16,B:28,xmin:-10,xmax:10,ymin:-3,ymax:3};const S=sub(o,x.W,x.H,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[-3,-2,-1,0,1,2,3].forEach(v=>{x.beginPath();x.moveTo(S.X(-10),S.Y(v));x.lineTo(S.X(10),S.Y(v));x.stroke();x.fillText(v===0?'1':'1e'+v,4,S.Y(v)+4);});[-10,-5,0,5,10].forEach(v=>x.fillText(String(v),S.X(v)-8,x.H-8));
+  label(x,'← 噪声多    λ    图片清楚 →',S.X(0),S.Y(-3)-6,C('--muted'),'center');
+  const tl=l=>1/(1+Math.exp(l/2));
+  const F=[l=>Math.exp(-l/2),l=>{const t=tl(l);return Math.exp(-l/2)*npd(Math.log(t/(1-t)),m,s)/(t*(1-t));},l=>2/(Math.exp(l/2)+Math.exp(-l/2)),l=>npd(l,2.4,2.4)*(Math.exp(-l)+0.25),l=>npd(l,0,1.2)*(Math.exp(-l)+0.25),null];
+  const cols=[C('--green'),C('--blue'),C('--accent'),C('--orange'),C('--pink'),C('--muted')];
+  F.forEach((f,k)=>{if(!on[k])return;x.strokeStyle=cols[k];x.lineWidth=2.2;x.beginPath();let st=false;
+    if(f){const z=f(0);for(let i=0;i<=400;i++){const l=-10+i/20;const v=Math.log10(f(l)/z);if(!isFinite(v)||v<-3||v>3){st=false;continue;}st?x.lineTo(S.X(l),S.Y(v)):x.moveTo(S.X(l),S.Y(v));st=true;}}
+    else{let z=1;let best=1e9;LDMw.forEach(p=>{if(Math.abs(p[0])<best){best=Math.abs(p[0]);z=p[1];}});LDMw.forEach(p=>{if(p[0]<-10||p[0]>10)return;const v=Math.log10(p[1]/z);if(v<-3||v>3){st=false;return;}st?x.lineTo(S.X(p[0]),S.Y(v)):x.moveTo(S.X(p[0]),S.Y(v));st=true;});}
+    x.stroke();});
+  let ly=o.T+12;O2N.forEach((n,k)=>{if(!on[k])return;x.fillStyle=cols[k];x.fillRect(x.W-160,ly-9,10,10);label(x,n,x.W-144,ly,C('--heading'));ly+=17;});
+  $('o2-read').textContent=`logit-normal(m=${m.toFixed(2)}, s=${s.toFixed(2)})：在 λ ≈ ${(-2*m).toFixed(1)} 附近加一个凸起（m 越大，凸起越往噪声多的一侧）`;}
+$('o2-checks').onchange=drawO2;$('o2-m').oninput=drawO2;$('o2-s').oninput=drawO2;
+
+/* ---------- O4 Table 1 ---------- */
+const T1=[['rf/lognorm(0.00, 1.00)',1.54,1.25,1.50,'rf'],['rf/lognorm(1.00, 0.60)',2.08,3.50,2.00,'rf'],['rf/lognorm(0.50, 0.60)',2.71,8.50,1.00,'rf'],['rf/mode(1.29)',2.75,3.25,3.00,'rf'],['rf/lognorm(0.50, 1.00)',2.83,1.50,2.50,'rf'],['eps/linear',2.88,4.25,2.75,'ev'],['rf/mode(1.75)',3.33,2.75,2.75,'rf'],['rf/cosmap',4.13,3.75,4.00,'rf'],['edm(0.00, 0.60)',5.63,13.25,3.25,'edm'],['rf',5.67,6.50,5.75,'rf'],['v/linear',6.83,5.75,7.75,'ev'],['edm(0.60, 1.20)',9.00,13.00,9.00,'edm'],['v/cos',9.17,12.25,8.75,'ev'],['edm/cos',11.04,14.25,11.25,'edm'],['edm/rf',13.04,15.25,13.25,'edm'],['edm(-1.20, 1.20)',15.58,20.25,15.00,'edm']];
+function drawO4(){const x=ctxN('o4',560);x.clearRect(0,0,x.W,x.H);const c=+$('o4-c').value+1;const nar=x.W<560;x.font=(nar?'10px ':'12px ')+C('--f-mono');
+  const L=nar?150:180,bw=x.W-L-50,rh=(x.H-8)/T1.length,mx=21;const col={rf:C('--green'),ev:C('--blue'),edm:C('--orange')};
+  T1.forEach((r,i)=>{const y=4+i*rh;label(x,r[0],L-8,y+rh*0.68,C('--heading'),'right');rr(x,L,y+rh*0.15,bw*r[c]/mx,rh*0.7,2,col[r[4]]);label(x,r[c].toFixed(2),L+bw*r[c]/mx+5,y+rh*0.68,C('--heading'));});x.font='12px '+C('--f-mono');}
+$('o4-c').onchange=drawO4;
+
+/* ---------- O5 Table 2 non-dominated sorting ---------- */
+const T2=[['rf',.247,49.70,.217,94.90],['edm(-1.2,1.2)',.236,63.12,.200,116.60],['eps/linear',.245,48.42,.222,90.34],['v/cos',.244,50.74,.209,97.87],['v/linear',.246,51.68,.217,100.76],['lognorm(0.5,0.6)',.256,80.41,.233,120.84],['mode(1.75)',.253,44.39,.218,94.06],['lognorm(1,0.6)',.254,114.26,.234,147.69],['lognorm(-0.5,1)',.248,45.64,.219,89.70],['lognorm(0,1)',.250,45.78,.224,89.91]];
+let o5k=0;
+function ranks(d){const P=T2.map(r=>({n:r[0],clip:r[1+2*d],fid:r[2+2*d]}));const R={},left=P.slice();let k=1;while(left.length){const fr=left.filter(a=>!left.some(b=>b!==a&&b.fid<=a.fid&&b.clip>=a.clip&&(b.fid<a.fid||b.clip>a.clip)));fr.forEach(a=>{R[a.n]=k;left.splice(left.indexOf(a),1);});k++;}return {P,R,max:k-1};}
+function drawO5(){const x=ctxN('o5',520);x.clearRect(0,0,x.W,x.H);const d=+$('o5-d').value;const {P,R,max}=ranks(d);
+  const xs=P.map(p=>p.fid),ys=P.map(p=>p.clip);const o={L:50,R:16,T:16,B:30,xmin:Math.floor(Math.min(...xs)/10)*10-5,xmax:Math.ceil(Math.max(...xs)/10)*10+5,ymin:Math.min(...ys)-0.003,ymax:Math.max(...ys)+0.003};const S=sub(o,x.W,x.H,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');for(let v=o.xmin+5;v<o.xmax;v+=20){x.fillText(String(v),S.X(v)-8,x.H-10);}for(let i=0;i<=4;i++){const v=o.ymin+(o.ymax-o.ymin)*i/4;x.beginPath();x.moveTo(S.X(o.xmin),S.Y(v));x.lineTo(S.X(o.xmax),S.Y(v));x.stroke();x.fillText(v.toFixed(3),2,S.Y(v)+4);}
+  label(x,'FID（越左越好）',S.X(o.xmax)-6,o.T+10,C('--muted'),'right');label(x,'CLIP ↑',o.L+4,o.T+10,C('--muted'));
+  const cols=[C('--green'),C('--blue'),C('--orange'),C('--pink'),C('--accent'),C('--muted')];
+  for(let k=1;k<=o5k;k++){const fr=P.filter(p=>R[p.n]===k).sort((a,b)=>a.fid-b.fid);x.strokeStyle=cols[Math.min(k-1,5)];x.lineWidth=1.5;x.setLineDash([4,3]);x.beginPath();fr.forEach((p,i)=>i?x.lineTo(S.X(p.fid),S.Y(p.clip)):x.moveTo(S.X(p.fid),S.Y(p.clip)));x.stroke();x.setLineDash([]);}
+  x.font=(x.W<560?'10px ':'11px ')+C('--f-mono');
+  const boxes=[];P.forEach(p=>{const k=R[p.n],on=k<=o5k;x.fillStyle=on?cols[Math.min(k-1,5)]:C('--line-strong');x.beginPath();x.arc(S.X(p.fid),S.Y(p.clip),6,0,7);x.fill();boxes.push([S.X(p.fid)-6,S.Y(p.clip)-6,12,12]);});
+  const hit=(b)=>boxes.some(q=>b[0]<q[0]+q[2]&&b[0]+b[2]>q[0]&&b[1]<q[1]+q[3]&&b[1]+b[3]>q[1]);
+  P.slice().sort((a,b)=>b.clip-a.clip).forEach(p=>{const k=R[p.n],on=k<=o5k;const t=p.n+(on?' ('+k+')':'');const w=x.measureText(t).width,h=12,px=S.X(p.fid),py=S.Y(p.clip);
+    const cand=[[px+9,py-14],[px+9,py+2],[px-9-w,py-14],[px-9-w,py+2],[px+9,py-28],[px-9-w,py+16],[px+9,py+16],[px-9-w,py-28]];
+    let c=cand.find(c=>c[0]>=0&&c[0]+w<=x.W&&!hit([c[0],c[1],w,h]))||cand[0];boxes.push([c[0],c[1],w,h]);label(x,t,c[0],c[1]+10,C('--heading'));});
+  x.font='12px '+C('--f-mono');
+  $('o5-read').textContent=o5k===0?'先看全部 10 个点':o5k>=max?`排完了，共 ${max} 层：括号里是名次`:`第 ${o5k} 层：剩下的点里，没有别的点在 CLIP 和 FID 上同时不差于它`;}
+$('o5-d').onchange=()=>{o5k=0;drawO5();};$('o5-next').onclick=()=>{o5k=Math.min(ranks(+$('o5-d').value).max,o5k+1);drawO5();};$('o5-reset').onclick=()=>{o5k=0;drawO5();};
+
+const L=(a,b,u)=>a+(b-a)*u;
+/* ---------- O6 path animation per method ---------- */
+const O6M={rf:{p:'rf',out:'v',name:'RF'},epscos:{p:'cos',out:'eps',name:'eps/cos'},vcos:{p:'cos',out:'vp',name:'v/cos'},epslin:{p:'ldm',out:'eps',name:'eps/linear'},vlin:{p:'ldm',out:'vp',name:'v/linear'},edm:{p:'edm',out:'F',name:'edm(−1.2, 1.2)'}};
+const O6pairs=(()=>{let s=2024;const r=()=>{s=(s*16807)%2147483647;return s/2147483647;};const g=()=>{let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};const a=[];for(let i=0;i<1600;i++)a.push([(r()<0.5?-3:3)+0.4*g(),g()]);return a;})();
+let o6t=0.35,o6play=false,o6dir=1;
+function o6w(m,t){const ab=path(O6M[m].p,t),l=lam(ab);if(m==='rf')return t/(1-t);if(m==='epscos')return 2/(Math.exp(l/2)+Math.exp(-l/2));if(m==='vcos'||m==='vlin')return Math.exp(-l/2);if(m==='edm')return npd(l,2.4,2.4)*(Math.exp(-l)+0.25);if(m==='epslin'){const d=1e-3,l2=lam(path('ldm',Math.min(0.999,t+d))),l1=lam(path('ldm',Math.max(0.001,t-d)));return -2/((l2-l1)/(2*d));}}
+function drawO6(){const x=ctxN('o6',620);x.clearRect(0,0,x.W,x.H);const m=$('o6-m').value,M=O6M[m],t=o6t,nar=x.W<560;
+  const ymax=M.p==='edm'?14:6;const wL=nar?x.W:x.W*0.6,hT=nar?x.H*0.55:x.H;
+  const A=sub({L:36,R:10,T:20,B:26,xmin:0,xmax:1,ymin:-ymax,ymax:ymax},wL,hT,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[-ymax,-ymax/2,0,ymax/2,ymax].forEach(v=>{x.beginPath();x.moveTo(A.X(0),A.Y(v));x.lineTo(A.X(1),A.Y(v));x.stroke();x.fillText(String(v),4,A.Y(v)+4);});[0,0.5,1].forEach(v=>x.fillText(String(v),A.X(v)-6,hT-6));
+  label(x,'每一对的轨迹 z_t（横轴 t：左数据，右噪声）',A.X(0)+4,12,C('--muted'));
+  for(let i=0;i<40;i++){const [x0,e]=O6pairs[i];x.strokeStyle=x0<0?C('--pink'):C('--blue');x.globalAlpha=0.35;x.lineWidth=1;x.beginPath();let st=false;for(let k=0;k<=80;k++){const tt=0.002+0.996*k/80;const ab=path(M.p,tt);const z=ab[0]*x0+ab[1]*e;if(Math.abs(z)>ymax){st=false;continue;}st?x.lineTo(A.X(tt),A.Y(z)):x.moveTo(A.X(tt),A.Y(z));st=true;}x.stroke();}x.globalAlpha=1;
+  const [hx0,he]=O6pairs[3];x.strokeStyle=C('--orange');x.lineWidth=2.6;x.beginPath();let st=false;for(let k=0;k<=120;k++){const tt=0.002+0.996*k/120;const ab=path(M.p,tt);const z=ab[0]*hx0+ab[1]*he;if(Math.abs(z)>ymax){st=false;continue;}st?x.lineTo(A.X(tt),A.Y(z)):x.moveTo(A.X(tt),A.Y(z));st=true;}x.stroke();
+  x.strokeStyle=C('--heading');x.setLineDash([3,3]);x.lineWidth=1;x.beginPath();x.moveTo(A.X(t),A.Y(-ymax));x.lineTo(A.X(t),A.Y(ymax));x.stroke();x.setLineDash([]);
+  const ab=path(M.p,t),zh=ab[0]*hx0+ab[1]*he;if(Math.abs(zh)<=ymax){x.fillStyle=C('--orange');x.beginPath();x.arc(A.X(t),A.Y(zh),6,0,7);x.fill();}
+  // histogram
+  const B=sub({L:nar?36:14,R:12,T:20,B:26,xmin:0,xmax:1,ymin:-ymax,ymax:ymax},nar?x.W:x.W-wL,nar?x.H-hT:hT,nar?0:wL,nar?hT:0);
+  const nb=48,bins=new Array(nb).fill(0);let out=0;O6pairs.forEach(([x0,e])=>{const z=ab[0]*x0+ab[1]*e;const b=Math.floor((z+ymax)/(2*ymax)*nb);if(b>=0&&b<nb)bins[b]++;else out++;});const mx=Math.max(...bins,1);
+  label(x,`t=${t.toFixed(2)} 时 z_t 的分布`,B.X(0)+4,(nar?hT:0)+12,C('--muted'));
+  bins.forEach((c,i)=>{const y0=B.Y(-ymax+(i+1)*2*ymax/nb),y1=B.Y(-ymax+i*2*ymax/nb);x.fillStyle=C('--accent');x.globalAlpha=0.6;x.fillRect(B.X(0),y0,(B.X(1)-B.X(0))*c/mx,y1-y0-0.5);});x.globalAlpha=1;
+  if(out>0)label(x,`${out} 个点超出画面`,B.X(0)+4,B.Y(-ymax)-4,C('--orange'));
+  // readout
+  const lm=lam(ab),eps=he,x0=hx0;let tgt,tname;
+  if(M.out==='v'){tgt=eps-x0;tname='速度 ε − x₀';}else if(M.out==='eps'){tgt=eps;tname='噪声 ε';}else if(M.out==='vp'){tgt=ab[0]*eps-ab[1]*x0;tname='v = a_t ε − b_t x₀';}else{tgt=NaN;tname='F（ε 与 x₀ 的组合，见 EDM）';}
+  $('o6-read').textContent=`${M.name} · t=${t.toFixed(2)} · a_t=${ab[0].toFixed(3)}，b_t=${ab[1].toFixed(3)}，λ_t=${lm.toFixed(2)} · 橙色这一对：x₀=${x0.toFixed(2)}，ε=${eps.toFixed(2)}，z_t=${zh.toFixed(2)} · 网络要预测 ${tname}${isFinite(tgt)?' = '+tgt.toFixed(2):''} · 统一形式的权重 w=${o6w(m,t).toPrecision(3)}`;
+  $('o6-t').value=t;}
+$('o6-m').onchange=drawO6;$('o6-t').oninput=()=>{o6t=+$('o6-t').value;drawO6();};
+$('o6-play').onclick=()=>{o6play=!o6play;$('o6-play').textContent=o6play?'暂停':'播放';if(!o6play)return;if(reduce){o6t=0.99;drawO6();o6play=false;$('o6-play').textContent='播放';return;}loop('o6',()=>{if(!o6play)return false;o6t+=0.004*o6dir;if(o6t>0.99){o6t=0.99;o6dir=-1;}if(o6t<0.01){o6t=0.01;o6dir=1;}drawO6();});};
+
+/* ---------- O7 timestep sampler animation ---------- */
+const sig=u=>1/(1+Math.exp(-u));
+const fmode=(u,s)=>1-u-s*(Math.cos(Math.PI*u/2)**2-1+u);
+const fcos=u=>1-1/(Math.tan(Math.PI*u/2)+1);
+let o7h=null,o7fly=[],o7left=0,o7seed=7;const o7r=()=>{o7seed=(o7seed*16807)%2147483647;return o7seed/2147483647;};const o7g=()=>{let u=0,v=0;while(!u)u=o7r();while(!v)v=o7r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+function o7cfg(){const k=$('o7-s').value,m=+$('o7-m').value,s=+$('o7-sl').value,ms=+$('o7-ms').value;
+  if(k==='ln')return {k,umin:m-3.5*s,umax:m+3.5*s,draw:()=>m+s*o7g(),g:u=>sig(u),dens:t=>npd(Math.log(t/(1-t)),m,s)/(t*(1-t)),ulab:`u ~ N(${m.toFixed(2)}, ${s.toFixed(2)}²)`,glab:'t = sigmoid(u)'};
+  if(k==='mode')return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>fmode(u,ms),dens:null,ulab:'u ~ U(0,1)',glab:`t = f_mode(u; s=${ms.toFixed(2)})`};
+  if(k==='cos')return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>fcos(u),dens:t=>2/(Math.PI-2*Math.PI*t+2*Math.PI*t*t),ulab:'u ~ U(0,1)',glab:'t = 1 − 1/(tan(πu/2)+1)'};
+  return {k,umin:0,umax:1,draw:()=>o7r(),g:u=>u,dens:()=>1,ulab:'u ~ U(0,1)',glab:'t = u（普通 rf）'};}
+function modeDens(ms){const pts=[];for(let i=1;i<2000;i++){const u=i/2000,d=1e-4;const fp=(fmode(u+d,ms)-fmode(u-d,ms))/(2*d);pts.push([fmode(u,ms),1/Math.abs(fp)]);}return pts.sort((a,b)=>a[0]-b[0]);}
+function drawO7(){const x=ctxN('o7',640);x.clearRect(0,0,x.W,x.H);const c=o7cfg(),nar=x.W<560;
+  const wA=nar?x.W*0.55:x.W*0.42,hTop=nar?x.H*0.62:x.H*0.72;
+  const A=sub({L:34,R:8,T:22,B:30,xmin:c.umin,xmax:c.umax,ymin:0,ymax:1},wA,hTop,0,0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[0,0.5,1].forEach(v=>{x.beginPath();x.moveTo(A.X(c.umin),A.Y(v));x.lineTo(A.X(c.umax),A.Y(v));x.stroke();x.fillText(String(v),6,A.Y(v)+4);});
+  [c.umin,(c.umin+c.umax)/2,c.umax].forEach(v=>x.fillText((Math.round(v*100)/100).toString(),A.X(v)-10,hTop-12));label(x,c.ulab,A.X(c.umin)+2,28,C('--muted'));label(x,c.glab,A.X(c.umin)+2,12,C('--heading'));
+  x.strokeStyle=C('--green');x.lineWidth=2.4;x.beginPath();for(let i=0;i<=200;i++){const u=c.umin+(c.umax-c.umin)*i/200;const t=c.g(u);i?x.lineTo(A.X(u),A.Y(t)):x.moveTo(A.X(u),A.Y(t));}x.stroke();
+  // histogram of t (horizontal bars aligned to t axis)
+  const Bx0=wA+6,Bw=x.W-Bx0-10;const nb=40;label(x,nar?'t 的直方图':'t 的直方图（横向）与精确密度',Bx0,12,C('--muted'));
+  const tot=o7h?o7h.total:0;let mxd=3;if(o7h){const m=Math.max(...o7h);if(tot)mxd=Math.max(mxd,m/tot*nb*1.1);}
+  const dscale=v=>Bw*Math.min(1,v/mxd);
+  if(o7h&&tot){o7h.forEach((n,i)=>{const d=n/tot*nb;const y0=A.Y((i+1)/nb),y1=A.Y(i/nb);x.fillStyle=C('--accent');x.globalAlpha=0.55;x.fillRect(Bx0,y0,dscale(d),y1-y0-0.5);});x.globalAlpha=1;}
+  x.strokeStyle=C('--blue');x.lineWidth=2;x.beginPath();const dp=c.k==='mode'?modeDens(+$('o7-ms').value):(()=>{const a=[];for(let i=1;i<400;i++){const t=i/400;a.push([t,c.dens(t)]);}return a;})();dp.forEach((q,i)=>{const X=Bx0+dscale(q[1]),Y=A.Y(q[0]);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();
+  x.strokeStyle=C('--line');x.beginPath();x.moveTo(Bx0,A.Y(0));x.lineTo(Bx0,A.Y(1));x.stroke();label(x,'t=0 数据',Bx0+4,A.Y(0)-4,C('--muted'));label(x,'t=1 噪声',Bx0+4,A.Y(1)+12,C('--muted'));
+  // flyers
+  o7fly.forEach(f=>{const u=f.u,t=c.g(u);let X,Y;if(f.p<0.5){X=A.X(u);Y=L(A.Y(0)+14,A.Y(t),f.p*2);}else{X=L(A.X(u),Bx0+4,(f.p-0.5)*2);Y=A.Y(t);}x.fillStyle=C('--orange');x.beginPath();x.arc(X,Y,3.5,0,7);x.fill();});
+  // lambda histogram
+  const Cy0=hTop+6,Ch=x.H-Cy0-22;const Cs=sub({L:34,R:10,T:16,B:18,xmin:-10,xmax:10,ymin:0,ymax:1},x.W,Ch+34,0,Cy0-16);
+  label(x,nar?'λ 的分布（左：噪声多）':'对应的 λ = 2 log((1−t)/t) 分布（左：噪声多，右：图片清楚）',Cs.X(-10),Cy0+8,C('--muted'));
+  if(o7h&&o7h.lam){const lb=o7h.lam,m2=Math.max(...lb,1);lb.forEach((n,i)=>{const X0=Cs.X(-10+i*0.5),X1=Cs.X(-10+(i+1)*0.5);const hh=(Cs.Y(0)-Cs.Y(1))*n/m2;x.fillStyle=C('--pink');x.globalAlpha=0.6;x.fillRect(X0,Cs.Y(0)-hh,X1-X0-0.5,hh);});x.globalAlpha=1;}
+  x.fillStyle=C('--muted');[-10,-5,0,5,10].forEach(v=>x.fillText(String(v),Cs.X(v)-6,x.H-4));
+  const mid=o7h&&tot?(o7h.slice(10,30).reduce((a,b)=>a+b,0)/tot*100).toFixed(1):'0';$('o7-read').textContent=`已抽 ${tot} 个 t · 落在中间 0.25 < t < 0.75 的比例 ${mid}%（均匀分布是 50%）`;}
+function o7reset(){o7h=new Array(40).fill(0);o7h.total=0;o7h.lam=new Array(40).fill(0);o7fly=[];o7left=0;}
+function o7add(u){const c=o7cfg();const t=c.g(u);if(!(t>0&&t<1))return;const b=Math.min(39,Math.floor(t*40));o7h[b]++;o7h.total++;const l=2*Math.log((1-t)/t);const lb=Math.floor((l+10)/0.5);if(lb>=0&&lb<40)o7h.lam[lb]++;}
+function o7run(n){if(!o7h)o7reset();o7left+=n;if(reduce){while(o7left-->0)o7add(o7cfg().draw());o7left=0;drawO7();return;}
+  loop('o7',()=>{const c=o7cfg();for(let k=0;k<3&&o7left>0;k++,o7left--)o7fly.push({u:c.draw(),p:0});const rest=Math.min(o7left,25);for(let k=0;k<rest;k++){o7add(c.draw());}o7left-=rest;
+    o7fly.forEach(f=>f.p+=0.035);o7fly.filter(f=>f.p>=1).forEach(f=>o7add(f.u));o7fly=o7fly.filter(f=>f.p<1);drawO7();return o7left>0||o7fly.length>0;});}
+$('o7-go').onclick=()=>o7run(3000);$('o7-reset').onclick=()=>{o7reset();drawO7();};
+['o7-s','o7-m','o7-sl','o7-ms'].forEach(id=>$(id).oninput=()=>{o7reset();const k=$('o7-s').value;$('o7-lnp').style.display=k==='ln'?'':'none';$('o7-mp').style.display=k==='mode'?'':'none';drawO7();});
+o7reset();
+
+/* ---------- init + theme ---------- */
+function all(){drawO1();drawO2();drawO4();drawO5();drawO6();drawO7();}
+all();
+const mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',all);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,150);});
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+</body>
+</html>
