@@ -253,8 +253,13 @@
       "study_guides": [
         {
           "url": "https://mkj69.github.io/writing/papers/sd3/primer/",
-          "title_zh": "精读第一部分：从零读懂 Flow Matching 与 5.1",
-          "title_en": "Study guide 1: Flow Matching from scratch and Section 5.1"
+          "title_zh": "入门课：从零读懂 Flow Matching",
+          "title_en": "Primer: Flow Matching from scratch"
+        },
+        {
+          "url": "https://mkj69.github.io/writing/papers/sd3/objective/",
+          "title_zh": "精读第一部分：训练目标（§2、§3、§5.1）",
+          "title_en": "Study guide 1: Training objective (§2, §3, §5.1)"
         },
         {
           "url": "https://mkj69.github.io/writing/papers/sd3/architecture/",
