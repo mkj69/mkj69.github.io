@@ -28,3 +28,7 @@ The public manifest contains only approved paper identities and summaries. Readi
 A paper may link to an additional reading edition through `annotated_reader.url` in its manifest entry. The URL must be the paper's canonical URL followed by `annotated/`. The hub and concept note retain this link when rebuilt. This does not add a duplicate paper to the hub count.
 
 The SD3 annotated edition provides an English-then-Chinese layout and contextual vocabulary tools. Its article lives at `papers/sd3/annotated/index.html`; image provenance is recorded in `assets/attribution.json` beside it. This edition is maintained independently of the concept-note renderer. Other papers retain their existing language defaults.
+
+## Study guides
+
+A paper may also list `study_guides` in its manifest entry: each item has `url`, `title_zh` and `title_en`, and the URL must live under the paper's canonical URL. The builder renders them as extra links after the annotated-edition link, on both the hub and the concept note, without changing the paper count. The SD3 guides (`primer/`, `architecture/`, `scaling/`) are standalone pages maintained independently of the concept-note renderer.

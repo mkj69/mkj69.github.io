@@ -122,7 +122,19 @@ def annotated_reader_link(paper):
         raise ValueError("Annotated reader must live under its paper article")
     return ('<p class="paper-edition-link"><a href="' + esc(expected) + '">'
             + language_text("全文中英对照与词汇注释版", "Full bilingual text with vocabulary notes")
-            + ' <span aria-hidden="true">↗</span></a></p>')
+            + ' <span aria-hidden="true">↗</span></a></p>') + study_guide_links(paper)
+
+
+def study_guide_links(paper):
+    links = []
+    for guide in paper.get("study_guides", []):
+        url = guide.get("url", "")
+        if not url.startswith(paper["url"]) or url == paper["url"]:
+            raise ValueError("Study guide must live under its paper article")
+        links.append('<p class="paper-edition-link"><a href="' + esc(url) + '">'
+                     + language_text(guide["title_zh"], guide["title_en"])
+                     + ' <span aria-hidden="true">↗</span></a></p>')
+    return "".join(links)
 
 
 def render_hub(papers):
