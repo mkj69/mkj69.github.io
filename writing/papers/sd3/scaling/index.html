@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>精读 SD3：训练到 8B | Kaijing Ma</title>
+<meta name="description" content="SD3 论文精读第三部分：按原文逐段解读 5.3 节（数据处理、QK-norm、不同长宽比的位置编码、分辨率相关的 timestep shift、scaling 结果、灵活的文本编码器）、附录 C、E 和结论。附交互动画。">
+<style>
+/* Layout: one reading column of numbered lessons; each lesson = plain-language idea, one worked number example, an animated figure, a short self-check. */
+:root{
+  --page:#fcfcfa; --panel:#ffffff; --ink:#4a4f56; --heading:#22272d; --muted:#7a8087; --line:#e1e3e3; --line-strong:#cec7c0;
+  --accent:#796a5c; --blue:#2f5f93; --blue-soft:#e9eff7; --pink:#ab4265; --pink-soft:#f7e9ee; --orange:#a76425; --orange-soft:#f7eee4; --green:#397451; --green-soft:#e7f1ea;
+  --f-body:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-display:"Songti SC","Noto Serif SC","STSong",serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#15171a; --panel:#1c1f23; --ink:#c9cdd2; --heading:#eef0f2; --muted:#9097a0; --line:#2c3036; --line-strong:#454a52;
+  --accent:#c4b29f; --blue:#8fb3e3; --blue-soft:#1d2a3a; --pink:#e58aa8; --pink-soft:#3a2029; --orange:#e2a868; --orange-soft:#3a2b1b; --green:#86c79e; --green-soft:#1a2e22; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.9;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.site-header{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding-block:22px 0;font-size:14px}
+.site-header a{color:var(--muted);text-decoration:none} .site-header a:hover{color:var(--heading)}
+.site-header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+main{max-width:760px;margin:0 auto;padding-block:30px 90px;display:flex;flex-direction:column;gap:34px}
+h1,h2,h3{font-family:var(--f-display);color:var(--heading);text-wrap:balance;line-height:1.4;margin:0}
+h1{font-size:34px} h2{font-size:26px} h3{font-size:19px}
+p{margin:0} a{color:var(--blue)}
+.eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{font-size:17.5px;color:var(--muted)}
+.hero{display:flex;flex-direction:column;gap:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.toc a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:15px;line-height:1.5}
+.toc a:hover,.toc a:focus-visible{border-color:var(--accent);outline:none}
+.toc .n{font-family:var(--f-mono);color:var(--accent);font-size:13px;min-width:2.2em}
+.lesson{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+.lesson-head{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-strong);padding-top:22px}
+.lesson-head .no{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.goal{font-size:15px;color:var(--muted)}
+.box{border-radius:8px;padding:12px 16px;font-size:15.5px;line-height:1.8}
+.box b{font-weight:700}
+.key{background:var(--green-soft)} .key b{color:var(--green)}
+.warn{background:var(--orange-soft)} .warn b{color:var(--orange)}
+.sd3{background:var(--blue-soft)} .sd3 b{color:var(--blue)}
+.math{overflow-x:auto;padding:4px 0;text-align:center}
+code{font-family:var(--f-mono);font-size:.9em}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums;line-height:1.6}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{border-bottom:1.5px solid var(--heading);color:var(--heading)}
+tbody tr:last-child td{border-bottom:1.5px solid var(--heading)}
+ol,ul{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+figcaption{font-size:14px;color:var(--muted);line-height:1.7}
+.fig-title{font-weight:700;color:var(--heading);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:14px}
+.controls label{display:flex;align-items:center;gap:8px}
+input[type=range]{width:170px;accent-color:var(--accent)}
+button,select{font:inherit;font-size:14px;color:var(--heading);background:var(--page);border:1px solid var(--line-strong);border-radius:6px;padding:4px 12px;cursor:pointer}
+button:hover,button:focus-visible,select:focus-visible{border-color:var(--accent);outline:2px solid transparent}
+.readout{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr} h1{font-size:28px} h2{font-size:22px}}
+.two>*{min-width:0}
+details.quiz{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--panel)}
+details.quiz summary{cursor:pointer;color:var(--heading);font-weight:600}
+details.quiz p{margin-top:8px;font-size:15.5px}
+.card{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.card>div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card>div+div{border-left:1px solid var(--line-strong)}
+@media (max-width:620px){.card{grid-template-columns:1fr}.card>div+div{border-left:0;border-top:1px solid var(--line-strong)}}
+.card h3{font-size:17px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:0 8px;border-radius:999px}
+.tag.fm{background:var(--pink-soft);color:var(--pink)} .tag.cfm{background:var(--green-soft);color:var(--green)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+
+.orig{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 8px 8px 0;padding:10px 16px;display:flex;flex-direction:column;gap:4px}
+.orig .loc{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+.orig p{font-family:Georgia,"Times New Roman",var(--f-display);font-size:15.5px;line-height:1.75;color:var(--heading)}
+ol.read{gap:10px} ol.read .q{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--heading)}
+.bg{background:var(--panel);border:1px dashed var(--line-strong)} .bg b{color:var(--heading)}
+p.readout{min-height:1.6em;line-height:1.6}
+.ref{background:var(--pink-soft)} .ref b{color:var(--pink)}
+.ref ul{margin-top:4px;gap:2px}
+.parts{display:flex;flex-wrap:wrap;gap:8px;font-size:14px}
+.parts a,.parts span{padding:4px 12px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--panel)}
+.parts span{border-color:var(--accent);color:var(--heading);font-weight:600}
+.map td:first-child{min-width:7em;font-size:14px;color:var(--accent)}
+.lesson,.tbl{min-width:0;max-width:100%}
+@media (max-width:620px){table{font-size:14px} th,td{padding:6px 6px}}
+.num td:not(:first-child),.num th:not(:first-child){text-align:right}
+td.b1{font-weight:700;color:var(--green)} td.b2{font-weight:700;color:var(--blue)} td.b3{font-weight:700;color:var(--orange)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 16px}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="/">Kaijing Ma</a>
+  <nav aria-label="网站导航"><a href="/writing/">Paper Notes</a><a href="/writing/papers/sd3/">SD3 概念笔记</a><a href="/writing/papers/sd3/annotated/">SD3 中英对照</a><a href="/#writing">Writing</a></nav>
+</header>
+<main>
+
+<section class="hero">
+  <span class="eyebrow">SD3 论文精读 · 第三部分 · 5.3 节、附录 C、E、第 6 节</span>
+  <h1>精读 SD3：训练到 8B</h1>
+  <div class="parts"><a href="/writing/papers/sd3/primer/">第一部分 · Flow Matching 与 5.1</a><a href="/writing/papers/sd3/architecture/">第二部分 · 模型结构</a><span>第三部分 · 训练到 8B</span></div>
+  <p class="lede">前两部分定下了配方：RF + logit-normal 抽 \(t\)（5.1），16 通道潜变量、50/50 caption、MM-DiT（5.2）。5.3 节把这个配方放大：先处理数据，再从 256² 微调到 1024²（途中解决了训练发散、长宽比、噪声不够三个问题），然后画 scaling 曲线、和别的模型比。这一页按原文顺序逐段精读，每段先给原文位置和关键原句，再逐句解读。</p>
+  <p class="lede">建议的读法：左边开着论文 PDF（或本站的 <a href="/writing/papers/sd3/annotated/">中英对照版</a>），右边开着这一页，读一段对一段。</p>
+  <nav class="toc" aria-label="目录">
+    <a href="#l0"><span class="n">地图</span>要读的全部原文位置</a>
+    <a href="#l1"><span class="n">精读 1</span>§5.3.1：数据过滤与去重</a>
+    <a href="#l2"><span class="n">精读 2</span>§5.3.1：预先算好编码</a>
+    <a href="#l3"><span class="n">精读 3</span>§5.3.2：QK-norm</a>
+    <a href="#l4"><span class="n">精读 4</span>§5.3.2：不同长宽比的位置编码</a>
+    <a href="#l5"><span class="n">精读 5</span>§5.3.2：分辨率相关的 timestep shift</a>
+    <a href="#l6"><span class="n">精读 6</span>§5.3.2 末 + 附录 C：DPO</a>
+    <a href="#l7"><span class="n">精读 7</span>§5.3.3：scaling 实验与 Fig. 8</a>
+    <a href="#l8"><span class="n">精读 8</span>§5.3.3：GenEval（Table 5）</a>
+    <a href="#l9"><span class="n">精读 9</span>§5.3.3：大模型更少步数（Table 6）</a>
+    <a href="#l10"><span class="n">精读 10</span>§5.3.3：人类评测与灵活的文本编码器</a>
+    <a href="#l11"><span class="n">精读 11</span>视频 scaling 与第 6 节结论</a>
+  </nav>
+</section>
+
+<!-- ===================================================== MAP -->
+<section class="lesson" id="l0">
+  <div class="lesson-head"><span class="no">论文阅读地图</span><h2>这部分要读的全部原文位置</h2><p class="goal">按论文顺序排列，页码按 arXiv 2403.03206v1 的 PDF。</p></div>
+  <div class="tbl"><table class="map">
+    <thead><tr><th>论文位置</th><th>讲了什么</th><th>本页</th></tr></thead>
+    <tbody>
+      <tr><td>§5.3 引言 + §5.3.1 "Pre-Training Mitigations"（p.9）</td><td>训练前过滤：色情内容、低美学分、重复图</td><td>精读 1</td></tr>
+      <tr><td>附录 E.2、E.3 + Algorithm 1、2 + Fig. 16、17（p.24 到 26）</td><td>SSCD 去重，16000 个聚类；去重后记忆样本减少约 5 倍</td><td>精读 1</td></tr>
+      <tr><td>§5.3.1 "Precomputing Image and Text Embeddings" + 附录 E.1 + Table 7（p.9、p.24）</td><td>冻结网络的输出预先算好存起来；省显存和时间的代价</td><td>精读 2</td></tr>
+      <tr><td>§5.3.2 "QK-Normalization" + Fig. 5（p.9）</td><td>1024² 微调时混合精度训练发散；对 Q、K 做 RMSNorm 解决</td><td>精读 3</td></tr>
+      <tr><td>§5.3.2 "Positional Encodings for Varying Aspect Ratios"（p.9 到 10）</td><td>分桶；扩展加插值的位置网格；中心裁剪</td><td>精读 4</td></tr>
+      <tr><td>§5.3.2 "Resolution-dependent shifting" + Eq. 23 到 25 + Fig. 6（p.10）</td><td>高分辨率要更多噪声；常数图论证；人类偏好选 \(\alpha=3\)</td><td>精读 5</td></tr>
+      <tr><td>§5.3.2 末句 + 附录 C + Fig. 13、14（p.11、p.23 到 24）</td><td>DPO 偏好微调，LoRA rank 128</td><td>精读 6</td></tr>
+      <tr><td>§5.3.3 第 1、3 段 + Fig. 8 + Fig. 12（p.11 到 12、p.22）</td><td>不同大小的模型训 500k 步；验证 loss 平滑下降、和各种评测高度相关</td><td>精读 7</td></tr>
+      <tr><td>§5.3.3 第 4 段 + Table 5（p.11）</td><td>GenEval 全表；8B + DPO + 1024² 超过 DALL-E 3</td><td>精读 8</td></tr>
+      <tr><td>§5.3.3 第 6 段 + Table 6（p.11）</td><td>大模型少步数掉得更少；路径长度</td><td>精读 9</td></tr>
+      <tr><td>§5.3.3 人类评测段 + Fig. 7；"Flexible Text Encoders" + Fig. 9（p.10 到 12）</td><td>人类偏好评测；推理时去掉 T5</td><td>精读 10</td></tr>
+      <tr><td>§5.3.3 第 2 段（视频）+ 第 6 节（p.11、p.12）</td><td>视频的初步 scaling；结论</td><td>精读 11</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box warn"><b>两个常见的读错：</b>第一，位置编码那段和 timestep shift 那段都在 <b>5.3.2</b>（Finetuning on High Resolutions）里，不在 5.3.1。第二，PDF 第 9 页上 5.3.2 排在右栏，和左栏的 5.3、5.3.1 并排，容易先读到它。按小节编号读：5.3 → 5.3.1 → 5.3.2 → 5.3.3。</div>
+  <div class="box sd3"><b>整个训练流程（从 5.3 各处拼出来）：</b>数据过滤去重 → 预先算好潜变量和文本编码 → 在 256×256 上预训练（scaling 实验：500k 步，batch 4096）→ 加 QK-norm、分桶的多长宽比、timestep shift，微调到更高分辨率（最终 1024×1024，\(\alpha=3\)）→ DPO 偏好微调。论文没有给 8B 最终模型每个阶段的总步数。</div>
+</section>
+
+<!-- ===================================================== 1 -->
+<section class="lesson" id="l1">
+  <div class="lesson-head"><span class="no">精读 1 · §5.3 引言 + §5.3.1 第 1 段 + 附录 E.2、E.3</span><h2>训练前先过滤数据</h2><p class="goal">读完这段，你应该能说出三类过滤各针对什么，以及去重怎么做、效果怎么验证。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3 引言（p.9）</span><p>"Before scaling up, we filter and preencode our data to ensure safe and efficient pretraining. Then, all previous considerations of diffusion formulations, architectures, and data culminate in the last section, where we scale our models up to 8B parameters."</p></div>
+  <ol class="read">
+    <li><span class="q">"filter and preencode"</span>：5.3.1 的两件事：过滤（为了安全），预编码（为了效率，精读 2）。</li>
+    <li><span class="q">"all previous considerations … culminate"</span>：前面 5.1（训练方式）、5.2（结构和数据）的结论汇总，在 5.3.3 放大到 8B。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.1 "Pre-Training Mitigations"（p.9）</span><p>"Training data significantly impacts a generative model's abilities. Consequently, data filtering is effective at constraining undesirable capabilities … (i) Sexual content: We use NSFW-detection models … (ii) Aesthetics: We remove images for which our rating systems predict a low score. (iii) Regurgitation: We use a cluster-based deduplication method to remove perceptual and semantic duplicates …; see Appendix E.2."</p></div>
+  <ol class="read">
+    <li><span class="q">"constraining undesirable capabilities"</span>：模型学不到训练集里没有的东西，所以想让它不会画某类内容，最直接的是训练前就把这类图删掉。</li>
+    <li><span class="q">"(i) Sexual content"</span>：用 NSFW 检测模型删掉露骨内容。</li>
+    <li><span class="q">"(ii) Aesthetics"</span>：用美学打分模型删掉低分图。这一条主要为了画质，不只是安全。论文没说用的哪个打分模型和阈值。</li>
+    <li><span class="q">"(iii) Regurgitation"</span>：regurgitation 是"原样吐出训练图"。一张图在训练集里重复越多次，越容易被模型背下来。所以要删掉"看起来几乎一样"（perceptual）和"内容一样"（semantic）的重复图。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 E.2 "Details on Deduplication"（p.25）</span><p>"… we opt for SSCD (Pizzi et al., 2022) as the backbone for the deduplication process. … We also decided to follow Nichol (2022) to decide on a number of clusters N. For our experiments, we use N = 16,000."</p></div>
+  <ol class="read">
+    <li><span class="q">"SSCD"</span>：一个专门做"近似重复图检测"的图像特征模型。两张图的 SSCD 特征越相似，越可能是同一张图的变体（裁剪、调色、加水印）。</li>
+    <li><span class="q">"number of clusters N = 16,000"</span>：几亿张图两两比较太贵，所以先把特征聚成 16000 个簇，只在每个簇内部比较（Algorithm 1：簇内用 FAISS 做半径搜索，相似度超过阈值的算重复）。</li>
+    <li>附录 E.3 的验证：按 Carlini et al. (2023) 的方法，专门训小模型，用最常重复的 35 万条 caption 各生成 500 张图，找"几乎一样"的生成结果（视为背下来的）。原文结论："when the clique size is 10, trained SD models on the deduplicated training samples cut off at SSCD = 0.5 show a 5× reduction in potentially memorized examples"。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>去重效果是在 SD2.1 结构的小模型上验证的（E.3），不是在 SD3 本身上。过滤用的 NSFW 模型、美学阈值、最终删掉多少数据，论文都没有公开。</div>
+  <details class="quiz"><summary>自测：为什么去重能减少"背图"？</summary><p>一张图在训练集里出现很多次，模型在它身上被反复训练，最容易把它整张记住。删掉重复之后每张图只出现一次左右，模型更倾向学到一般规律而不是具体某张图。E.3 用小模型验证了记忆样本减少约 5 倍。</p></details>
+</section>
+
+<!-- ===================================================== 2 -->
+<section class="lesson" id="l2">
+  <div class="lesson-head"><span class="no">精读 2 · §5.3.1 第 2 段 + 附录 E.1 + Table 7</span><h2>预先算好：冻结网络只跑一次</h2><p class="goal">读完这段，你应该能读懂 Table 7 每一列，并说出预编码的两个好处和两个代价。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.1 "Precomputing Image and Text Embeddings"（p.9）</span><p>"Our model uses the output of multiple pretrained, frozen networks as inputs (autoencoder latents and text encoder representations). Since these outputs are constant during training, we precompute them once for the entire dataset."</p></div>
+  <ol class="read">
+    <li><span class="q">"pretrained, frozen networks"</span>：第二部分讲过：自编码器的编码器 \(E\)、CLIP-L、OpenCLIP bigG、T5-XXL 都是冻结的。</li>
+    <li><span class="q">"these outputs are constant during training"</span>：同一张图、同一句话，冻结网络每次输出完全一样。每个 epoch 都重算一遍是浪费。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 附录 E.1（p.24）</span><p>"This comes with two main advantages: (i) The encoders do not need to be available on the GPU during training, lowering the required memory. (ii) The forward encoding pass is skipped during training, saving time … This approach has two disadvantages: First, random augmentation for each sample every epoch is not possible … Second, the dense output of the text encoders is particularly large, creating additional storage cost and longer loading times …"</p></div>
+  <ol class="read">
+    <li><span class="q">"(i) … lowering the required memory"</span>：T5-XXL 光加载就要 19 GB 显存（Table 7），预编码后训练时根本不用加载它。</li>
+    <li><span class="q">"(ii) … saving time"</span>：每一步省掉编码的前向计算。</li>
+    <li><span class="q">"random augmentation … is not possible"</span>：存下来的是固定的潜变量，没法每个 epoch 随机裁剪、翻转。所以预编码时统一做中心裁剪；微调高分辨率时先把图裁到最近的长宽比桶再编码（精读 4）。</li>
+    <li><span class="q">"dense output of the text encoders is particularly large"</span>：T5 每个样本要存 77×4096 个数，Table 7 里每个样本 630.7 kB，是潜变量的约 10 倍。论文用半精度存文本编码，"as we do not observe a deterioration in performance"。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 1 · Table 7：勾选哪些编码器在训练时"现算"，看代价</div>
+    <div class="checks" id="b2-checks"></div>
+    <canvas id="b2" width="720" height="260"></canvas>
+    <figcaption>数字来自 Table 7：Mem 是加载到 GPU 的显存，FP 是 batch 32 时每个样本的前向时间，Storage 是预编码后每个样本的存储，Delta 是把它放进训练循环后 2B 模型（568 ms/步）每步慢多少。把几项加起来是我的近似，论文没有给组合起来的数。</figcaption>
+  </figure>
+  <div class="tbl"><table class="num">
+    <thead><tr><th>Table 7</th><th>Mem [GB]</th><th>FP [ms]</th><th>Storage [kB]</th><th>Delta [%]</th></tr></thead>
+    <tbody>
+      <tr><td>VAE（编码器）</td><td>0.14</td><td>2.45</td><td>65.5</td><td>13.8</td></tr>
+      <tr><td>CLIP-L</td><td>0.49</td><td>0.45</td><td>121.3</td><td>2.6</td></tr>
+      <tr><td>CLIP-G</td><td>2.78</td><td>2.77</td><td>202.2</td><td>15.6</td></tr>
+      <tr><td>T5</td><td>19.05</td><td>17.46</td><td>630.7</td><td>98.3</td></tr>
+    </tbody>
+  </table></div>
+  <p>怎么读：T5 一项就让每一步慢 98.3%，几乎翻倍。四项全在循环里现算，按相加的粗算要慢一倍多。所以对 8B 的大规模训练，预编码是必须的。</p>
+  <details class="quiz"><summary>自测：预编码之后，还能做"随机水平翻转"这种数据增强吗？</summary><p>不能在训练时做，因为存下来的是固定的潜变量。要么预编码时就存两份（原图和翻转图），要么放弃。论文的做法是放弃随机增强，统一中心裁剪。</p></details>
+</section>
+
+<!-- ===================================================== 3 -->
+<section class="lesson" id="l3">
+  <div class="lesson-head"><span class="no">精读 3 · §5.3.2 "QK-Normalization" + Fig. 5</span><h2>QK-norm：高分辨率训练为什么会炸</h2><p class="goal">读完这段，你应该能说清"attention logit 增长"是什么、为什么会让训练发散，以及 RMSNorm 怎么挡住它。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 1 段（p.9）</span><p>"In general, we pretrain all of our models on low-resolution images of size 256² pixels. Next, we finetune our models on higher resolutions with mixed aspect ratios … We find that, when moving to high resolutions, mixed precision training can become unstable and the loss diverges. This can be remedied by switching to full precision training … but comes with a ∼ 2× performance drop compared to mixed-precision training."</p></div>
+  <ol class="read">
+    <li><span class="q">"pretrain … 256² … finetune … higher resolutions"</span>：先低分辨率后高分辨率，因为 256² 只有 256 个图片 token，1024² 有 4096 个（第二部分精读 5），先在便宜的设置上学会大部分东西。</li>
+    <li><span class="q">"mixed precision training"</span>：大部分计算用 16 位浮点数（这里是 bf16），比 32 位快约一倍、省显存。bf16 的数值范围很大，但只有约 3 位十进制有效数字，很粗。</li>
+    <li><span class="q">"the loss diverges"</span>：loss 突然变成 NaN（不是数），训练直接废掉。</li>
+    <li><span class="q">"∼ 2× performance drop"</span>：这里 performance 指训练速度。换全精度能解决，但慢一倍，不划算。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 1 段（续）</span><p>"… Dehghani et al. (2023) observe that the training of large vision transformer models diverges because the attention entropy grows uncontrollably. To avoid this, Dehghani et al. (2023) propose to normalize Q and K before the attention operation. We follow this approach and use RMSNorm … with learnable scale in both streams of our MMDiT architecture …"</p></div>
+  <ol class="read">
+    <li><span class="q">"attention entropy grows uncontrollably"</span>：这句的说法和 Fig. 5 图注相反：Dehghani et al. 的发现和 Fig. 5 都是 attention <b>logit</b> 失控增长、attention <b>熵</b>塌缩（变小），正文这里大概是笔误。Fig. 5 图注写得对："prevents the attention-logit growth instability (left), which causes the attention entropy to collapse (right)"。</li>
+    <li><span class="q">"normalize Q and K before the attention operation"</span>：attention logit 就是 \(q\cdot k/\sqrt{d_k}\)。训练中 Q、K 的长度可能越变越大，logit 跟着平方级变大，softmax 就变成几乎只有一个 1、其余全 0（熵塌缩）。这时梯度几乎为零或者极不稳定，bf16 的粗精度更放大问题。把 Q、K 先归一化，长度就固定住了，logit 有上界。</li>
+    <li><span class="q">"RMSNorm … with learnable scale"</span>：RMSNorm 把向量除以它的均方根，再乘一个可学习的缩放。和 LayerNorm 比只是不减均值。可学习的缩放让网络仍能调节注意力的"尖锐程度"，只是不能无限增长。</li>
+    <li><span class="q">"in both streams"</span>：文字流和图片流各自的 Q、K 都加。这就是 Fig. 2b 里四个虚线的 "Opt. RMS-Norm"。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 2 · 拖动"Q、K 的长度"，看 softmax 怎么塌缩，QK-norm 怎么挡住</div>
+    <div class="controls"><label>Q、K 长度倍数 <input type="range" id="b3-s" min="0.5" max="6" step="0.05" value="1"></label><label><input type="checkbox" id="b3-n"> 加 QK-norm</label></div>
+    <p class="readout" id="b3-read"></p>
+    <canvas id="b3" width="720" height="280"></canvas>
+    <figcaption>一个 query 对 12 个 key 的注意力（玩具数字）。长度倍数模拟训练中 Q、K 越变越长。没有 QK-norm 时，logit 正比于倍数的平方，softmax 很快变成"只看一个"，熵掉到 0 附近，就是 Fig. 5 右图的熵塌缩。勾上 QK-norm 后，Q、K 先归一化再乘一个固定的可学习缩放（这里取 2.5），长度怎么变 logit 都不变。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 1 段（末）+ Fig. 5 图注</span><p>"… enables efficient training at bf16-mixed precision when combined with ϵ = 10⁻¹⁵ in the AdamW optimizer. This technique can also be applied on pretrained models that have not used qk-normalization during pretraining … it is not a universal recipe …" / Fig. 5: "In contrast with these previous works, we observe this instability in the last transformer blocks of our networks. Maximum attention logits and attention entropies are shown averaged over the last 5 blocks of a 2B (d=24) model."</p></div>
+  <ol class="read">
+    <li><span class="q">"ϵ = 10⁻¹⁵ in the AdamW optimizer"</span>：AdamW 更新时分母里加的那个防止除零的小数（又一个 \(\epsilon\)，和噪声、调制参数都无关）。默认通常是 \(10^{-8}\)，改小是配合 QK-norm 的另一个稳定性设置，论文没解释原因。</li>
+    <li><span class="q">"applied on pretrained models that have not used qk-normalization"</span>：256² 预训练时可以没有 QK-norm，微调时再加，模型很快适应。</li>
+    <li><span class="q">"not a universal recipe"</span>：作者自己提醒：换个训练设置可能要调整。</li>
+    <li><span class="q">Fig. 5</span>：横轴训练步数（到 10k），左图纵轴是最大 attention logit（对数轴），右图是 attention 熵。没有 QK-norm（黄线）：logit 一路涨到 \(10^3\) 量级，熵往下掉，大约 6k 步时出现 NaN。有 QK-norm（紫线）：logit 和熵都平稳。这是 2B 模型最后 5 个块的平均。</li>
+  </ol>
+  <details class="quiz"><summary>自测：为什么说"熵塌缩"是坏事？</summary><p>熵塌缩意味着每个 token 只注意一个 token，softmax 输出接近 one-hot。这时 softmax 的梯度几乎为零（饱和），而 logit 本身又很大，一点扰动就会让输出剧烈跳动，低精度下容易溢出成 NaN。网络也失去了"综合多个 token 信息"的能力。</p></details>
+</section>
+
+<!-- ===================================================== 4 -->
+<section class="lesson" id="l4">
+  <div class="lesson-head"><span class="no">精读 4 · §5.3.2 "Positional Encodings for Varying Aspect Ratios"</span><h2>不同长宽比：位置网格怎么扩展和插值</h2><p class="goal">读完这段，你应该能看懂那个位置公式，并说清"扩展"和"插值"各解决什么。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 2 段（p.9 到 10）</span><p>"After training on a fixed 256 × 256 resolution we aim to (i) increase the resolution and … (ii) enable inference with flexible aspect ratios. Since we use 2d positional frequency embeddings we have to adapt them based on the resolution. In the multi-aspect ratio setting, a direct interpolation of the embeddings as in (Dosovitskiy et al., 2020) would not reflect the side lengths correctly. Instead we use a combination of extended and interpolated position grids which are subsequently frequency embedded."</p></div>
+  <ol class="read">
+    <li><span class="q">"2d positional frequency embeddings"</span>：每个图片 token 有一个坐标（行，列）。先算出坐标数值，再用一组不同频率的 sin/cos 把它变成向量（和时间步的正弦编码同一个思路）。关键在于：<b>编码的是坐标数值</b>，所以可以给它任意实数坐标。</li>
+    <li><span class="q">"a direct interpolation … would not reflect the side lengths correctly"</span>：ViT 的老办法是把训练时 16×16 的位置编码直接拉伸到新尺寸。但如果新图是 1:2 的长条，拉伸后横竖两个方向的"单位长度"就不一样了，网络会以为图被压扁了。</li>
+    <li><span class="q">"extended and interpolated position grids"</span>：插值：分辨率变高时，同样的画面范围里塞进更多 token，坐标间距变小（比如 0, 0.25, 0.5, …）。扩展：图变宽时，横向坐标超出训练时的范围继续往外延伸，而不是把整排压缩到原范围里。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 3 段（p.10）</span><p>"For a target resolution of S² pixels, we use bucketed sampling … such that each batch consists of images of a homogeneous size H × W, where H · W ≈ S². … Let \(h_{max}=H_{max}/16\), \(w_{max}=W_{max}/16\) and \(s=S/16\) be the corresponding sizes in latent space (a factor 8) after patching (a factor 2). Based on these values, we construct a vertical position grid with the values \(\big((p-\frac{h_{max}-s}{2})\cdot\frac{256}{S}\big)_{p=0}^{h_{max}-1}\) and correspondingly for the horizontal positions. We then center-crop from the resulting positional 2d grid before embedding it."</p></div>
+  <ol class="read">
+    <li><span class="q">"bucketed sampling … H · W ≈ S²"</span>：预先定好一组长宽比"桶"，每个桶的像素总数都约等于 \(S^2\)（所以 token 数差不多，计算量差不多）。每个 batch 只从一个桶里取图，batch 内尺寸一致，才能拼成一个张量。</li>
+    <li><span class="q">"/16 … (a factor 8) after patching (a factor 2)"</span>：像素到 token 网格要除以 16：自编码器下采样 8，再 2×2 切块。\(S=1024\) 时 \(s=64\)。</li>
+    <li><span class="q">"\((p-\frac{h_{max}-s}{2})\cdot\frac{256}{S}\)"</span>：拆开看：\(p\) 是第几行（0 到 \(h_{max}-1\)）。减去 \(\frac{h_{max}-s}{2}\) 是让中间那 \(s\) 行的坐标从 0 开始，也就是把正方形部分对齐到原点。乘 \(\frac{256}{S}\) 是缩放：\(S=256\) 时乘 1，坐标就是 0 到 15，和预训练完全一样；\(S=1024\) 时乘 1/4，正方形部分的坐标还是 0 到 15.75，只是间距变成 0.25（这就是插值）。比正方形长出来的部分，坐标小于 0 或大于 15（这就是扩展）。</li>
+    <li><span class="q">"center-crop"</span>：先按最极端的长宽比造一个最大的网格，具体每张图用的时候，从中间裁出它实际的 \(h\times w\)。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 3 · 按原文公式算出的位置坐标（每个点是一个 token 的坐标）</div>
+    <div class="controls"><label>目标分辨率 S <select id="b4-S"><option value="256">256</option><option value="512">512</option><option value="1024" selected>1024</option></select></label><label>长宽比 W:H <input type="range" id="b4-a" min="-1" max="1" step="0.05" value="0.5"></label></div>
+    <p class="readout" id="b4-read"></p>
+    <canvas id="b4" width="720" height="340"></canvas>
+    <figcaption>灰色方框是预训练（256²）时的坐标范围 0 到 15。蓝点是当前设置下每个 token 的坐标。拖到长宽比 1:1、S=256，蓝点和灰框正好重合；换成 S=1024，点变密但仍在灰框里（插值）；拉成长条，点在长边方向伸出灰框（扩展），短边方向仍居中。网格里每隔几个才画一个点，避免糊成一片。长宽比范围设成 1:2 到 2:1 是我假设的，论文没写桶的具体范围。</figcaption>
+  </figure>
+  <details class="quiz"><summary>自测：\(S=1024\)、正方形图，第 0 行和第 63 行的纵坐标各是多少？</summary><p>网格按最极端的长宽比造，有 \(h_{max}\) 行。正方形图从中间裁出 64 行，也就是 \(p\) 从 \(\frac{h_{max}-64}{2}\) 开始。代入公式，裁出的第一行坐标是 \(0\)，最后一行是 \(63\times\frac{256}{1024}=15.75\)。和预训练的 0 到 15 范围几乎一样，只是更密。</p></details>
+</section>
+
+<!-- ===================================================== 5 -->
+<section class="lesson" id="l5">
+  <div class="lesson-head"><span class="no">精读 5 · §5.3.2 "Resolution-dependent shifting" + Eq. 23 到 25 + Fig. 6</span><h2>高分辨率需要更多噪声：timestep shift</h2><p class="goal">读完这段，你应该能自己推出 Eq. 23，说清 \(\alpha\) 是什么、为什么最后选 3，以及它和第一部分 log-SNR 的关系。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 4 段（p.10）</span><p>"Intuitively, since higher resolutions have more pixels, we need more noise to destroy their signal. Assume we are working in a resolution with n = H · W pixels. Now, consider a "constant" image, i.e. one where every pixel has the value c. The forward process produces \(z_t=(1-t)c\mathbb 1+t\epsilon\) …"</p></div>
+  <ol class="read">
+    <li><span class="q">"we need more noise to destroy their signal"</span>：直觉：同样 \(t=0.5\)，一张 64×64 的图和一张 1024×1024 的图被加了同样强度的噪声。但大图里相邻像素高度相关，把周围几个像素平均一下，噪声就被平均掉了，画面的大轮廓还清清楚楚。也就是说<b>同一个 \(t\) 对大图"不够吵"</b>。下面的图 4 可以直接看到这个现象。</li>
+    <li><span class="q">"consider a 'constant' image"</span>：为了能算出公式，取一个极端简化：整张图每个像素都是同一个数 \(c\)。加噪后得到 \(n\) 个像素，每个都是 \((1-t)c+t\eta_i\)，\(\eta_i\) 是独立的标准正态噪声。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 4 · 同样的 \(t\)，大图平均一下就"露馅"了</div>
+    <div class="controls"><label>\(t\) <input type="range" id="b5n-t" min="0" max="0.98" step="0.01" value="0.75"></label><button type="button" id="b5n-re">换一组噪声</button></div>
+    <p class="readout" id="b5n-read"></p>
+    <canvas id="b5n" width="720" height="260"></canvas>
+    <figcaption>左：32×32 的小图加噪 \(z_t=(1-t)x+t\epsilon\)。中：128×128 的大图（同一个画面，像素多 16 倍）用同样的 \(t\) 加噪。右：把中间的大图每 4×4 像素平均成 32×32。右边明显比左边清楚：平均 16 个独立噪声，噪声标准差变成 1/4。这就是"同一个 \(t\) 对大图不够吵"。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 4 段（续）</span><p>"Thus, \(z_t\) provides n observations of the random variable \(Y=(1-t)c+t\eta\) … \(E(Y)=(1-t)c\) and \(\sigma(Y)=t\). We can therefore recover c via \(c=\frac{1}{1-t}E(Y)\), and the error between c and its sample estimate \(\hat c=\frac{1}{1-t}\sum_{i=1}^n z_{t,i}\) has a standard deviation of \(\sigma(t,n)=\frac{t}{1-t}\sqrt{\frac1n}\) …"</p></div>
+  <ol class="read">
+    <li><span class="q">"n observations of … Y"</span>：每个像素都是同一个随机变量 \(Y\) 的一次独立观测，均值 \((1-t)c\)，标准差 \(t\)。</li>
+    <li><span class="q">"\(\hat c=\frac{1}{1-t}\sum z_{t,i}\)"</span>：用 \(n\) 个像素的平均值去估计 \(c\)。原文这里少写了 \(\frac1n\)，应该是 \(\frac{1}{1-t}\cdot\frac1n\sum_i z_{t,i}\)，否则不是平均。</li>
+    <li><span class="q">"\(\sigma(t,n)=\frac{t}{1-t}\sqrt{\frac1n}\)"</span>：\(n\) 个独立观测的平均，标准差是单个的 \(1/\sqrt n\)：\(t/\sqrt n\)；再除以 \(1-t\)。所以 \(\sigma(t,n)\) 衡量"在时间 \(t\)、分辨率 \(n\) 下，我对原图还有多不确定"。原文举例：宽高都翻倍，\(n\) 变 4 倍，不确定性减半。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 4 段（末）+ Eq. 23</span><p>"… we can now map a timestep \(t_n\) at resolution n to a timestep \(t_m\) at resolution m that results in the same degree of uncertainty via the ansatz \(\sigma(t_n,n)=\sigma(t_m,m)\). Solving for \(t_m\) gives"</p></div>
+  <div class="math">\[ t_m=\frac{\sqrt{\frac mn}\,t_n}{1+\big(\sqrt{\frac mn}-1\big)t_n}\qquad(23) \]</div>
+  <ol class="read">
+    <li><b>自己推一遍：</b>\(\frac{t_m}{1-t_m}\sqrt{\frac1m}=\frac{t_n}{1-t_n}\sqrt{\frac1n}\)，两边乘 \(\sqrt m\)：\(\frac{t_m}{1-t_m}=\alpha\frac{t_n}{1-t_n}\)，其中 \(\alpha=\sqrt{m/n}\)。设右边为 \(r\)，则 \(t_m=\frac{r}{1+r}=\frac{\alpha t_n}{(1-t_n)+\alpha t_n}=\frac{\alpha t_n}{1+(\alpha-1)t_n}\)。就是 Eq. 23。</li>
+    <li><b>意思：</b>在低分辨率 \(n\) 下学好的 \(t_n\)，换到高分辨率 \(m\) 时应该用更大的 \(t_m\)（更吵）才能达到同样的不确定性。\(\alpha>1\) 时曲线整体往上弯，端点 0 和 1 不变。</li>
+    <li><b>怎么用：</b>训练时照常抽 \(t_n\)（logit-normal），再用 Eq. 23 映射成 \(t_m\) 去加噪；采样时，均匀的时间步也用 Eq. 23 映射，结果是在高噪声区域多走几步。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 5 · Eq. 23 的曲线（对应 Fig. 6 左上）和 log-SNR 的平移</div>
+    <div class="controls"><label>\(\alpha=\sqrt{m/n}\) <input type="range" id="b5-a" min="1" max="6" step="0.1" value="3"></label><label>\(t_n\) <input type="range" id="b5-t" min="0.02" max="0.98" step="0.01" value="0.5"></label></div>
+    <p class="readout" id="b5-read"></p>
+    <canvas id="b5" width="720" height="300"></canvas>
+    <figcaption>左：横轴 \(t_n\)，纵轴 \(t_m\)，灰线是论文画的 \(\alpha=1,1.5,2,3,4,6\)，蓝线是当前 \(\alpha\)。右：RF 路径下 log-SNR \(\lambda_t=2\log\frac{1-t}{t}\)（第一部分第 8 课）随 \(t\) 的曲线，shift 之后整条曲线往下平移 \(2\log\alpha\)，这就是 Eq. 24、25。</figcaption>
+  </figure>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 5 段（p.10）</span><p>"Note that the assumption of constant images is not realistic. To find good values for the shift value \(\alpha:=\sqrt{\frac mn}\) during inference, we apply them to the sampling steps of a model trained at resolution 1024 × 1024 and run a human preference study. The results in Figure 6 show a strong preference for samples with shifts greater than 1.5 but less drastic differences among the higher shift values. In our subsequent experiments, we thus use a shift value of α = 3.0 both during training and sampling at resolution 1024 × 1024."</p></div>
+  <ol class="read">
+    <li><span class="q">"the assumption of constant images is not realistic"</span>：真实图片不是常数图，像素之间的相关性介于"完全相同"和"完全独立"之间。所以理论值 \(\sqrt{m/n}\)（从 256² 到 1024² 是 \(\sqrt{16}=4\)）只是一个参考，实际要靠实验定。</li>
+    <li><span class="q">"human preference study"</span>：Fig. 6 右上是 Elo 分数的柱状图（Elo 是从两两比较算出的排名分）。按柱子高低：\(\alpha=3.0\) 和 \(6.0\) 最高，其次 2.0、4.0，\(\alpha=1.5\) 和 1.0（不 shift）明显低一截。</li>
+    <li><span class="q">"less drastic differences among the higher shift values"</span>：只要 shift 够大（超过 1.5），具体选几差别不大。</li>
+    <li><span class="q">"α = 3.0 both during training and sampling"</span>：最终选择。注意这个偏好实验是在采样时改 shift，训练时也用同样的 3.0。Fig. 6 下面两行：一个 512² 模型分别用 \(\alpha=1\)（上）和 \(\alpha=3\)（下）训练 8k 步并采样的结果，是论文给的定性对比。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.2 第 5 段（末）+ Eq. 24、25</span><p>"Finally, note that Equation 23 implies a log-SNR shift of \(\log\frac nm\) similar to (Hoogeboom et al., 2023):"</p></div>
+  <div class="math">\[ \lambda_{t_m}=2\log\frac{1-t_n}{\sqrt{\frac mn}\,t_n}\qquad(24)\qquad\quad =\lambda_{t_n}-2\log\alpha=\lambda_{t_n}-\log\frac mn\qquad(25) \]</div>
+  <ol class="read">
+    <li>第一部分讲过 RF 的 \(\lambda_t=\log\frac{a_t^2}{b_t^2}=2\log\frac{1-t}{t}\)，越大越清晰。把 \(\frac{t_m}{1-t_m}=\alpha\frac{t_n}{1-t_n}\) 代进去，就得到 Eq. 24、25：<b>整条 log-SNR 曲线往下平移 \(\log\frac mn\)</b>。</li>
+    <li>和第一部分的联系：logit-normal 抽 \(t\) 等价于在 \(\lambda\) 上放一个钟形的权重。shift 相当于把这个钟形整体挪向更低的 SNR（更吵）一侧。Hoogeboom et al. (2023) 的 simple diffusion 也有同样的结论。</li>
+  </ol>
+  <details class="quiz"><summary>自测：\(\alpha=3\) 时，\(t_n=0.5\) 映射到多少？这意味着什么？</summary><p>\(t_m=\frac{3\times0.5}{1+2\times0.5}=0.75\)。低分辨率下"一半信号一半噪声"的状态，在 1024² 下要加到 \(t=0.75\) 才算等价的吵。log-SNR 从 0 降到 \(-2\log3\approx-2.2\)。</p></details>
+</section>
+
+<!-- ===================================================== 6 -->
+<section class="lesson" id="l6">
+  <div class="lesson-head"><span class="no">精读 6 · §5.3.2 末句 + 附录 C + Fig. 13、14</span><h2>DPO：最后按人类偏好微调</h2><p class="goal">读完这段，你应该能说清 DPO 在 SD3 里怎么用、改了哪些参数、效果在哪里看。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.2 末句（p.11）</span><p>"After the shifted training at resolution 1024×1024, we align the model using Direct Preference Optimization (DPO) as described in Appendix C."</p></div>
+  <div class="orig"><span class="loc">原文 · 附录 C（p.23）</span><p>"… we apply the method introduced in Wallace et al. (2023) to our 2B and 8B parameter base model. Rather than finetuning the entire model, we introduce learnable Low-Rank Adaptation (LoRA) matrices (of rank 128) for all linear layers as is common practice. We finetune these new parameters for 4k and 2k iteration for the 2B and 8B base model, respectively. We then evaluate the resulting model in a human preference study using a subset of 128 captions from the Partiprompts set (roughly three voter per prompt and comparison)."</p></div>
+  <ol class="read">
+    <li><b>DPO 是什么：</b>原本是给大语言模型用的：有一批"同一个提示下，人更喜欢 A 不喜欢 B"的数据，直接调模型，让它生成 A 的概率相对 B 变大，不需要单独训练奖励模型。Wallace et al. (2023) 的 Diffusion-DPO 把它改到扩散模型上。论文没说偏好数据从哪来。</li>
+    <li><span class="q">"LoRA matrices (of rank 128) for all linear layers"</span>：不改原模型的参数，而是给每个线性层旁边加一对小矩阵（秩 128），只训练这些小矩阵。参数少、成本低、不容易把原模型改坏。</li>
+    <li><span class="q">"4k and 2k iteration"</span>：训练很短，2B 训 4000 步，8B 只训 2000 步。</li>
+    <li><span class="q">"128 captions … roughly three voter per prompt"</span>：评测规模不大：128 个提示，每个提示每组对比约 3 个人投票。Fig. 14 显示人在 prompt following 和整体质量上都更偏好 DPO 后的模型；Fig. 13 的例子里 DPO 后的图更好看、拼写更准。</li>
+  </ol>
+  <div class="box sd3"><b>在结果里哪里能看到 DPO：</b>Table 5 里 depth=38 在 512² 下，不加 DPO 总分 0.68，加 DPO 0.71；再到 1024² 加 DPO 是 0.74（精读 8）。所以最终的 8B 模型 = RF 预训练 + 1024² shift 微调 + DPO。</div>
+  <details class="quiz"><summary>自测：为什么用 LoRA 而不是直接微调全部 8B 参数？</summary><p>偏好数据量小、训练步数少，全量微调容易过拟合或把原模型能力改坏，显存也大得多。LoRA 只训练很少的新参数，原模型保持不变，是常见做法（原文 "as is common practice"）。</p></details>
+</section>
+
+<!-- ===================================================== 7 -->
+<section class="lesson" id="l7">
+  <div class="lesson-head"><span class="no">精读 7 · §5.3.3 第 1、3 段 + Fig. 8 + Fig. 12</span><h2>scaling 实验：模型越大，loss 越低，图越好</h2><p class="goal">读完这段，你应该能读懂 Fig. 8 的八个小图，并说清"验证 loss 是好的代理指标"这句话的证据。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.3 第 1 段（p.11）</span><p>"For images, we conduct a large scaling study and train models with different numbers of parameters for 500k steps on 256² pixels resolution using preencoded data, c.f. Appendix E.1, with a batch size of 4096. We train on 2 × 2 patches, and report validation losses on the CoCo dataset every 50k steps. In particular, to reduce noise in the validation loss signal, we sample loss levels equidistant in t ∈ (0, 1) and compute validation loss for each level separately. We then average the loss across all but the last (t = 1) levels."</p></div>
+  <ol class="read">
+    <li><span class="q">"different numbers of parameters"</span>：用第二部分的深度 \(d\) 控制：Fig. 8 里图像模型是 depth 15、18、21、30、38。</li>
+    <li><span class="q">"500k steps on 256² … batch size of 4096"</span>：这是 scaling 实验的设置，都在 256² 上（便宜）。和 5.1 的 batch 1024 比大了 4 倍。</li>
+    <li><span class="q">"sample loss levels equidistant in t"</span>：随机抽 \(t\) 算出来的验证 loss 波动很大（不同 \(t\) 的 loss 本来就差很多，第一部分第 7 课）。所以固定几个等间距的 \(t\)，每个分别算，再平均，曲线更平滑。</li>
+    <li><span class="q">"all but the last (t = 1) levels"</span>：\(t=1\) 时输入是纯噪声，loss 基本降不下去，只会加噪声，所以不算。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.3 第 3 段（p.11）</span><p>"For both the image and video domains, we observe a smooth decrease in the validation loss when increasing model size and training steps. We find the validation loss to be highly correlated to comprehensive evaluation metrics (CompBench, GenEval) and to human preference. These results support the validation loss as a simple and general measure of model performance. Our results do not show saturation neither for image not for video models."</p></div>
+  <figure>
+    <div class="fig-title">图 6 · 怎么读 Fig. 8：上排是 scaling 曲线，下排是相关性</div>
+    <div class="controls"><label>看哪一列 <select id="b7-c"><option value="0">第 1 列：loss vs 步数</option><option value="1">第 2 列：loss vs FLOPs</option><option value="2">下排：loss vs 评测</option></select></label></div>
+    <p class="readout" id="b7-read"></p>
+    <canvas id="b7" width="720" height="300"></canvas>
+    <figcaption>这是示意图，曲线形状是我画的，不是论文数据，只为了说明怎么读。下排列出的相关系数 \(r\) 是论文 Fig. 8 里标的真实数字。</figcaption>
+  </figure>
+  <ol class="read">
+    <li><b>上排第 1、2 列（图像）</b>：纵轴验证 loss。第 1 列横轴训练步数，每条线一个深度，越深的线越低，而且都还在往下走。第 2 列横轴是训练 FLOPs（总计算量，对数轴），这才是公平的比较：大模型每步更贵。看"同样的计算量下哪个深度最低"。</li>
+    <li><b>上排第 3、4 列</b>：视频模型（depth 18、24、30），同样的读法（精读 11）。</li>
+    <li><b>下排</b>：每个点是某个深度在某个训练步的 checkpoint，横轴是评测分数，纵轴是验证 loss。相关系数：GenEval \(r=-0.920\)，人类偏好 Elo \(r=-0.982\)，T2I-CompBench \(r=-0.898\)，视频人类偏好 \(r=-0.908\)。负号是因为 loss 越低分越高。\(|r|\) 越接近 1 越线性相关。</li>
+    <li><b>图注里的细节</b>："An exception is depth=38, where learning rate adjustments at \(3\times10^5\) steps were necessary to prevent divergence"。最大的模型训练到一半要调学习率防止发散，所以它的曲线不是完全同等条件。</li>
+    <li><b>为什么这件事重要</b>：第一部分说过，不同训练方式的 loss 不能横比。但<b>同一个训练方式下</b>，loss 和人类偏好几乎是一条直线（\(r=-0.982\)）。所以训练大模型时可以只盯验证 loss，不用每次都做昂贵的人类评测。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>"没有饱和"是指在训练到的范围内曲线还在下降，不代表无限下去都成立。论文没有拟合 scaling law 的公式（比如幂律指数），只是画了曲线。相关性是在同一个模型族内部算的，换一种训练方式或结构不一定成立。Fig. 12（p.22）给了定性的例子：训练越久、模型越大，图越好。</div>
+  <details class="quiz"><summary>自测：为什么第 2 列要用 FLOPs 而不是步数做横轴？</summary><p>同样一步，depth=38 的计算量是 depth=15 的十几倍。用步数做横轴，大模型当然占便宜。用 FLOPs 做横轴，比较的是"花同样的算力，哪个模型 loss 更低"，这才能说明放大模型是划算的。</p></details>
+</section>
+
+<!-- ===================================================== 8 -->
+<section class="lesson" id="l8">
+  <div class="lesson-head"><span class="no">精读 8 · §5.3.3 第 4 段 + Table 5</span><h2>GenEval：8B 在提示理解上超过 DALL-E 3</h2><p class="goal">读完这段，你应该能读懂 Table 5 的每一列，并指出哪些列 SD3 赢、哪些没赢。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.3 第 4 段（p.11）</span><p>"Tab. 5 shows the results of GenEval in full. When applying the methods presented in Section 5.3.2 and increasing training image resolution, our biggest model excels in most categories and outperforms DALLE 3, the current state of the art in prompt comprehension, in overall score."</p></div>
+  <ol class="read">
+    <li><span class="q">"GenEval"</span>：自动评测：给定"两个物体""三个苹果""红色的杯子在蓝色的书左边"这类提示，用目标检测模型判断生成的图是否满足。数字是成功的比例（0 到 1）。</li>
+    <li><span class="q">"applying the methods presented in Section 5.3.2 and increasing training image resolution"</span>：表的最后一行（depth=38，1024²，加 DPO）用到了 5.3.2 的全部方法。</li>
+    <li><span class="q">"excels in most categories"</span>：不是所有列都第一，见下表。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 7 · Table 5 的 Overall 列（点按钮切换要看的列）</div>
+    <div class="controls"><label>列 <select id="b8-c"><option value="0">Overall</option><option value="1">Single</option><option value="2">Two</option><option value="3">Counting</option><option value="4">Colors</option><option value="5">Position</option><option value="6">Color Attribution</option></select></label></div>
+    <canvas id="b8" width="720" height="380"></canvas>
+    <figcaption>数字全部来自 Table 5。灰色是其他模型，蓝色是 SD3 的各个版本（512² 下的四个深度、加 DPO、1024² 加 DPO），粉色是 DALL-E 3。</figcaption>
+  </figure>
+  <div class="tbl"><table class="num">
+    <thead><tr><th>Table 5（节选）</th><th>Overall</th><th>Single</th><th>Two</th><th>Count</th><th>Colors</th><th>Position</th><th>Color Attr.</th></tr></thead>
+    <tbody>
+      <tr><td>SDXL</td><td>0.55</td><td>0.98</td><td>0.74</td><td>0.39</td><td>0.85</td><td>0.15</td><td>0.23</td></tr>
+      <tr><td>IF-XL</td><td>0.61</td><td>0.97</td><td>0.74</td><td>0.66</td><td>0.81</td><td>0.13</td><td>0.35</td></tr>
+      <tr><td>DALL-E 3</td><td>0.67</td><td>0.96</td><td>0.87</td><td>0.47</td><td>0.83</td><td class="b2">0.43</td><td>0.45</td></tr>
+      <tr><td>Ours d=38, 512²</td><td>0.68</td><td>0.98</td><td>0.84</td><td>0.66</td><td>0.74</td><td>0.40</td><td>0.43</td></tr>
+      <tr><td>Ours d=38, 512² w/DPO</td><td>0.71</td><td>0.98</td><td>0.89</td><td>0.73</td><td>0.83</td><td>0.34</td><td>0.47</td></tr>
+      <tr><td>Ours d=38, 1024² w/DPO</td><td class="b1">0.74</td><td class="b1">0.99</td><td class="b1">0.94</td><td>0.72</td><td class="b1">0.89</td><td>0.33</td><td class="b1">0.60</td></tr>
+    </tbody>
+  </table></div>
+  <ol class="read">
+    <li><b>赢的</b>：Overall 0.74 vs DALL-E 3 的 0.67；Two Objects、Colors、Color Attribution（0.60 vs 0.45）都是第一。</li>
+    <li><b>没赢的</b>：Position（位置关系）DALL-E 3 是 0.43，SD3 最好的一行是 depth=38 无 DPO 的 0.40，加 DPO 和上 1024 后反而降到 0.34、0.33。Counting 最高的是 512² w/DPO 的 0.73，1024² 那行是 0.72。</li>
+    <li><b>深度的趋势</b>：512² 下 depth 18、24、30、38 的 Overall 是 0.58、0.62、0.64、0.68，越大越好，和 Fig. 8 一致。</li>
+  </ol>
+  <div class="box warn"><b>注意可比性：</b>其他模型的数字是从各自论文或 GenEval 原文抄来的，生成设置不完全一样。SD3 的数字是作者自己跑的。DALL-E 3 是闭源的，DPO 和分辨率也是混在一起的改动。</div>
+  <details class="quiz"><summary>自测：从 512² w/DPO 到 1024² w/DPO，哪些列变好、哪些变差？</summary><p>变好：Overall 0.71 → 0.74，Single 0.98 → 0.99，Two 0.89 → 0.94，Colors 0.83 → 0.89，Color Attribution 0.47 → 0.60。变差：Counting 0.73 → 0.72，Position 0.34 → 0.33（都很小）。</p></details>
+</section>
+
+<!-- ===================================================== 9 -->
+<section class="lesson" id="l9">
+  <div class="lesson-head"><span class="no">精读 9 · §5.3.3 第 6 段 + Table 6</span><h2>大模型用更少的步数</h2><p class="goal">读完这段，你应该能读懂 Table 6，并把"路径长度"和第一部分的"路越直越好走"联系起来。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.3 第 6 段（p.11）</span><p>"Lastly, Table 6 highlights an intriguing result: not only do bigger models perform better, they also require fewer steps to reach their peak performance."</p></div>
+  <div class="orig"><span class="loc">原文 · Table 6 图注（p.11）</span><p>"The table shows the relative performance decrease relative to CLIP scores evaluated using 50 sampling steps at a fixed seed. Larger models can be sampled using fewer steps, which we attribute to increased robustness and better fitting the straight-path objective of rectified flow models, resulting in shorter path lengths. Path length is calculated by summing up \(\lVert v_\theta\cdot dt\rVert\) over 50 steps."</p></div>
+  <ol class="read">
+    <li><span class="q">"relative performance decrease relative to CLIP scores … using 50 sampling steps"</span>：以 50 步的 CLIP score 为基准，用 5、10、20 步采样时 CLIP score 掉了百分之几。越小越好。</li>
+    <li><span class="q">"better fitting the straight-path objective"</span>：第一部分第 2 课：路越直，Euler 法少走几步误差越小。RF 的训练目标是直线路径，但网络学到的是"平均速度"，实际轨迹会弯。作者的解释是大模型拟合得更好，轨迹更直。</li>
+    <li><span class="q">"Path length … summing up \(\lVert v_\theta\cdot dt\rVert\) over 50 steps"</span>：把 50 步每步走过的距离加起来。两点之间直线最短，所以路径越短说明越直（在起点终点差不多的前提下）。</li>
+  </ol>
+  <figure>
+    <div class="fig-title">图 8 · Table 6：少步数时 CLIP score 掉了多少（%）</div>
+    <canvas id="b9" width="720" height="280"></canvas>
+    <figcaption>三组柱子分别是 5/50、10/50、20/50 步，每组里三根是 depth 15、30、38。数字全部来自 Table 6。</figcaption>
+  </figure>
+  <div class="tbl"><table class="num">
+    <thead><tr><th>Table 6</th><th>5/50 步</th><th>10/50 步</th><th>20/50 步</th><th>路径长度</th></tr></thead>
+    <tbody>
+      <tr><td>depth=15</td><td>4.30</td><td>0.86</td><td>0.21</td><td>191.13</td></tr>
+      <tr><td>depth=30</td><td>3.59</td><td>0.70</td><td>0.24</td><td>187.96</td></tr>
+      <tr><td>depth=38</td><td>2.71</td><td>0.14</td><td>0.08</td><td>185.96</td></tr>
+    </tbody>
+  </table></div>
+  <ol class="read">
+    <li><b>最醒目的</b>：10 步时，depth=38 只掉 0.14%，depth=15 掉 0.86%。也就是 8B 模型用 10 步几乎和 50 步一样好。</li>
+    <li><b>不完全单调</b>：20 步时 depth=30（0.24）比 depth=15（0.21）掉得还多一点。</li>
+    <li><b>路径长度</b>：191.13 → 187.96 → 185.96，只差约 3%。方向和解释一致，但差距不大。</li>
+  </ol>
+  <div class="box warn"><b>证据强度：</b>"固定一个随机种子"，指标只有 CLIP score 一种，三个模型。"大模型更直"是作者的解释（"we attribute to"），路径长度的差距也小，算是支持性的观察，不是严格证明。</div>
+  <details class="quiz"><summary>自测：为什么路径短能说明路径直？有什么前提？</summary><p>起点（噪声）和终点（生成的图）之间直线最短，弯路一定更长。前提是不同模型的起点终点距离差不多，比较才公平。同一个种子、同一批提示下，起点相同，终点都是合理的图，这个前提大致成立。</p></details>
+</section>
+
+<!-- ===================================================== 10 -->
+<section class="lesson" id="l10">
+  <div class="lesson-head"><span class="no">精读 10 · §5.3.3 人类评测段 + Fig. 7 + "Flexible Text Encoders" + Fig. 9</span><h2>人类评测，以及推理时去掉 T5</h2><p class="goal">读完这段，你应该能读懂 Fig. 7 的 win rate，并说清去掉 T5 损失了什么。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.3 人类评测段（p.11）</span><p>"Our d = 38 model outperforms current proprietary … and open … SOTA generative image models in human preference evaluation on the Parti-prompts benchmark in the categories visual aesthetics, prompt following and typography generation, c.f. Figure 7. For evaluating human preference in these categories, raters were shown pairwise outputs from two models, and asked to answer the following questions: …"</p></div>
+  <ol class="read">
+    <li><span class="q">"pairwise outputs from two models"</span>：每次给评分者看同一提示下 SD3 和另一个模型的两张图，选更好的。Fig. 7 的纵轴是 SD3 的胜率（Winrate），50% 的虚线表示打平。</li>
+    <li><span class="q">"visual aesthetics, prompt following and typography"</span>：三个问题：哪张更好看；哪张更符合文字；哪张把要求的文字写得更准（"More accurate spelling is preferred! Ignore other aspects."）。</li>
+    <li><b>读 Fig. 7</b>：横轴是对手：PixArt-α、SDXL、SDXL-Turbo、Stable Cascade、Playground-V2.5、MJ-V6、Ideogram-V1.0、DALLE-3、Ours w/o T5。大部分柱子在 50% 以上，排版（黄色）通常赢得最多；和 Ideogram、DALL-E 3 这类强模型差距小，按图读 Ideogram 的视觉美感一项大约在 50% 附近。（具体高度是我从图上读的，论文没给表。）</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · §5.3.3 "Flexible Text Encoders"（p.11 到 12）</span><p>"While the main motivation for using multiple text-encoders is boosting the overall model performance, we now show that this choice additionally increases the flexibility … we train our model with three text encoders, with an individual drop-out rate of 46.3%. Hence, at inference time, we can use an arbitrary subset of all three text encoders. This offers means for trading off model performance for improved memory efficiency, which is particularly relevant for the 4.7B parameters of T5-XXL that require significant amounts of VRAM."</p></div>
+  <ol class="read">
+    <li><span class="q">"individual drop-out rate of 46.3%"</span>：第二部分讲过：每个编码器的输出训练时以约 46% 的概率被单独置零（附录 B.3 写的是 46.4%）。所以模型见过"只有 CLIP 没有 T5"的输入，推理时去掉 T5（用零代替）不会出分布。</li>
+    <li><span class="q">"4.7B parameters of T5-XXL"</span>：T5 编码器本身比 2B 的 MM-DiT 还大，加载要 19 GB 显存（Table 7）。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · "Flexible Text Encoders"（续）</span><p>"… we observe limited performance drops when using only the two CLIP-based text-encoders for the text prompts and replacing the T5 embeddings by zeros. … Only for complex prompts involving either highly detailed descriptions of a scene or larger amounts of written text do we find significant performance gains when using all three text-encoders. … Removing T5 has no effect on aesthetic quality ratings (50% win rate), and only a small impact on prompt adherence (46% win rate), whereas its contribution to the capabilities of generating written text are more significant (38% win rate)."</p></div>
+  <figure>
+    <div class="fig-title">图 9 · 推理时选用哪些文本编码器（显存来自 Table 7，胜率来自正文）</div>
+    <div class="checks" id="b10-checks"></div>
+    <canvas id="b10" width="720" height="220"></canvas>
+    <figcaption>只有"全选"和"去掉 T5"两种组合论文给了人类评测结果。去掉 T5 时三个胜率是 w/o T5 版本对全编码器版本：美感 50%（没差别）、提示遵循 46%、排版 38%。其他组合论文没评测。</figcaption>
+  </figure>
+  <ol class="read">
+    <li><b>怎么理解</b>：两个 CLIP 已经够描述"画什么、什么风格"。T5 的价值在长而细的描述和要写出来的字，这正是第二部分说的 T5 更懂语言、CLIP 更懂画面。Fig. 9 的三个例子：前两行是复杂描述和长文字，去掉 T5 明显变差；第三行简单提示几乎一样。</li>
+    <li><b>Fig. 7 里的 "Ours w/o T5"</b>：这一栏是全编码器 SD3 对 w/o T5 的胜率，所以是 50%、54%、62% 左右，正好是正文 50%、46%、38% 的反面。</li>
+  </ol>
+  <details class="quiz"><summary>自测：如果训练时没有对每个编码器单独做 dropout，推理时还能直接去掉 T5 吗？</summary><p>效果会很差。模型从没见过"T5 那部分全是 0"的输入，这对它是分布外的情况。正是因为训练时约 46% 的步里 T5 被置零，去掉 T5 才是模型熟悉的输入。</p></details>
+</section>
+
+<!-- ===================================================== 11 -->
+<section class="lesson" id="l11">
+  <div class="lesson-head"><span class="no">精读 11 · §5.3.3 第 2 段（视频）+ 第 6 节</span><h2>视频的初步 scaling 和全文结论</h2><p class="goal">读完这段，你应该能说清视频实验怎么做的、结论的三句话各对应哪一部分的证据。</p></div>
+  <div class="orig"><span class="loc">原文 · §5.3.3 第 2 段（p.11）</span><p>"Similarly, we conduct a preliminary scaling study of our MM-DiT on videos. To this end we start from the pretrained image weights and additionally use a 2x temporal patching. … In each attention layer we rearrange the representation in the visual stream and add a full attention over all spatiotemporal tokens after the spatial attention operation before the final feedforward layer. Our video models are trained for 140k steps with a batch size of 512 on videos comprising 16 frames with 256² pixels. We report validation losses on the Kinetics dataset every 5k steps. Note that our reported FLOPs for video training in Figure 8 are only FLOPs from video training …"</p></div>
+  <ol class="read">
+    <li><span class="q">"start from the pretrained image weights"</span>：从图像模型接着训，不是从头训视频。</li>
+    <li><span class="q">"2x temporal patching"</span>：除了空间 2×2，时间上相邻 2 帧也打包进一个 token，16 帧变成 8 个时间位置。</li>
+    <li><span class="q">"add a full attention over all spatiotemporal tokens after the spatial attention"</span>：原来的注意力只在一帧内部做（空间），在它后面、MLP 之前，加一层跨所有帧所有位置的注意力，让不同帧之间交换信息。</li>
+    <li><span class="q">"only FLOPs from video training"</span>：Fig. 8 第 4 列的横轴不含图像预训练的算力，所以看起来视频模型用的算力少，其实前面还有图像预训练。</li>
+    <li>结论和图像一样：loss 随模型大小和步数平滑下降、没饱和，和人类偏好相关（\(r=-0.908\)）。论文称之为 "preliminary"，只用了 depth 18、24、30 三个大小。</li>
+  </ol>
+  <div class="orig"><span class="loc">原文 · 第 6 节 Conclusion（p.12）</span><p>"In this work, we presented a scaling analysis of rectified flow models for text-to-image synthesis. We proposed a novel timestep sampling for rectified flow training … We also demonstrated the advantages of our transformer-based MM-DiT architecture … Finally, we performed a scaling study of this combination up to a model size of 8B parameters and \(5\times10^{22}\) training FLOPs. … The scaling trend shows no signs of saturation …"</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>结论里的话</th><th>证据在哪</th><th>本系列</th></tr></thead>
+    <tbody>
+      <tr><td>"a novel timestep sampling for rectified flow training"</td><td>§3.1 Eq. 18 到 22；§5.1 Table 1、Fig. 3</td><td>第一部分</td></tr>
+      <tr><td>"advantages of our transformer-based MM-DiT architecture"</td><td>§4 Fig. 2；§5.2.3 Fig. 4</td><td>第二部分</td></tr>
+      <tr><td>"scaling study … 8B parameters and \(5\times10^{22}\) training FLOPs"</td><td>§5.3.3 Fig. 8</td><td>本页精读 7</td></tr>
+      <tr><td>"validation loss improvements correlate with … benchmarks as well as human preference"</td><td>Fig. 8 下排</td><td>本页精读 7</td></tr>
+      <tr><td>"competitive with state-of-the-art proprietary models"</td><td>Table 5、Fig. 7</td><td>本页精读 8、10</td></tr>
+      <tr><td>"no signs of saturation"</td><td>Fig. 8 上排（在训练到的范围内）</td><td>本页精读 7</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box warn"><b>全文的证据强度，一起记住：</b>5.1 和 5.2 的比较都是小规模、单次运行；8B 直接沿用小规模选出的配方，没有在大规模上重新比较；QK-norm、shift 的 \(\alpha\)、DPO 是工程上的稳定和调优手段；和闭源模型的比较依赖人类评测和别人报告的数字。这些不影响论文的主要贡献，但讲的时候要分清"实验证明了"和"作者选择了"。</div>
+  <details class="quiz"><summary>最终自测：用三句话讲清 5.3 做了什么。</summary><p>先过滤去重数据、预先算好潜变量和文本编码，在 256² 上训练 depth 15 到 38 的模型，发现验证 loss 随大小和算力平滑下降、没饱和，而且和 GenEval、人类偏好高度相关。微调到 1024² 时用 QK-norm 防止 bf16 训练发散，用扩展加插值的位置网格支持多长宽比，用 Eq. 23 的 timestep shift（\(\alpha=3\)）补足高分辨率需要的噪声，最后再用 DPO 对齐人类偏好。最终 8B 模型在 GenEval 总分和人类评测上达到或超过 DALL-E 3 等模型，大模型还能用更少的采样步数，训练时的编码器 dropout 也让推理时可以去掉 T5 省显存。</p></details>
+</section>
+
+<footer>
+  <p>依据：Esser et al., "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis", ICML 2024（<a href="https://arxiv.org/abs/2403.03206v1">arXiv 2403.03206v1</a>）第 5.3 节、第 6 节、Fig. 5 到 9、Fig. 12 到 17、Table 5 到 7 与附录 B.3、C、E。引文为论文原句的节选。图 2、4、6 是示意（图 6 的相关系数为论文数字）；图 1、7、8、9 和表格的数字来自论文；图 3 按原文公式计算，长宽比范围是假设的。</p>
+  <p>上一部分：<a href="/writing/papers/sd3/architecture/">精读 SD3：模型结构</a> · 从头开始：<a href="/writing/papers/sd3/primer/">从零读懂 Flow Matching</a></p>
+</footer>
+</main>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
+<script>
+(function(){
+"use strict";
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+function ctx(id){const c=$(id);const r=window.devicePixelRatio||1;if(!c._w){c._w=c.width;c._h=c.height;}const W=Math.round(c.clientWidth||c._w),H=Math.round(c._h*Math.max(0.72,Math.min(1,W/c._w)));if(c._cw!==W||c._ch!==H){c._cw=W;c._ch=H;c.width=W*r;c.height=H*r;c.style.height=H+'px';}const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.W=W;x.H=H;x.font='12px '+C('--f-mono');return x;}
+// seeded rng
+let seed=12345;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const SD=0.4;const dataSample=()=>(rnd()<0.5?-3:3)+SD*gauss();
+const npdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+// exact marginal RF velocity for the toy: x0 ~ 0.5N(-3,SD^2)+0.5N(3,SD^2), eps~N(0,1), z=(1-t)x0+t eps ; u = E[eps - x0 | z]
+function uMarg(z,t){let num=0,den=0;for(const mu of [-3,3]){const m=(1-t)*mu, v=(1-t)*(1-t)*SD*SD+t*t, s=Math.sqrt(v);const w=npdf(z,m,s);
+  const ex0=mu+(1-t)*SD*SD/v*(z-m), eeps=t/v*(z-m);num+=w*(eeps-ex0);den+=w;}return den>0?num/den:0;}
+function axes(x,o){ // o: {L,R,T,B,xmin,xmax,ymin,ymax,xt:[...],yt:[...],xl,yl}
+  const pw=x.W-o.L-o.R,ph=x.H-o.T-o.B;const X=v=>o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y=v=>o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin));
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');x.lineWidth=1;
+  (o.yt||[]).forEach(v=>{x.beginPath();x.moveTo(o.L,Y(v));x.lineTo(o.L+pw,Y(v));x.stroke();x.fillText(String(v),4,Y(v)+4);});
+  (o.xt||[]).forEach(v=>{x.fillText(String(v),X(v)-8,x.H-o.B+16);});
+  if(o.xl)x.fillText(o.xl,o.L+pw-x.measureText(o.xl).width,o.T+ph-6);
+  if(o.yl)x.fillText(o.yl,o.L+4,o.T-2>10?o.T-2:12);
+  return {X,Y,pw,ph};
+}
+function arrow(x,x1,y1,x2,y2,col,w){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w||2;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();const a=Math.atan2(y2-y1,x2-x1),h=Math.min(8,Math.hypot(x2-x1,y2-y1)*0.5);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-h*Math.cos(a-0.45),y2-h*Math.sin(a-0.45));x.lineTo(x2-h*Math.cos(a+0.45),y2-h*Math.sin(a+0.45));x.closePath();x.fill();}
+const anims={};function loop(name,step){if(anims[name])cancelAnimationFrame(anims[name]);const f=()=>{if(step()!==false)anims[name]=requestAnimationFrame(f);else anims[name]=0;};anims[name]=requestAnimationFrame(f);}
+
+function rr(x,X,Y,W,H,r,fill,stroke){x.beginPath();x.roundRect?x.roundRect(X,Y,W,H,r):x.rect(X,Y,W,H);if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=1.2;x.stroke();}}
+function label(x,t,X,Y,col,align){x.fillStyle=col||C('--heading');x.textAlign=align||'left';x.fillText(t,X,Y);x.textAlign='left';}
+function ctxN(id,hN){const c=$(id);if(!c._h0){c._w=c.width;c._h0=c.height;}c._h=(c.clientWidth||c._w)<560?hN:c._h0;return ctx(id);}
+function mkChecks(box,items,on){items.forEach((it,i)=>{const l=document.createElement('label');const c=document.createElement('input');c.type='checkbox';c.checked=on[i];c.dataset.i=i;l.appendChild(c);l.appendChild(document.createTextNode(' '+it));$(box).appendChild(l);});return ()=>[...$(box).querySelectorAll('input')].map(c=>c.checked);}
+
+/* ---------- B2 Table 7 ---------- */
+const T7=[['VAE',0.14,2.45,65.5,13.8],['CLIP-L',0.49,0.45,121.3,2.6],['CLIP-G',2.78,2.77,202.2,15.6],['T5',19.05,17.46,630.7,98.3]];
+const b2get=mkChecks('b2-checks',T7.map(r=>r[0]+' 现算'),[false,false,false,false]);
+function drawB2(){const x=ctxN('b2',380);x.clearRect(0,0,x.W,x.H);const on=b2get();const nar=x.W<560;
+  const mem=T7.reduce((a,r,i)=>a+(on[i]?r[1]:0),0),del=T7.reduce((a,r,i)=>a+(on[i]?r[4]:0),0),sto=T7.reduce((a,r,i)=>a+(on[i]?0:r[3]),0);
+  const rows=[['训练时多占显存',mem,25,'GB',C('--orange')],['每步变慢（相加近似）',del,140,'%',C('--pink')],['每个样本要存',sto,1100,'kB',C('--blue')]];
+  const L=nar?10:170,top=24,rh=(x.H-top-10)/3;rows.forEach((r,i)=>{const y=top+i*rh;label(x,r[0],nar?10:L-10,nar?y+12:y+rh*0.45,C('--heading'),nar?'left':'right');const bx=nar?10:L,bw=x.W-bx-90,by=nar?y+20:y+rh*0.2,bh=nar?rh*0.35:rh*0.45;
+    rr(x,bx,by,bw,bh,3,null,C('--line'));rr(x,bx,by,Math.max(0,bw*Math.min(1,r[1]/r[2])),bh,3,r[4]);label(x,r[1].toFixed(r[3]==='GB'?2:1)+' '+r[3],bx+bw+8,by+bh*0.7,C('--heading'));});
+  label(x,'勾上 = 放进训练循环现算；不勾 = 预先算好存盘',10,14,C('--muted'));}
+$('b2-checks').onchange=drawB2;
+
+/* ---------- B3 QK-norm ---------- */
+const B3k=(()=>{let s=4242;const r=()=>{s=(s*16807)%2147483647;return s/2147483647-0.5;};const K=[];for(let i=0;i<12;i++)K.push([r()*2,r()*2,r()*2,r()*2]);return K;})();const B3q=[0.9,0.5,-0.4,0.6];
+function drawB3(){const x=ctx('b3');x.clearRect(0,0,x.W,x.H);const s=+$('b3-s').value,qn=$('b3-n').checked;const norm=v=>{const r=Math.sqrt(v.reduce((a,b)=>a+b*b,0)/v.length);return v.map(e=>e/r);};
+  const g=2.5;const q=qn?norm(B3q).map(e=>e*g/2):B3q.map(e=>e*s),K=B3k.map(k=>qn?norm(k).map(e=>e*g/2):k.map(e=>e*s));
+  const lg=K.map(k=>k.reduce((a,e,i)=>a+e*q[i],0)/2);const mx=Math.max(...lg);const ex=lg.map(l=>Math.exp(l-mx));const Z=ex.reduce((a,b)=>a+b,0);const w=ex.map(e=>e/Z);const H=-w.reduce((a,p)=>a+(p>0?p*Math.log(p):0),0);
+  const o={L:34,R:110,T:18,B:24,xmin:0,xmax:12,ymin:0,ymax:1,yt:[0,0.5,1]};const {X,Y}=axes(x,o);
+  w.forEach((p,i)=>{rr(x,X(i)+3,Y(p),X(1)-X(0)-6,Y(0)-Y(p),2,qn?C('--green'):C('--blue'));});
+  label(x,'softmax 权重（12 个 key）',o.L+4,12,C('--muted'));
+  const gx=x.W-90;label(x,'最大 logit',gx,o.T+10,C('--muted'));label(x,mx.toFixed(1),gx,o.T+30,C('--heading'));label(x,'熵',gx,o.T+64,C('--muted'));label(x,H.toFixed(2)+' / '+Math.log(12).toFixed(2),gx,o.T+84,C('--heading'));
+  rr(x,gx,o.T+96,70,10,3,null,C('--line'));rr(x,gx,o.T+96,70*H/Math.log(12),10,3,H<0.5?C('--pink'):C('--green'));
+  $('b3-read').textContent=qn?'QK-norm：Q、K 先归一化，长度倍数不再影响 logit':(H<0.5?'熵塌缩：几乎只看一个 key（Fig. 5 右图里 NaN 之前的样子）':'Q、K 还不大，注意力分散在多个 key 上');}
+$('b3-s').oninput=drawB3;$('b3-n').onchange=drawB3;
+
+/* ---------- B4 positional grid ---------- */
+function drawB4(){const x=ctxN('b4',640);const nar=x.W<560;x.clearRect(0,0,x.W,x.H);const S=+$('b4-S').value,av=+$('b4-a').value,a=Math.pow(2,av);const s=S/16;
+  const amax=2;const hmax=Math.round(s*Math.sqrt(amax)),wmax=hmax;// extreme 1:2 and 2:1 give same max side
+  const h=Math.max(1,Math.round(s/Math.sqrt(a))),w=Math.max(1,Math.round(s*Math.sqrt(a)));
+  const pos=(p,m)=>(p-(m-s)/2)*256/S;const c0=Math.round((hmax-h)/2),r0=Math.round((wmax-w)/2);
+  const ys=[],xs=[];for(let p=c0;p<c0+h;p++)ys.push(pos(p,hmax));for(let p=r0;p<r0+w;p++)xs.push(pos(p,wmax));
+  const lo=-5,hi=21,pad=26,side=nar?Math.min(x.W-2*pad,x.H-190):Math.min(x.W-2*pad-120,x.H-2*pad);const X=v=>pad+side*(v-lo)/(hi-lo),Y=v=>pad+side*(v-lo)/(hi-lo);
+  x.strokeStyle=C('--line');for(let v=lo;v<=hi;v+=5){x.beginPath();x.moveTo(X(v),Y(lo));x.lineTo(X(v),Y(hi));x.stroke();x.beginPath();x.moveTo(X(lo),Y(v));x.lineTo(X(hi),Y(v));x.stroke();}
+  x.fillStyle=C('--muted');[0,15].forEach(v=>{x.fillText(String(v),X(v)-4,Y(hi)+14);x.fillText(String(v),X(lo)-20,Y(v)+4);});
+  rr(x,X(0),Y(0),X(15)-X(0),Y(15)-Y(0),2,C('--line-strong')+'55',C('--muted'));
+  const step=Math.max(1,Math.ceil(Math.max(h,w)/32));x.fillStyle=C('--blue');
+  for(let i=0;i<ys.length;i+=step)for(let j=0;j<xs.length;j+=step){x.beginPath();x.arc(X(xs[j]),Y(ys[i]),2.2,0,7);x.fill();}
+  const tx=nar?pad:pad+side+16,ty0=nar?pad+side+10:0;x.save();x.translate(0,ty0);label(x,`S = ${S}，s = ${s}`,tx,pad+10,C('--heading'));label(x,`token 网格 ${h} × ${w}`,tx,pad+32,C('--heading'));label(x,`W:H ≈ ${a>=1?a.toFixed(2)+':1':'1:'+(1/a).toFixed(2)}`,tx,pad+54,C('--muted'));
+  label(x,`纵坐标 ${ys[0].toFixed(2)} 到 ${ys[ys.length-1].toFixed(2)}`,tx,pad+86,C('--muted'));label(x,`横坐标 ${xs[0].toFixed(2)} 到 ${xs[xs.length-1].toFixed(2)}`,tx,pad+106,C('--muted'));label(x,`间距 ${(256/S).toFixed(2)}`,tx,pad+126,C('--muted'));x.restore();
+  $('b4-read').textContent=(S===256&&Math.abs(av)<0.03)?'和预训练完全一样：坐标 0 到 15':(Math.abs(av)<0.03?'插值：范围不变，点变密':'扩展：长边伸出灰框，短边居中');}
+$('b4-S').onchange=drawB4;$('b4-a').oninput=drawB4;
+
+/* ---------- B5n noise demo ---------- */
+const scene=(u,v)=>{let val=0.15;if(Math.hypot(u-0.35,v-0.4)<0.2)val=0.9;if(u>0.55&&u<0.85&&v>0.55&&v<0.85)val=0.6;if(v>0.8)val=0.35;return val*2-1;};
+let b5seed=99;const nz=(()=>{const mk=n=>{const a=new Float32Array(n);let s=b5seed;const r=()=>{s=(s*16807)%2147483647;return s/2147483647;};for(let i=0;i<n;i++){let u=0,v=0;while(!u)u=r();while(!v)v=r();a[i]=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}return a;};return {mk};})();
+let N32=nz.mk(32*32),N128=nz.mk(128*128);
+function drawB5n(){const x=ctxN('b5n',520);x.clearRect(0,0,x.W,x.H);const t=+$('b5n-t').value;const nar=x.W<560;
+  const side=nar?Math.min((x.W-30)/2,(x.H-60)/2):Math.min((x.W-60)/3,x.H-40);
+  const pan=(ox,oy,n,get,title)=>{const c=side/n;for(let i=0;i<n;i++)for(let j=0;j<n;j++){const v=get(i,j);const g=Math.max(0,Math.min(255,(v+1.6)/3.2*255))|0;x.fillStyle=`rgb(${g},${g},${g})`;x.fillRect(ox+j*c,oy+i*c,c+0.6,c+0.6);}label(x,title,ox,oy-6,C('--heading'));};
+  const z32=(i,j)=>(1-t)*scene((j+0.5)/32,(i+0.5)/32)+t*N32[i*32+j];const z128=(i,j)=>(1-t)*scene((j+0.5)/128,(i+0.5)/128)+t*N128[i*128+j];
+  const avg=(i,j)=>{let s=0;for(let a=0;a<4;a++)for(let b=0;b<4;b++)s+=z128(i*4+a,j*4+b);return s/16;};
+  const P=nar?[[10,22],[20+side,22],[10,44+side]]:[[14,22],[30+side,22],[46+2*side,22]];
+  pan(P[0][0],P[0][1],32,z32,'32×32，t='+t.toFixed(2));pan(P[1][0],P[1][1],128,z128,'128×128，同样的 t');pan(P[2][0],P[2][1],32,avg,'右：大图 4×4 平均');
+  const sig=(n)=>t/(1-t)/Math.sqrt(n);$('b5n-read').textContent=`σ(t,n)：32² 时 ${sig(1024).toFixed(4)}，128² 时 ${sig(16384).toFixed(4)}（小 4 倍）· 大图要等价地吵，t 应映射到 ${(4*t/(1+3*t)).toFixed(2)}（α=4）`;}
+$('b5n-t').oninput=drawB5n;$('b5n-re').onclick=()=>{b5seed=(b5seed*48271)%2147483647;N32=nz.mk(1024);N128=nz.mk(16384);drawB5n();};
+
+/* ---------- B5 shift curves ---------- */
+const shift=(t,a)=>a*t/(1+(a-1)*t);
+function drawB5(){const x=ctxN('b5',560);x.clearRect(0,0,x.W,x.H);const a=+$('b5-a').value,tn=+$('b5-t').value,nar=x.W<560;
+  const half=nar?x.H/2:x.H;const w1=nar?x.W:x.W*0.5;
+  const o1={L:34,R:12,T:16,B:26,xmin:0,xmax:1,ymin:0,ymax:1,xt:[0,0.5,1],yt:[0,0.5,1],xl:'t_n'};const xc=ctx; // left plot
+  const sub=(o,W,H,ox,oy)=>{const pw=W-o.L-o.R,ph=H-o.T-o.B;return {X:v=>ox+o.L+pw*(v-o.xmin)/(o.xmax-o.xmin),Y:v=>oy+o.T+ph*(1-(v-o.ymin)/(o.ymax-o.ymin)),pw,ph};};
+  const A=sub(o1,w1,half,0,0);x.strokeStyle=C('--line');x.fillStyle=C('--muted');[0,0.5,1].forEach(v=>{x.beginPath();x.moveTo(A.X(0),A.Y(v));x.lineTo(A.X(1),A.Y(v));x.stroke();x.fillText(String(v),4,A.Y(v)+4);x.fillText(String(v),A.X(v)-6,half-8);});
+  label(x,'t_m',A.X(0)+4,A.Y(1)+12,C('--muted'));
+  [1,1.5,2,3,4,6].forEach(al=>{x.strokeStyle=C('--line-strong');x.lineWidth=1;x.beginPath();for(let i=0;i<=100;i++){const t=i/100;i?x.lineTo(A.X(t),A.Y(shift(t,al))):x.moveTo(A.X(t),A.Y(shift(t,al)));}x.stroke();});
+  x.strokeStyle=C('--blue');x.lineWidth=2.4;x.beginPath();for(let i=0;i<=100;i++){const t=i/100;i?x.lineTo(A.X(t),A.Y(shift(t,a))):x.moveTo(A.X(t),A.Y(shift(t,a)));}x.stroke();
+  const tm=shift(tn,a);x.setLineDash([3,3]);x.strokeStyle=C('--pink');x.beginPath();x.moveTo(A.X(tn),A.Y(0));x.lineTo(A.X(tn),A.Y(tm));x.lineTo(A.X(0),A.Y(tm));x.stroke();x.setLineDash([]);x.fillStyle=C('--pink');x.beginPath();x.arc(A.X(tn),A.Y(tm),5,0,7);x.fill();
+  const o2={L:40,R:12,T:16,B:26,xmin:0,xmax:1,ymin:-8,ymax:8};const B=sub(o2,nar?x.W:x.W-w1,half,nar?0:w1,nar?half:0);
+  x.strokeStyle=C('--line');x.fillStyle=C('--muted');[-8,-4,0,4,8].forEach(v=>{x.beginPath();x.moveTo(B.X(0),B.Y(v));x.lineTo(B.X(1),B.Y(v));x.stroke();x.fillText(String(v),B.X(0)-30,B.Y(v)+4);});
+  label(x,'λ_t = 2 log((1-t)/t)',B.X(0)+4,B.Y(8)+12,C('--muted'));
+  const lam=t=>2*Math.log((1-t)/t);const curve=(f,col,dash)=>{x.strokeStyle=col;x.lineWidth=2;x.setLineDash(dash||[]);x.beginPath();let st=false;for(let i=1;i<200;i++){const t=i/200;const v=f(t);if(v<-8||v>8){st=false;continue;}st?x.lineTo(B.X(t),B.Y(v)):x.moveTo(B.X(t),B.Y(v));st=true;}x.stroke();x.setLineDash([]);};
+  curve(lam,C('--muted'),[4,3]);curve(t=>lam(t)-2*Math.log(a),C('--blue'));
+  x.fillStyle=C('--muted');[0,0.5,1].forEach(v=>x.fillText(String(v),B.X(v)-6,(nar?2*half:half)-8));
+  $('b5-read').textContent=`α=${a.toFixed(1)}：t_n=${tn.toFixed(2)} → t_m=${tm.toFixed(2)} · log-SNR 下移 2·log α = ${(2*Math.log(a)).toFixed(2)}`;}
+$('b5-a').oninput=drawB5;$('b5-t').oninput=drawB5;
+
+/* ---------- B7 Fig 8 reading (schematic) ---------- */
+function drawB7(){const x=ctx('b7');x.clearRect(0,0,x.W,x.H);const c=+$('b7-c').value;const deps=[15,18,21,30,38],cols=[C('--muted'),C('--accent'),C('--green'),C('--blue'),C('--orange')];
+  if(c<2){const o={L:44,R:80,T:16,B:30,xmin:0,xmax:1,ymin:0,ymax:1};const {X,Y}=axes(x,o);
+    deps.forEach((d,k)=>{const sz=Math.pow(d/15,3);x.strokeStyle=cols[k];x.lineWidth=2;x.beginPath();for(let i=0;i<=60;i++){const u=i/60;const xx=c===0?u:Math.min(1,(Math.log10(u*sz+0.02)+1.8)/3.2);const L=0.3+0.5*Math.exp(-3*u)-0.06*Math.log(sz)+0.02;i?x.lineTo(X(xx),Y(L)):x.moveTo(X(xx),Y(L));}x.stroke();label(x,'d='+d,x.W-o.R+8,o.T+14+k*18,cols[k]);});
+    label(x,c===0?'训练步数 →':'训练 FLOPs（对数）→',X(1)-110,Y(0)+22,C('--muted'));label(x,'验证 loss',o.L+4,o.T+10,C('--muted'));
+    $('b7-read').textContent=c===0?'同样的步数，越深的模型 loss 越低，而且都还在下降':'横轴换成算力：大模型每步更贵，曲线右移；看同样算力下谁更低';}
+  else{const R=[['GenEval',-0.920],['人类偏好 Elo',-0.982],['T2I-CompBench',-0.898],['视频人类偏好',-0.908]];const L=x.W<560?110:150,bw=x.W-L-80,rh=(x.H-30)/R.length;
+    label(x,'Fig. 8 下排标的相关系数 |r|（论文数字）',10,14,C('--muted'));
+    R.forEach((r,i)=>{const y=24+i*rh;label(x,r[0],L-10,y+rh*0.55,C('--heading'),'right');rr(x,L,y+rh*0.2,bw,rh*0.5,3,null,C('--line'));rr(x,L,y+rh*0.2,bw*Math.abs(r[1]),rh*0.5,3,C('--blue'));label(x,'r = '+r[1].toFixed(3),L+bw*Math.abs(r[1])+6,y+rh*0.55,C('--heading'));});
+    $('b7-read').textContent='loss 越低，评测越好：同一模型族里验证 loss 是很好的代理指标';}}
+$('b7-c').onchange=drawB7;
+
+/* ---------- B8 Table 5 ---------- */
+const T5d=[['minDALL-E',.23,.73,.11,.12,.37,.02,.01],['SD v1.5',.43,.97,.38,.35,.76,.04,.06],['PixArt-α',.48,.98,.50,.44,.80,.08,.07],['SD v2.1',.50,.98,.51,.44,.85,.07,.17],['DALL-E 2',.52,.94,.66,.49,.77,.10,.19],['SDXL',.55,.98,.74,.39,.85,.15,.23],['SDXL Turbo',.55,1.00,.72,.49,.80,.10,.18],['IF-XL',.61,.97,.74,.66,.81,.13,.35],['DALL-E 3',.67,.96,.87,.47,.83,.43,.45],
+  ['SD3 d18 512²',.58,.97,.72,.52,.78,.16,.34],['SD3 d24 512²',.62,.98,.74,.63,.67,.34,.36],['SD3 d30 512²',.64,.96,.80,.65,.73,.33,.37],['SD3 d38 512²',.68,.98,.84,.66,.74,.40,.43],['SD3 d38 512² DPO',.71,.98,.89,.73,.83,.34,.47],['SD3 d38 1024² DPO',.74,.99,.94,.72,.89,.33,.60]];
+function drawB8(){const x=ctxN('b8',520);x.clearRect(0,0,x.W,x.H);const c=+$('b8-c').value+1;const L=x.W<560?118:150,bw=x.W-L-50,rh=(x.H-8)/T5d.length;x.font=(x.W<560?'10px ':'12px ')+C('--f-mono');
+  const best=Math.max(...T5d.map(r=>r[c]));
+  T5d.forEach((r,i)=>{const y=4+i*rh;const col=r[0].startsWith('SD3')?C('--blue'):r[0]==='DALL-E 3'?C('--pink'):C('--line-strong');label(x,r[0],L-8,y+rh*0.7,C('--heading'),'right');rr(x,L,y+rh*0.15,bw*r[c],rh*0.7,2,col);label(x,r[c].toFixed(2)+(r[c]===best?' ★':''),L+bw*r[c]+5,y+rh*0.7,C('--heading'));});x.font='12px '+C('--f-mono');}
+$('b8-c').onchange=drawB8;
+
+/* ---------- B9 Table 6 ---------- */
+function drawB9(){const x=ctx('b9');x.clearRect(0,0,x.W,x.H);const nar=x.W<560;const D=[[4.30,0.86,0.21],[3.59,0.70,0.24],[2.71,0.14,0.08]],dn=['d=15','d=30','d=38'],cols=[C('--line-strong'),C('--green'),C('--blue')];
+  const o={L:40,R:12,T:24,B:30,xmin:0,xmax:3,ymin:0,ymax:5,yt:[0,1,2,3,4,5]};const {X,Y}=axes(x,o);const gw=X(1)-X(0),bw=gw*0.22;
+  ['5/50 步','10/50 步','20/50 步'].forEach((g,j)=>{label(x,g,X(j+0.5),x.H-10,C('--heading'),'center');D.forEach((r,k)=>{const bx=X(j+0.5)+(k-1.5)*bw+2;rr(x,bx,Y(r[j]),bw-4,Y(0)-Y(r[j]),2,cols[k]);x.font=(nar?'9px ':'12px ')+C('--f-mono');label(x,r[j].toFixed(2),bx+(bw-4)/2,Y(r[j])-4-(nar&&r[j]<1?k*10:0),C('--heading'),'center');x.font='12px '+C('--f-mono');});});
+  dn.forEach((d,k)=>{x.fillStyle=cols[k];x.fillRect(o.L+10+k*80,6,12,10);label(x,d,o.L+26+k*80,15,C('--heading'));});}
+
+/* ---------- B10 text encoders ---------- */
+const b10get=mkChecks('b10-checks',['CLIP-L','CLIP-G','T5-XXL'],[true,true,true]);
+function drawB10(){const x=ctx('b10');x.clearRect(0,0,x.W,x.H);const on=b10get();const mem=[0.49,2.78,19.05];const tot=mem.reduce((a,m,i)=>a+(on[i]?m:0),0);
+  const L=10,bw=x.W-40;label(x,(x.W<560?'编码器显存：':'文本编码器显存（Table 7 的 Mem，相加）：')+tot.toFixed(2)+' / 22.32 GB',L,18,C('--heading'));
+  let cx=L;mem.forEach((m,i)=>{const w=bw*m/22.32;rr(x,cx,28,w-2,26,3,on[i]?[C('--pink'),C('--green'),C('--orange')][i]:null,C('--line-strong'));cx+=w;});
+  const allOn=on.every(v=>v),noT5=on[0]&&on[1]&&!on[2];
+  const msg=allOn?['全部三个编码器：论文的默认设置，作为比较基准']:noT5?['去掉 T5（用零代替），对全编码器版本的胜率：','视觉美感 50%（没差别）','提示遵循 46%（略差）','排版（写字）38%（明显差）']:['这个组合论文没有给评测结果','（训练时每个编码器独立 dropout，所以原理上可以用）'];
+  msg.forEach((m,i)=>label(x,m,L,84+i*24,i===0?C('--heading'):C('--muted')));
+  if(noT5){[[50,'美感'],[46,'提示'],[38,'排版']].forEach(([v,n],i)=>{const bx=x.W*0.55,y=96+i*24,w=(x.W*0.4)*v/100;rr(x,bx,y-10,w,14,2,C('--blue'));x.strokeStyle=C('--heading');x.beginPath();x.moveTo(bx+x.W*0.2,y-14);x.lineTo(bx+x.W*0.2,y+6);x.stroke();label(x,v+'%',bx+w+4,y+2,C('--heading'));});}}
+$('b10-checks').onchange=drawB10;
+
+/* ---------- init + theme ---------- */
+function all(){drawB2();drawB3();drawB4();drawB5n();drawB5();drawB7();drawB8();drawB9();drawB10();}
+all();
+const mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',all);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,150);});
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+</body>
+</html>

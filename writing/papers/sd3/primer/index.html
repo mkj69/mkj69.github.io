@@ -78,6 +78,11 @@ details.quiz p{margin-top:8px;font-size:15.5px}
 .card h3{font-size:17px}
 .tag{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:0 8px;border-radius:999px}
 .tag.fm{background:var(--pink-soft);color:var(--pink)} .tag.cfm{background:var(--green-soft);color:var(--green)}
+.ref{background:var(--pink-soft)} .ref b{color:var(--pink)} .ref ul{margin-top:4px;gap:2px}
+.parts{display:flex;flex-wrap:wrap;gap:8px;font-size:14px}
+.parts a,.parts span{padding:4px 12px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--panel)}
+.parts span{border-color:var(--accent);color:var(--heading);font-weight:600}
+.lesson,.tbl{min-width:0;max-width:100%}
 footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>
@@ -92,6 +97,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
 <section class="hero">
   <span class="eyebrow">SD3 背景知识 · 从零开始的 9 课</span>
   <h1>从零读懂 Flow Matching</h1>
+  <div class="parts"><span>第一部分 · Flow Matching 与 5.1</span><a href="/writing/papers/sd3/architecture/">第二部分 · 模型结构</a><a href="/writing/papers/sd3/scaling/">第三部分 · 训练到 8B</a></div>
   <p class="lede">这是读 SD3（Esser et al., ICML 2024）之前的入门课。不假设你懂扩散模型。我们把"图片"缩成数轴上的一个数，用一维的小例子一课一课往上搭：从"什么是分布"开始，到 Flow Matching（FM）和 Conditional Flow Matching（CFM），再到 SD3 第 5.1 节那个比较 61 种训练方式的实验。每课都有能动的图和一道自测题。</p>
   <nav class="toc" aria-label="目录">
     <a href="#l1"><span class="n">第 1 课</span>生成模型在干什么</a>
@@ -103,6 +109,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
     <a href="#l7"><span class="n">第 7 课</span>为什么中间的 t 最难</a>
     <a href="#l8"><span class="n">第 8 课</span>换一种说法：权重与抽 t</a>
     <a href="#l9"><span class="n">第 9 课</span>回到 SD3 的 5.1 实验</a>
+    <a href="#map"><span class="n">对照</span>每课对应论文哪里</a>
   </nav>
 </section>
 
@@ -125,6 +132,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   <p>造一台机器：<b>输入一个噪声数 \(\epsilon\)，输出一个像真实数据的数</b>。而且用很多不同的噪声反复跑，输出整体上要还原数据分布：一半落在 −3 附近，一半落在 +3 附近，中间 0 附近几乎没有，因为那里不是真实的图。</p>
   <p>一步直接变过去很难学（GAN 就是这么做的，训练出了名的不稳定）。Diffusion 和 flow 的想法是：<b>分很多小步慢慢走过去</b>，每一小步只需要学"往哪边挪一点"。第 2 课就讲这个"慢慢走"。</p>
   <details class="quiz"><summary>自测：如果一个模型生成的 1000 个点大多落在 0 附近，它好不好？</summary><p>不好。真实数据（猫、狗）都在 ±3 附近，0 附近几乎没有真实图片。落在 0 附近相当于生成了"既不像猫也不像狗"的模糊图。好的模型要同时还原两个峰和它们的比例。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 第 1 句：模型定义"从噪声分布 \(p_1\) 的样本 \(x_1\) 到数据分布 \(p_0\) 的样本 \(x_0\) 的映射"。注意论文的记号：下标 1 是噪声，下标 0 是数据。</li><li>§1 引言第 2 段：扩散模型从数据到噪声定义一个前向过程，再学反向过程。</li></ul></div>
 </section>
 
 <!-- ===================================================== L2 -->
@@ -150,6 +158,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </figure>
   <div class="box key"><b>要记住：</b>每走一步就要调用一次网络。SD3 默认走 50 步，就是生成一张图要跑 50 次大网络。路越直，越少的步数就够；InstaFlow 想把路拉直到 1 步就行。</div>
   <details class="quiz"><summary>自测：风速处处 −2.5，从 0.5 出发切成 4 步，最后到哪？</summary><p>每步 \(\Delta t=0.25\)，每步加 \(0.25\times2.5=0.625\)：0.5 → 1.125 → 1.75 → 2.375 → 3.0。还是正好到 3，因为路是直的。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 1：\(dy_t=v_\Theta(y_t,t)\,dt\)，"velocity \(v\) is parameterized by the weights \(\Theta\) of a neural network"。</li><li>§1 引言第 3 段："a straight path could be simulated with a single step and is less prone to error accumulation … each step corresponds to an evaluation of the neural network"，就是图 2 和"路越直越少步"。</li><li>§2 第 2 段：直接用可微 ODE 求解器训练（Chen et al., 2018）太贵，所以改成直接回归一个向量场 \(u_t\)，这引出第 3 到 6 课。</li></ul></div>
 </section>
 
 <!-- ===================================================== L3 -->
@@ -171,6 +180,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </figure>
   <div class="box sd3"><b>SD3 里：</b>不同方法的第一层区别就是 \(a_t,b_t\) 选得不同。cosine 用 \(\cos(\tfrac{\pi}{2}t),\sin(\tfrac{\pi}{2}t)\)；LDM 用一串离散系数累乘；EDM 让图片不缩小、只往上加噪声。SD3 选的是直线（RF）。</div>
   <details class="quiz"><summary>自测：RF 下 \(x_0=-3,\ \epsilon=1\)，\(t=0.75\) 时 \(z_t\) 是多少？</summary><p>\(0.25\times(-3)+0.75\times1=-0.75+0.75=0\)。记住这个 0，第 5 课要用。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 2：\(z_t=a_tx_0+b_t\epsilon,\ \epsilon\sim\mathcal N(0,I)\)。</li><li>§2 Eq. 3：边际分布 \(p_t(z_t)=\mathbb E_\epsilon\, p_t(z_t\mid\epsilon)\)，边界条件 \(a_0=1,b_0=0,a_1=0,b_1=1\) 保证两端分别是数据和噪声。图 3 右边的直方图就是 \(p_t\)。</li><li>§3 "Rectified Flow" 段 Eq. 13：\(z_t=(1-t)x_0+t\epsilon\)。同一节还有 EDM（Eq. 14）、Cosine（Eq. 17）、(LDM-)Linear 的路径。</li></ul></div>
 </section>
 
 <!-- ===================================================== L4 -->
@@ -193,6 +203,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </figure>
   <div class="box key"><b>所以看起来训练很简单：</b>让网络看到 \(z_t\) 和 \(t\)，去猜 \(\epsilon-x_0\)。但这里藏着一个问题，网络只看得到 \(z_t\)，<b>看不到是哪一对</b>。第 5 课就来看这个问题。</div>
   <details class="quiz"><summary>自测：\(x_0=-3,\ \epsilon=1\) 这一对的条件速度是多少？</summary><p>\(1-(-3)=4\)。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 4：\(\psi_t(\cdot\mid\epsilon):x_0\mapsto a_tx_0+b_t\epsilon\)，就是"已知噪声 \(\epsilon\) 时，图片走到时刻 \(t\) 的位置"。</li><li>§2 Eq. 5：\(u_t(z\mid\epsilon):=\psi_t'(\psi_t^{-1}(z\mid\epsilon)\mid\epsilon)\)。读法：先用 \(\psi_t^{-1}\) 从位置 \(z\) 反推出是哪张图 \(x_0\)，再对路径求导得速度。</li><li>为什么写成"\(\mid\epsilon\)"而不是"\(\mid x_0,\epsilon\)"：知道 \(\epsilon\) 和当前位置 \(z\)，\(x_0\) 就唯一确定了，所以"以 \(\epsilon\) 为条件"就等于"知道是哪一对"。</li><li>§2 Eq. 9：把 Eq. 5 展开成 \(\frac{a_t'}{a_t}z_t-\epsilon b_t(\frac{a_t'}{a_t}-\frac{b_t'}{b_t})\)。代 RF 的 \(a_t=1-t,b_t=t\) 化简就是 \(\epsilon-x_0\)。</li></ul></div>
 </section>
 
 <!-- ===================================================== L5 -->
@@ -223,6 +234,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   <p>意思是：随机挑一个时刻 \(t\)、一个位置 \(z\)，让网络输出的风速尽量接近真正的平均风速。</p>
   <div class="box warn"><b>问题：</b>\(u_t(z)\) 算不出来。要算它，得知道"所有可能经过 \(z\) 的图片和噪声"并求平均，也就是要对整个数据分布做积分。我们的玩具世界能精确算，是因为数据分布是两个已知的正态分布；真实图片的分布我们根本不知道公式。所以 FM 是一个"理想但做不到"的目标。第 6 课解决它。</div>
   <details class="quiz"><summary>自测：用一句话说出条件速度和平均速度的区别。</summary><p>条件速度是"已知是哪一对时，这一对的速度"，好算；平均速度是"只知道位置和时刻时，所有可能经过这里的路的平均速度"，这才是能把整个噪声分布推成数据分布的风速，但算不出来。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 6：\(u_t(z)=\mathbb E_{\epsilon}\,u_t(z\mid\epsilon)\frac{p_t(z\mid\epsilon)}{p_t(z)}\)。权重 \(\frac{p_t(z\mid\epsilon)}{p_t(z)}\) 就是"在所有经过 \(z\) 的路里，这条路占多大比例"。在图 5a 里 A、B 各占一半，所以平均速度是 \(\tfrac12(+4)+\tfrac12(-4)=0\)。</li><li>Eq. 6 前一句："one can construct a marginal vector field \(u_t\) which generates the marginal probability paths \(p_t\) … (see B.1)"。证明在附录 B.1 Eqs. 26 到 29（连续性方程）。</li><li>§2 Eq. 7：\(\mathcal L_{FM}=\mathbb E_{t,p_t(z)}\lVert v_\Theta(z,t)-u_t(z)\rVert_2^2\)；下一句："directly is intractable due to the marginalization in Equation 6"，就是本课最后的"算不出来"。</li></ul></div>
 </section>
 
 <!-- ===================================================== L6 -->
@@ -250,6 +262,20 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
     <canvas id="f6b" width="720" height="240"></canvas>
     <figcaption>一个只在交叉点上有一个可调输出的极简"网络"，从 3.0 开始。每一步随机抽到 A 或 B，用 CFM 的梯度下降更新一次（学习率 0.05）。粉点和绿点是每次抽到的目标，深色线是网络输出，它在 +4 和 −4 的拉扯中稳定到平均值 0 附近。</figcaption>
   </figure>
+  <h3>在交叉点上把 FM 和 CFM 并排算一遍</h3>
+  <p>还是只看交叉点 \((t=0.75,\ z=0)\)，经过它的只有 A、B 两条路，各占一半。设网络在这一点输出 \(v\)：</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>FM（Eq. 7）</th><th>CFM（Eq. 8）</th></tr></thead>
+    <tbody>
+      <tr><td>标签是什么</td><td>平均速度 \(u_t(0)=\tfrac12(+4)+\tfrac12(-4)=0\)</td><td>抽到 A 时是 +4，抽到 B 时是 −4</td></tr>
+      <tr><td>要不要知道"所有经过这里的路"</td><td>要（才能算平均）</td><td>不要（只用抽到的这一对）</td></tr>
+      <tr><td>平均损失</td><td>\((v-0)^2=v^2\)</td><td>\(\tfrac12(v-4)^2+\tfrac12(v+4)^2=v^2+16\)</td></tr>
+      <tr><td>最小值在哪</td><td>\(v=0\)</td><td>\(v=0\)</td></tr>
+      <tr><td>对 \(v\) 的梯度</td><td>\(2v\)</td><td>\(2v\)</td></tr>
+    </tbody>
+  </table></div>
+  <p>两列只差一个常数 16。这个 16 是"标签自己的分散程度"（+4 和 −4 离平均 0 各差 4，平方是 16），和网络无关，网络怎么学都消不掉它，也不影响梯度。所以用 CFM 训练，每一步的梯度和用 FM 训练完全一样，只是 CFM 的梯度是"带噪声的估计"（有时往 +4 拉，有时往 −4 拉），平均下来就是 FM 的梯度。图 6b 那条来回抖动、最后停在 0 附近的线就是这个意思。</p>
+  <div class="box warn"><b>三个常见的卡点：</b><br><b>① 网络为什么不能在交叉点输出两个答案？</b>它是一个函数，同样的输入 \((z,t)\) 只能有一个输出。生成时也一样：小球走到 \(z=0\) 时，不知道自己"本来"是 A 还是 B，只能按一个风速走。<br><b>② 为什么平均速度就是对的，而不是 +4 或 −4？</b>我们要的不是让某一颗球回到它自己的起点，而是让<b>整团</b>噪声变成<b>整团</b>数据。按平均速度走，每个时刻小球的整体分布都和 \(p_t\) 一样（附录 B.1 前半，图 5b）。至于哪颗噪声最后变成哪张图，会和训练时的配对不一样，这没关系。<br><b>③ "conditional（条件）"和"marginal（边际）"到底指什么？</b>条件 = 已知是哪一对（论文写成"\(\mid\epsilon\)"）；边际 = 把所有对平均掉，只剩位置和时刻。FM 学边际速度，CFM 用条件速度当标签，两者最优解相同。</div>
   <h3>两个损失只差一个常数（附录 B.1 第二段）</h3>
   <p>更严格地说，把 \(\|v-u\|^2\) 展开成 \(\|v\|^2-2\langle v,u\rangle+\|u\|^2\)，逐项比较 FM 和 CFM：</p>
   <ol>
@@ -264,6 +290,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </div>
   <details class="quiz"><summary>附录 B.1 第一段在证明什么？（选读）</summary><p>它证明"按平均速度走，分布真的会从噪声变成数据"。工具是连续性方程 \(\frac{d}{dt}p_t+\nabla\cdot(p_t v_t)=0\)，可以理解成水流守恒：某处的"水"变多，一定是流进来的比流出去的多。每一对自己的路都满足守恒，平均起来整体也满足，所以平均速度能推动整个 \(p_t\)。</p></details>
   <details class="quiz"><summary>自测：CFM 训练时，网络每一步的"标准答案"是什么？它最终学到的又是什么？</summary><p>每一步的标准答案是抽到的那一对的条件速度（RF 下是 \(\epsilon-x_0\)）；最终学到的是所有可能经过同一点的条件速度的平均，也就是平均速度 \(u_t(z)\)。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 8：\(\mathcal L_{CFM}=\mathbb E_{t,p_t(z\mid\epsilon),p(\epsilon)}\lVert v_\Theta(z,t)-u_t(z\mid\epsilon)\rVert_2^2\)，"provides an equivalent yet tractable objective"。</li><li>附录 B.1 Eq. 30 到 33：FM 展开成三项（Eq. 31），把交叉项换成条件版（Eq. 32），合回去就是 CFM 加常数（Eq. 33）。</li><li>附录 B.1 Eq. 34 到 36：交叉项为什么能换：对 \(\epsilon\) 的积分乘上再除以 \(p_t(z)\)，里面正好是 Eq. 6 的平均速度。</li></ul></div>
 </section>
 
 <!-- ===================================================== L7 -->
@@ -283,6 +310,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </figure>
   <div class="box sd3"><b>SD3 的 3.1 节说的就是这个：</b>"对 \(t=0\)，最优预测是 \(p_1\) 的均值；对 \(t=1\)，最优预测是 \(p_0\) 的均值"。两头只需要猜一个平均值，中间才是真正难的地方。所以 SD3 想让训练多练中间的时刻，这就是第 8 课的 timestep 采样。</div>
   <details class="quiz"><summary>自测：为什么说两端"容易"，并不是说两端的误差小？</summary><p>"容易"指要学的函数简单（接近一条直线），网络很快能学对。两端的误差本身不一定小：比如 \(t\) 接近 0 时噪声完全不知道，误差至少有噪声本身那么大，但这部分误差谁也消不掉，网络也不用为它费力。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§3.1 第 1 段："the resulting velocity prediction target \(\epsilon-x_0\) is more difficult for \(t\) in the middle of \([0,1]\), since for \(t=0\), the optimal prediction is the mean of \(p_1\), and for \(t=1\) the optimal prediction is the mean of \(p_0\)"。</li></ul></div>
 </section>
 
 <!-- ===================================================== L8 -->
@@ -327,6 +355,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
     <figcaption>横轴是 \(t\)（左边数据、右边噪声），纵轴是密度。灰虚线是均匀分布（普通 rf），蓝线 logit-normal，橙线 mode，绿线 CosMap。点按钮，看按 logit-normal 抽出来的 \(t\) 堆成的直方图和蓝线吻合：中间被抽到的次数远多于两头。默认参数 \(m=0,s=1\) 正是 SD3 最后选的设置。</figcaption>
   </figure>
   <details class="quiz"><summary>自测："多抽中间的 t"会改变网络的最优解吗？</summary><p>不会。每个 \(t\) 上的最好答案仍然是平均速度 \(u_t(z)\)，只是训练时中间的 \(t\) 出现得更频繁，网络把更多能力花在最难的地方。在网络能力有限的现实里，这会让结果更好。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§2 Eq. 10 前后：定义 \(\lambda_t:=\log\frac{a_t^2}{b_t^2}\)，把 Eq. 9 改写成 Eq. 10。</li><li>§2 Eq. 11、12：把 CFM 改写成噪声预测形式，\(\epsilon_\Theta:=\frac{-2}{\lambda_t'b_t}(v_\Theta-\frac{a_t'}{a_t}z)\)。</li><li>§2 末尾的统一形式 \(\mathcal L_w(x_0)=-\frac12\mathbb E\,w_t\lambda_t'\lVert\epsilon_\Theta-\epsilon\rVert^2\)，"where \(w_t=-\frac12\lambda_t'b_t^2\) corresponds to \(\mathcal L_{CFM}\)"；前一句"the optimum … does not change when introducing a time-dependent weighting"。</li><li>§3 "Rectified Flow" 段：\(w_t^{RF}=\frac{t}{1-t}\)。EDM 的权重 Eq. 16，Cosine 的 \(\mathrm{sech}(\lambda_t/2)\) 和 \(e^{-\lambda_t/2}\)。</li><li>§3.1：Eq. 18（抽 \(t\) = 加权），Eq. 19 logit-normal，Eq. 20 mode，Eq. 21、22 CosMap；Fig. 11（附录 p.22）画了 mode 和 logit-normal 的密度；附录 B.4 再总结一次。</li></ul></div>
 </section>
 
 <!-- ===================================================== L9 -->
@@ -360,6 +389,26 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   </ul>
   <div class="box warn"><b>心里要有数：</b>这些比较在小模型、小数据上做，每个变体只训练一次，没有多个随机种子。8B 大模型直接沿用了 lognorm(0,1)，没有在大模型上重新比一遍。</div>
   <details class="quiz"><summary>最终自测：用三句话讲清 SD3 的第一个贡献。</summary><p>所有扩散/flow 方法都可以写成"一条路径 + 一条权重曲线"，于是能在同样条件下公平比较。中间的 \(t\) 最难学，而按某个分布抽 \(t\) 等价于加权，所以作者让 RF 多抽中间的 \(t\)（如 logit-normal）。61 个变体的大比较里，RF + logit-normal(0,1) 一直排在前面，而普通 RF 反而不如传统的 eps/linear。</p></details>
+  <div class="box ref"><b>论文对照</b><ul><li>§5.1 全文（p.5 到 6）：实验设置、非支配排序、结论。</li><li>Table 1（全局排名）、Table 2（各变体在 25 步时的 FID 和 CLIP，p.6）、Fig. 3（FID 随采样步数，p.7）。</li><li>附录 B.3（p.21）：数据集、优化器、EMA、文本编码器 dropout、评测方式、6 种采样设置。</li></ul></div>
+</section>
+
+<section class="lesson" id="map">
+  <div class="lesson-head"><span class="no">论文对照总表</span><h2>每课对应论文哪里</h2><p class="goal">读完这 9 课再回去读论文 §2、§3、§5.1 和附录 B.1、B.3，按这张表一段一段对。页码按 arXiv 2403.03206v1 的 PDF。</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>论文位置</th><th>讲了什么</th><th>本页</th></tr></thead>
+    <tbody>
+      <tr><td>§1 第 2、3 段（p.1 到 2）</td><td>扩散是"数据到噪声"的路径；直路一步就能走完、误差不累积</td><td>第 1、2 课</td></tr>
+      <tr><td>§2 第 1、2 段，Eq. 1（p.2）</td><td>ODE 和速度场；直接解 ODE 太贵，改回归向量场</td><td>第 2 课</td></tr>
+      <tr><td>§2 Eq. 2、3（p.2 到 3）</td><td>前向路径 \(z_t=a_tx_0+b_t\epsilon\)，边际分布 \(p_t\)</td><td>第 3 课</td></tr>
+      <tr><td>§2 Eq. 4、5、9（p.3）</td><td>条件路径 \(\psi_t\)、条件速度 \(u_t(z\mid\epsilon)\)</td><td>第 4 课</td></tr>
+      <tr><td>§2 Eq. 6、7（p.3）；附录 B.1 Eq. 26 到 29（p.20）</td><td>边际速度、FM 损失、为什么边际速度能推动 \(p_t\)</td><td>第 5 课</td></tr>
+      <tr><td>§2 Eq. 8（p.3）；附录 B.1 Eq. 30 到 36（p.20）</td><td>CFM 损失、FM 与 CFM 只差常数</td><td>第 6 课</td></tr>
+      <tr><td>§3.1 第 1 段（p.4）</td><td>中间的 \(t\) 最难</td><td>第 7 课</td></tr>
+      <tr><td>§2 Eq. 10 到 12 与 \(\mathcal L_w\)（p.3）；§3 各路径的 \(w_t\)（p.3 到 4）；§3.1 Eq. 18 到 22（p.4）；Fig. 11（p.22）、附录 B.4（p.21）</td><td>log-SNR、噪声预测形式、统一的加权损失、RF 的 \(w_t\)、抽 \(t\) 的分布</td><td>第 8 课</td></tr>
+      <tr><td>§5.1、Table 1、Table 2、Fig. 3（p.5 到 7）；附录 B.3（p.21）</td><td>61 个变体的比较</td><td>第 9 课</td></tr>
+    </tbody>
+  </table></div>
+  <p>下一步：<a href="/writing/papers/sd3/architecture/">第二部分 · 精读 SD3 的模型结构</a>（§4、§5.2、附录 B.2）。</p>
 </section>
 
 <footer>
