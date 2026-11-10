@@ -116,7 +116,7 @@ def document(title, body, depth, canonical):
 def annotated_reader_link(paper):
     edition = paper.get("annotated_reader")
     if not edition:
-        return ""
+        return study_guide_links(paper)
     expected = paper["url"] + "annotated/"
     if edition.get("url") != expected:
         raise ValueError("Annotated reader must live under its paper article")

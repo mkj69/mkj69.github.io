@@ -4,6 +4,35 @@
   "description": "Detailed reading notes on methods, evidence, and limits. Figures and tables stay close to the claims they support.",
   "papers": [
     {
+      "slug": "value-filtered-decoding",
+      "short_title": "Value-filtered decoding",
+      "paper_title": "Selective Safety Steering via Value-Filtered Decoding",
+      "authors": "Bat-Sheva Einbinder, Hen Davidov, Yee Whye Teh, Yarin Gal, Yaniv Romano",
+      "published": "2026-11-10",
+      "summary": "Safety steering with a calibrated budget for false interventions. The note separates oracle guarantees, learned values, finite sampling, and empirical evidence.",
+      "summary_zh": "用校准后的误干预预算进行安全引导。笔记区分真实价值函数下的保证、学习价值、有限采样和实验证据。",
+      "topics": [
+        "Safety steering",
+        "Value functions",
+        "Conformal risk control"
+      ],
+      "source_url": "https://arxiv.org/abs/2605.14746v3",
+      "source_label": "arXiv:2605.14746v3 (2026)",
+      "url": "https://mkj69.github.io/writing/papers/value-filtered-decoding/",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "placement": "dedicated_paper_notes",
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/value-filtered-decoding/aligned/",
+          "title_zh": "笔记中英逐句对照版",
+          "title_en": "Sentence-aligned bilingual note"
+        }
+      ]
+    },
+    {
       "slug": "deep-learning-2015",
       "short_title": "Deep learning",
       "paper_title": "Deep learning",
