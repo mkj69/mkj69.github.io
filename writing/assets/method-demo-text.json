@@ -1,0 +1,423 @@
+{
+  "apd": {
+    "label": {
+      "en": "Extrapolation strength",
+      "zh": "外推强度"
+    },
+    "min": 0,
+    "max": 3,
+    "value": 1,
+    "steps": [
+      {
+        "en": "Input: two models assign probabilities to three possible next tokens. The larger model favors A more strongly.",
+        "zh": "输入：两个模型给三个候选词分配概率。较大模型更偏好 A。"
+      },
+      {
+        "en": "A straight extension in probability space adds a probability difference. Here it eventually makes C negative. This straight line is a comparison baseline, not APD.",
+        "zh": "概率空间直线外推直接加上概率差。此例中 C 最终变成负数。这条直线是对照，不是 APD。"
+      },
+      {
+        "en": "Log-space extension multiplies likelihood ratios and normalizes. Its normalized probabilities remain positive, but it can become very sharp.",
+        "zh": "对数空间外推相乘似然比后归一化。归一化概率保持正值，但可能变得很尖锐。"
+      },
+      {
+        "en": "APD instead learns an asymptotic probability trend from a family of model sizes. Our bounded curve only illustrates this distinction; it is not the fitted curve in the paper.",
+        "zh": "APD 则从一系列不同规模的模型学习概率的渐近趋势。这里的有界曲线仅用于解释区别，不是论文拟合的曲线。"
+      },
+      {
+        "en": "Offline probability extrapolation supplies a target for training an amateur. At inference, APD still uses expert and trained-amateur logits. This is not direct access to a huge model.",
+        "zh": "离线概率外推为小模型训练提供目标。推理时 APD 仍使用专家与训练后小模型的 logits，并不直接调用一个巨型模型。"
+      }
+    ]
+  },
+  "commitment-before-realization": {
+    "label": {
+      "en": "Allowed loss ε",
+      "zh": "允许损失 ε"
+    },
+    "min": 0,
+    "max": 0.1,
+    "value": 0.03,
+    "steps": [
+      {
+        "en": "Input: a partially masked sequence. A rollout can finish with base transitions or with guided transitions. Base transitions still retain the prompt.",
+        "zh": "输入：部分位置被掩码的序列。后续可以用基础转移或引导转移完成；基础转移仍保留提示词。"
+      },
+      {
+        "en": "At the same prefix, estimate success under both continuations. Their difference is the remaining value of guidance. This is an average estimated by rollouts, not certainty about this sample.",
+        "zh": "在相同前缀处估计两种续写的成功率。差值是剩余引导价值。这是通过续写估计的平均值，不是对当前样本的确定判断。"
+      },
+      {
+        "en": "Try switching guidance off at each candidate time. The dashed reference is full-guidance success minus ε.",
+        "zh": "在各候选时刻尝试关闭引导。参考线表示全程引导成功率减去 ε。"
+      },
+      {
+        "en": "Choose the earliest time for which every later tested switch also clears the reference. An early isolated crossing does not establish a persistent horizon.",
+        "zh": "选择最早满足此条件的时刻：此时及之后每个被测试的关闭时刻都达到参考线。一次孤立的提前越线并不构成持续时域。"
+      },
+      {
+        "en": "After that horizon, use base transitions. The paper establishes conditions and task-level evidence, not a universal switch time for arbitrary parallel decoders.",
+        "zh": "越过该时域后使用基础转移。论文给出条件和任务层面的证据，并未为任意并行解码器给出通用关闭时刻。"
+      }
+    ]
+  },
+  "ucd": {
+    "label": {
+      "en": "Contrast strength α",
+      "zh": "对比强度 α"
+    },
+    "min": 0,
+    "max": 2,
+    "value": 1,
+    "steps": [
+      {
+        "en": "Input: the corrupted target model knows the information to forget. Two smaller auxiliary models estimate the direction associated with that information.",
+        "zh": "输入：受污染的目标模型掌握待遗忘信息。两个较小的辅助模型用于估计与该信息相关的方向。"
+      },
+      {
+        "en": "The corrupted auxiliary is tuned with forget data. The clean auxiliary is tuned with retain data, under the assumption that its starting model is clean.",
+        "zh": "污染辅助模型使用遗忘集微调；干净辅助模型使用保留集微调，并假设其起始模型是干净的。"
+      },
+      {
+        "en": "For each token, subtract the corrupted auxiliary log probability and add the clean auxiliary log probability, scaled by α.",
+        "zh": "对每个词，减去污染辅助模型的对数概率，再加上干净辅助模型的对数概率，并乘以 α。"
+      },
+      {
+        "en": "Normalize to obtain a new next-token distribution. A falls because the corrupted auxiliary favored it much more than the clean auxiliary.",
+        "zh": "归一化得到新的下一词分布。A 的概率下降，因为污染辅助模型比干净辅助模型更偏好它。"
+      },
+      {
+        "en": "Sample or decode from the new distribution. This changes serving behavior; the target weights still contain the learned information. The theorem needs a proportional log-ratio assumption.",
+        "zh": "从新分布采样或解码。这改变的是服务时的行为，目标权重仍保留已学信息；理论结论需要对数概率比成比例的假设。"
+      }
+    ]
+  },
+  "value-filtered-decoding": {
+    "label": {
+      "en": "Value threshold",
+      "zh": "价值阈值"
+    },
+    "min": 0,
+    "max": 1,
+    "value": 0.65,
+    "steps": [
+      {
+        "en": "Input: the base model proposes A, B, or C. A value estimator predicts how successful a continuation from each candidate would be. Value is not the base token probability.",
+        "zh": "输入：基础模型提出 A、B 或 C。价值估计器预测从各候选继续生成的成功程度。价值不是基础模型的词概率。"
+      },
+      {
+        "en": "Compare the estimated values with the threshold. Acceptable tokens are highlighted in the conditional distribution below. The estimator can make mistakes.",
+        "zh": "把估计价值与阈值比较。下方条件分布显示哪些词通过筛选。估计器可能出错。"
+      },
+      {
+        "en": "Draw candidates from the base model and accept the first one that passes. With unlimited retries and a nonempty accepted set, the result is the base distribution conditioned on passing.",
+        "zh": "从基础模型抽取候选，接受第一个通过筛选的候选。无限重试且接受集合非空时，结果是以通过筛选为条件的基础分布。"
+      },
+      {
+        "en": "Finite retries require a fallback. For the fixed teaching draw sequence C, B, C, choose B if none passes, because it has the highest value among those draws. A was never drawn.",
+        "zh": "有限次重试需要回退。对固定教学抽样序列 C、B、C，如果均不通过，则选这几个已抽候选中价值最高的 B。A 从未被抽到。"
+      },
+      {
+        "en": "Threshold calibration and decoding are different stages. The paper calibrates against value-estimation error; a high threshold alone does not certify the final text. Read the note for assumptions and calibration.",
+        "zh": "阈值校准与解码是两个阶段。论文针对价值估计误差进行校准；仅把阈值设高不能认证最终文本。假设和校准详见笔记。"
+      }
+    ]
+  },
+  "rethinking-contrastive-decoding": {
+    "label": {
+      "en": "Plausibility ratio β",
+      "zh": "合理性比率 β"
+    },
+    "min": 0,
+    "max": 1,
+    "value": 0.2,
+    "steps": [
+      {
+        "en": "Input: a base distribution and a distribution from a perturbed visual input. Contrastive decoding combines subtraction with a plausibility filter.",
+        "zh": "输入：基础分布与扰动视觉输入后的分布。对比解码通常同时包含差分与合理性过滤。"
+      },
+      {
+        "en": "Keep tokens whose base probability is at least β times the largest base probability. This operation alone can remove unlikely tokens.",
+        "zh": "保留基础概率至少为最大基础概率 β 倍的词。仅此操作就能移除低概率候选。"
+      },
+      {
+        "en": "Renormalize the filtered base distribution. This is the APC-S control: it isolates the filter without attributing its gains to subtraction.",
+        "zh": "将过滤后的基础分布归一化。这是 APC-S 对照，用于分离过滤作用，避免把其收益归因于差分。"
+      },
+      {
+        "en": "Compare a controlled subtraction variant against this control. The paper also probes hallucination and calibration; these synthetic bars do not predict benchmark performance.",
+        "zh": "再把受控的差分变体与此对照比较。论文也检验幻觉与校准；这些合成柱状图不预测基准表现。"
+      }
+    ]
+  },
+  "attention-contrastive-decoding": {
+    "label": {
+      "en": "Attention contrast α",
+      "zh": "注意力对比 α"
+    },
+    "min": 0,
+    "max": 3,
+    "value": 1,
+    "steps": [
+      {
+        "en": "Input: conditional and perturbed-input attention rows. These are attention weights over positions, not probabilities of the next word.",
+        "zh": "输入：条件输入与扰动输入的注意力行。它们是位置上的注意力权重，不是下一词概率。"
+      },
+      {
+        "en": "Find positions where perturbed attention exceeds conditional attention. The mask selects only these positions for subtraction.",
+        "zh": "找出扰动注意力大于条件注意力的位置。掩码只选择这些位置执行减法。"
+      },
+      {
+        "en": "Scale the conditional row and subtract masked perturbed attention. The result can be negative and need not sum to one.",
+        "zh": "放大条件注意力行，并减去被掩码选中的扰动注意力。结果可能为负，也不必和为一。"
+      },
+      {
+        "en": "Use the modified attention in the model forward pass. A next-token distribution comes later. The paper retains the noise strategy while replacing the logit-level combination.",
+        "zh": "把修改后的注意力用于前向传播，下一词分布在之后产生。论文保留噪声策略，并替换 logits 层面的组合。"
+      }
+    ]
+  },
+  "masked-diffusion-cfg": {
+    "label": {
+      "en": "Guidance weight w",
+      "zh": "引导权重 w"
+    },
+    "min": 1,
+    "max": 5,
+    "value": 2,
+    "steps": [
+      {
+        "en": "Input: a masked position with conditional and unconditional token predictions. A reverse-time sampler chooses both when to unmask and which token to insert.",
+        "zh": "输入：一个掩码位置的条件与无条件词预测。反向时间采样既决定何时揭开，也决定填入哪个词。"
+      },
+      {
+        "en": "Power guidance creates unnormalized weights. Their sum Z can change with guidance strength.",
+        "zh": "幂形式的引导产生未归一化权重；其总和 Z 随引导强度改变。"
+      },
+      {
+        "en": "If these weights multiply jump rates directly, Z also changes the unmasking clock. That is a separate effect from changing token preference.",
+        "zh": "若把这些权重直接乘到跳转速率上，Z 也改变揭开掩码的时钟。这与改变词偏好是两个不同作用。"
+      },
+      {
+        "en": "Normalize the token weights and preserve the intended jump rate. Timing schedules can then be studied separately; increasing generation progress is decreasing forward diffusion time.",
+        "zh": "归一化词权重并保留预定跳转速率。之后可分别研究时序调度；生成进度增加对应正向扩散时间减小。"
+      }
+    ]
+  },
+  "segue": {
+    "label": {
+      "en": "Entropy penalty β",
+      "zh": "熵惩罚 β"
+    },
+    "min": 0,
+    "max": 3,
+    "value": 1,
+    "steps": [
+      {
+        "en": "Input: a forget query. SEGUE appends a probe and uses the same language-model head to inspect candidate-token support across query positions.",
+        "zh": "输入：遗忘查询。SEGUE 添加探针，用同一语言模型头检查各查询位置对候选词的支持。"
+      },
+      {
+        "en": "Normalize a candidate’s support over input positions and compute its entropy. This is not next-token distribution entropy and is not causal attribution.",
+        "zh": "把一个候选词在输入位置上的支持归一化并计算熵。这不是下一词分布的熵，也不是因果归因。"
+      },
+      {
+        "en": "Subtract a scaled token-to-token entropy from each candidate logit. The example illustrates only this penalty.",
+        "zh": "从各候选 logit 减去按比例缩放的词间熵。本例只演示这一惩罚。"
+      },
+      {
+        "en": "The full method additionally masks selected factual candidates and applies nonlinear bias. It discards probe KV states. Changed answers do not erase weights or guarantee truthfulness.",
+        "zh": "完整方法还会屏蔽选定事实候选并添加非线性偏置，且丢弃探针 KV 状态。答案改变不等于权重擦除，也不保证事实正确。"
+      }
+    ]
+  },
+  "lara": {
+    "label": {
+      "en": "Cost multiplier λ",
+      "zh": "代价乘子 λ"
+    },
+    "min": 0,
+    "max": 5,
+    "value": 1,
+    "steps": [
+      {
+        "en": "Input: candidate completions with base probability, reward, and safety cost. Reward and cost are different quantities.",
+        "zh": "输入：带有基础概率、奖励与安全代价的候选完整回答。奖励与代价是不同量。"
+      },
+      {
+        "en": "Form the adjusted score reward minus λ times cost. Increasing λ makes high-cost answers less attractive.",
+        "zh": "计算调整分数：奖励减去 λ 倍代价。λ 越大，高代价回答越不受偏好。"
+      },
+      {
+        "en": "A Gibbs distribution reweights base probabilities by the exponentiated adjusted score. Measure expected cost under this distribution.",
+        "zh": "Gibbs 分布以调整分数的指数重新加权基础概率。再计算此分布下的期望代价。"
+      },
+      {
+        "en": "The dual update increases λ when average cost exceeds the target. The theorem requires its assumptions; deterministic best-of-N selection is not identical to this Gibbs sampling.",
+        "zh": "当平均代价超过目标时，对偶更新提高 λ。定理需要相应假设；确定性的 best-of-N 选择不等于这种 Gibbs 采样。"
+      }
+    ]
+  },
+  "ggro": {
+    "label": {
+      "en": "Entropy trigger",
+      "zh": "熵触发阈值"
+    },
+    "min": 0,
+    "max": 1.2,
+    "value": 0.8,
+    "steps": [
+      {
+        "en": "Input: a next-token distribution and a reward model. Entropy signals uncertain positions where extra work may be useful.",
+        "zh": "输入：下一词分布与奖励模型。熵用于指示可能值得额外计算的不确定位置。"
+      },
+      {
+        "en": "Compare entropy with a threshold. The trigger controls whether to request guided proposals. It is a computation-allocation heuristic.",
+        "zh": "将熵与阈值比较，决定是否请求引导提议。这是一种计算资源分配启发式。"
+      },
+      {
+        "en": "The paper uses reward gradients to propose token alternatives, then refines segments. We show candidate selection, not the ambiguous gradient sign in the printed formula.",
+        "zh": "论文使用奖励梯度提出替代词，再细化片段。此处演示候选选择，不演示原文公式中含义不明确的梯度符号。"
+      },
+      {
+        "en": "Score the resulting candidates and keep the selected continuation. Rewards are proxies, and extra inference does not improve every benchmark.",
+        "zh": "给生成的候选打分并保留选定续写。奖励是代理指标，额外推理并不改善每个基准。"
+      }
+    ]
+  },
+  "crest": {
+    "label": {
+      "en": "Threat similarity s",
+      "zh": "威胁相似度 s"
+    },
+    "min": 0,
+    "max": 1,
+    "value": 0.6,
+    "steps": [
+      {
+        "en": "Input: a base model and a specialized guidance model with different hidden spaces. Paired examples fit a map between those spaces.",
+        "zh": "输入：隐藏空间不同的基础模型与专用引导模型。配对样例用于拟合两个空间之间的映射。"
+      },
+      {
+        "en": "A probe estimates similarity to a threat direction. A threshold gates whether steering is enabled.",
+        "zh": "探针估计与威胁方向的相似度。阈值决定是否启用引导。"
+      },
+      {
+        "en": "Below the threshold, strength is zero. At the threshold, the paper’s gated sigmoid jumps to half its maximum; it is not a smooth ramp from zero.",
+        "zh": "低于阈值时强度为零。在阈值处，论文门控 sigmoid 跳到最大值的一半，并非从零平滑增加。"
+      },
+      {
+        "en": "Map the guidance direction and add it during a limited token window. This diagram shows the gate, not a learned high-dimensional map or proof of safety.",
+        "zh": "映射引导方向，并在有限词窗口内添加它。此图演示门控，不模拟学得的高维映射，也不构成安全证明。"
+      }
+    ]
+  },
+  "dynamic-negative-guidance": {
+    "label": {
+      "en": "Undesired posterior u",
+      "zh": "不期望类别后验 u"
+    },
+    "min": 0,
+    "max": 0.95,
+    "value": 0.4,
+    "steps": [
+      {
+        "en": "Input: a noisy state and an estimate of the posterior probability of an undesired class. This is not a classifier certainty about the final image.",
+        "zh": "输入：带噪状态，以及对不期望类别后验概率的估计。这并不是对最终图像类别的确定判断。"
+      },
+      {
+        "en": "Complement conditioning asks for the probability of not belonging to that class. Differentiating its log introduces posterior odds.",
+        "zh": "补集条件要求不属于该类别的概率。对其对数求导会引入后验赔率。"
+      },
+      {
+        "en": "Negative-guidance strength is proportional to u/(1−u). It shrinks when the undesired class is already unlikely and grows sharply near one.",
+        "zh": "负引导强度正比于 u/(1−u)。当不期望类别已很不可能时，它会减弱；接近一时则迅速增大。"
+      },
+      {
+        "en": "The practical sampler estimates posteriors using transition likelihoods and stabilizes them. The toy slider assumes an exact posterior and does not reproduce those estimation errors.",
+        "zh": "实际采样器用转移似然估计后验并做稳定化处理。本滑块假设后验准确，并未复现这些估计误差。"
+      }
+    ]
+  },
+  "dynamic-vlm-negative-prompting": {
+    "label": {
+      "en": "Observation index",
+      "zh": "观察序号"
+    },
+    "min": 0,
+    "max": 3,
+    "value": 0,
+    "steps": [
+      {
+        "en": "Input: an intermediate noisy image. Predict its clean image before asking a vision-language model what unwanted content remains.",
+        "zh": "输入：中间带噪图像。先预测对应干净图像，再询问视觉语言模型还存在什么不期望内容。"
+      },
+      {
+        "en": "The VLM proposes a negative phrase for the current prediction. This synthetic example is a storyboard, not a VLM execution.",
+        "zh": "VLM 为当前预测提出负面短语。本合成例子是流程示意，并未运行 VLM。"
+      },
+      {
+        "en": "Reuse that phrase for negative guidance until the next scheduled observation. A fixed negative prompt would keep the same phrase throughout.",
+        "zh": "在下一次预定观察前复用该短语进行负引导。固定负提示则会从头到尾保持相同短语。"
+      },
+      {
+        "en": "A later observation may change the phrase. Added VLM calls cost time; quality and removal can trade off. The note records the paper’s guidance-formula ambiguity.",
+        "zh": "后续观察可能改变短语。新增 VLM 调用有耗时，质量与移除效果可能权衡。笔记记录了原文引导公式的歧义。"
+      }
+    ]
+  },
+  "value-sign-flip": {
+    "label": {
+      "en": "Negative attention mass",
+      "zh": "负分支注意力质量"
+    },
+    "min": 0,
+    "max": 1,
+    "value": 0.3,
+    "steps": [
+      {
+        "en": "Input: positive and negative text branches. Their keys compete in a shared softmax. Negative values are sign-flipped.",
+        "zh": "输入：正面与负面文本分支。两者的键在共享 softmax 中竞争；负面分支的值翻转符号。"
+      },
+      {
+        "en": "Separate the shared attention into positive mass W and negative mass 1−W. Flipping values does not flip keys or attention probabilities.",
+        "zh": "把共享注意力分成正面质量 W 与负面质量 1−W。翻转值不会翻转键或注意力概率。"
+      },
+      {
+        "en": "The output is W times positive value minus α(1−W) times negative value. This acts inside attention, not by subtracting final noise predictions.",
+        "zh": "输出为 W 倍正面值减去 α(1−W) 倍负面值。这作用于注意力内部，而非相减最终噪声预测。"
+      },
+      {
+        "en": "In the MMDiT construction, the negative branch must also keep an unflipped copy for its own updates. The simple scalar example omits full network dynamics.",
+        "zh": "在 MMDiT 构造中，负分支还需保留未翻转副本供自身更新。这个简单标量例子省略了完整网络动态。"
+      }
+    ]
+  },
+  "concept-removal-guidance": {
+    "label": {
+      "en": "Evidence surplus",
+      "zh": "证据超出量"
+    },
+    "min": -0.5,
+    "max": 1,
+    "value": 0.4,
+    "steps": [
+      {
+        "en": "Input: a proposed denoising step and an evidence score for an unwanted concept. Evidence is a surrogate, not a calibrated probability.",
+        "zh": "输入：拟议的去噪步与不期望概念的证据分数。证据是代理量，不是校准概率。"
+      },
+      {
+        "en": "Approximate the evidence constraint by a half-space using the current direction and a short lookahead.",
+        "zh": "使用当前方向与短期前瞻，把证据约束近似为半空间。"
+      },
+      {
+        "en": "If the constraint is satisfied, leave the step alone. Otherwise project to the boundary along the evidence direction with minimum Euclidean displacement.",
+        "zh": "若约束已满足，则保持原步不动；否则沿证据方向投影到边界，使欧氏位移最小。"
+      },
+      {
+        "en": "The guarantee concerns the local surrogate. A zero evidence-direction norm can make a violated constraint infeasible. Scaling beyond the projection sacrifices the minimum-displacement statement.",
+        "zh": "保证只涉及局部代理约束。证据方向范数为零时，已违反的约束可能不可行。放大投影步会失去最小位移结论。"
+      }
+    ]
+  }
+}

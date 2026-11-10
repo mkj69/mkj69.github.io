@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Explaining and Improving Contrastive Decoding by Extrapolating the Probabilities of a Huge and Hypothetical LM | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/apd/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Explaining and Improving Contrastive Decoding by Extrapolating the Probabilities of a Huge and Hypothetical LM</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/apd/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="apd"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>APD 问的是：同一家族内不同规模的模型，能否共同改善当前可用最大模型的下一词分布。</span><span data-paper-language-content="en" lang="en">APD asks whether several models from one size-controlled family can improve the next-token distribution of the largest available model.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：两个模型给三个候选词分配概率。较大模型更偏好 A。</span><span data-paper-language-content="en" lang="en">Input: two models assign probabilities to three possible next tokens. The larger model favors A more strongly.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>概率空间直线外推直接加上概率差。此例中 C 最终变成负数。这条直线是对照，不是 APD。</span><span data-paper-language-content="en" lang="en">A straight extension in probability space adds a probability difference. Here it eventually makes C negative. This straight line is a comparison baseline, not APD.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>对数空间外推相乘似然比后归一化。归一化概率保持正值，但可能变得很尖锐。</span><span data-paper-language-content="en" lang="en">Log-space extension multiplies likelihood ratios and normalizes. Its normalized probabilities remain positive, but it can become very sharp.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>APD 则从一系列不同规模的模型学习概率的渐近趋势。这里的有界曲线仅用于解释区别，不是论文拟合的曲线。</span><span data-paper-language-content="en" lang="en">APD instead learns an asymptotic probability trend from a family of model sizes. Our bounded curve only illustrates this distinction; it is not the fitted curve in the paper.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>离线概率外推为小模型训练提供目标。推理时 APD 仍使用专家与训练后小模型的 logits，并不直接调用一个巨型模型。</span><span data-paper-language-content="en" lang="en">Offline probability extrapolation supplies a target for training an amateur. At inference, APD still uses expert and trained-amateur logits. This is not direct access to a huge model.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#apd-zh-page-1">1 · 外推的对象是什么？</a></li><li><a href="#apd-zh-page-2">2 · 带条件的理论解释</a></li><li><a href="#apd-zh-page-3">3 · 学习得到的修正如何训练</a></li><li><a href="#apd-zh-page-4">4 · 实验究竟测量了什么</a></li><li><a href="#apd-zh-page-5">5 · 局限、复现与解释</a></li><li><a href="#apd-zh-page-6">6 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Haw-Shiuan Chang, Nanyun Peng, Mohit Bansal, Anil Ramakrishna, Tagyoung Chung</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2411.01610v1</p><p><a href="https://arxiv.org/abs/2411.01610v1">2411.01610v1</a>
+ · <a href="https://github.com/amazon-science/llm-asymptotic-decoding">作者代码</a>
+</p></div>
+<article class="sheet" id="apd-zh-page-1" aria-labelledby="apd-zh-page-1-heading"><header class="running"><h2 id="apd-zh-page-1-heading">外推的对象是什么？</h2></header><div class="page-columns">
+<section class="column">
+<p>APD 问的是：同一家族内不同规模的模型，能否共同改善当前可用最大模型的下一词分布。</p>
+<p>目标是一个假想的渐近分布，而不是实际训练出的无限大模型的输出。</p>
+<p>论文先把对比解码解释为 logit 空间的线性外推，再用概率空间中逐渐饱和的曲线替换这一归纳偏置。</p>
+<p>一个重要失败情形是：大小模型都已经偏好的简单答案。</p>
+<p>减去小模型可能压低这个答案，转而提升一个概率随规模增长更快、却不够恰当的词。</p>
+<p>作者将其称为 obvious blindness，并在图 1 中用 Bees 与 Invertebrates 的对比说明。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-zh-page-2" aria-labelledby="apd-zh-page-2-heading"><header class="running"><h2 id="apd-zh-page-2-heading">带条件的理论解释</h2></header><div class="page-columns">
+<section class="column">
+<p>用 E 表示专家 logit、A 表示业余模型 logit，论文采用 z = E − A/T。</p>
+<p>当 T &gt; 1 时，可以将它改写为 (1 − 1/T)[E + (E − A)/(T − 1)]。</p>
+<div class="equation" role="math" aria-label="z_CD = E − A/T = (1 − 1/T) z_H;  log s_H = (T log s_E − log s_A)/(T − 1)">z_CD = E − A/T = (1 − 1/T) z_H;  log s_H = (T log s_E − log s_A)/(T − 1)</div>
+<p>如果每个词的 logit 都是模型规模对数的仿射函数，方括号中的表达式就是外推规模 s_H 处的 logit。</p>
+<p>前面的乘法因子意味着，CD 相当于以温度 T/(T − 1) 对这一假想模型采样。</p>
+<p>这一代数关系并未证明真实模型的逐词 logit 遵循线性缩放规律。</p>
+<p>超出已观察规模的外推也不能保证事实性更好。</p>
+<p>作为独立说明，当 T = 2 时，假想模型规模为 s_E²/s_A，温度为 2。</p>
+<p>当 T 趋近 1 时，推算出的规模发散，因此不能将这一极限附近的公式理解为稳定预测。</p>
+<p>第 8 节称理论未覆盖 T 大于 1 的情形，这与定理 1 及紧随其后对较小 T 的讨论冲突。</p>
+<p>定理明确假设 T &gt; 1；本笔记按定理表述解释，并标出这一疑似文字错误。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-zh-page-3" aria-labelledby="apd-zh-page-3-heading"><header class="running"><h2 id="apd-zh-page-3-heading">学习得到的修正如何训练</h2></header><div class="page-columns">
+<section class="column">
+<p>APD 在 Wikipedia 2021 的一百万行文本上收集多个规模模型对候选词的概率。</p>
+<p>候选集合包括专家概率最高的 20 个词及抽样的较低排名词；各模型概率都在这个集合内归一化。</p>
+<p>因而它们是在选定词表子集上的条件概率，而非未经处理的完整词表概率。</p>
+<p>对上升曲线进行 p ↦ 1 − p 的翻转，使同一种下降参数化可以表示两种趋势。</p>
+<div class="equation" role="math" aria-label="p_hat(s) = P&#x27;_AP + a exp[−max(0, b(s − d))],  a,b,d &gt; 0;  s = log(model size)">p_hat(s) = P&#x27;_AP + a exp[−max(0, b(s − d))],  a,b,d &gt; 0;  s = log(model size)</div>
+<p>待估计的渐近值来自 softmax(E − A′)，其中 A′ 是业余模型的可训练副本。</p>
+<p>一个四层 MLP 接收待估计渐近值及观测概率，并预测 a、b、d。</p>
+<p>MLP 检验这一渐近值能否解释观测曲线；它没有来自无限大模型的监督。</p>
+<p>第一项损失对除最大模型外的各规模计算均方根拟合误差。</p>
+<p>第二项惩罚拟合曲线高于最大模型翻转后概率的正向超出量。</p>
+<p>式 10 对平均正向超出量开平方，并没有先将超出量平方。</p>
+<p>第三项损失限制 A′ 相对于原业余模型 logit 的偏移。</p>
+<div class="equation" role="math" aria-label="L = L₁ + 10L₂ + λ₃L₃;  λ₃ = 0.8 (Pythia), 0.4 (OPT), 1.0 (Qwen1.5)">L = L₁ + 10L₂ + λ₃L₃;  λ₃ = 0.8 (Pythia), 0.4 (OPT), 1.0 (Qwen1.5)</div>
+<p>只优化业余模型和曲线网络，专家模型保持固定。</p>
+<p>推理时不再使用曲线网络及中间规模模型，只保留专家与更新后的业余模型。</p>
+<p>因此，相近推理成本是相对于双模型 CD 而言，不是相对于单模型解码器，也不包括离线训练。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-zh-page-4" aria-labelledby="apd-zh-page-4-heading"><header class="running"><h2 id="apd-zh-page-4-heading">实验究竟测量了什么</h2></header><div class="page-columns">
+<section class="column">
+<p>图 4 同时比较事实性和多样性，而不是只展示一个获胜分数。</p>
+<p>NEER 衡量未出现在检索所得 Wikipedia 证据中的命名实体，Dist-2 衡量不同二元词组的比例。</p>
+<p>检索错误和采样阈值都可能影响观察到的事实性提升。</p>
+<p>表 1 中，OPT 在 p = 0.8 的 top-p k20 设置下，NEER 从 CD 的 38.20 降至 APD 的 34.06。</p>
+<p>Dist-2 从 44.13 升至 45.72，但严重重复率从 0.78 升至 3.39；这四个数均为百分数。</p>
+<p>这说明存在有用的权衡，同时也应保留对重复代价的说明。</p>
+<p>表 2 中 Pythia 的 LAMBADA 困惑度分别为 CD 2.237、APD 2.132、12B 模型 2.188。</p>
+<p>同样顺序下，CommonsenseQA 困惑度分别为 6.176、5.882 和 8.140。</p>
+<p>这些分数采用附录 E.3 所述的 top-20 筛选、候选概率重新归一化及概率平滑。</p>
+<p>它们不是完整基准上标准的全词表困惑度。</p>
+<p>QA 实验还直接报告最佳温度结果，因此实际新任务应在独立验证集上选择温度。</p>
+<p>人工评估包含 150 个续写，每个由两名标注者评价；事实性评分从 CD + REAL 的 2.16 提升至 APD + REAL 的 2.31。</p>
+<p>样本较少且标注者相关性不高，限制了对部署效果作强结论的依据。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-zh-page-5" aria-labelledby="apd-zh-page-5-heading"><header class="running"><h2 id="apd-zh-page-5-heading">局限、复现与解释</h2></header><div class="page-columns">
+<section class="column">
+<p>主要证据来自较早的预训练模型家族，OPT 与 Qwen 在部分 QA 任务上的结果并不一致。</p>
+<p>相同分词器、可比训练数据以及足够宽的模型规模范围，有助于解释外推的含义。</p>
+<p>渐近值仍依赖归纳假设；有限观测不能唯一确定无限大模型的行为。</p>
+<p>有价值的复现应保留候选筛选设置，同时报告未筛选准确率，并区分训练与推理成本。</p>
+<p>论文链接的作者仓库为 amazon-science/llm-asymptotic-decoding。</p>
+<p>核心贡献是学习一个更好的外推规则，而不是证明小模型真的包含一个更大的模型。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-zh-page-6" aria-labelledby="apd-zh-page-6-heading"><header class="running"><h2 id="apd-zh-page-6-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by/4.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/amazon-science/llm-asymptotic-decoding</p>
+</section>
+</div><footer class="page-foot"><span>6 / 6</span><span>2411.01610v1</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#apd-en-page-1">1 · What is being extrapolated?</a></li><li><a href="#apd-en-page-2">2 · The conditional theorem</a></li><li><a href="#apd-en-page-3">3 · How the learned correction is trained</a></li><li><a href="#apd-en-page-4">4 · What the experiments actually measure</a></li><li><a href="#apd-en-page-5">5 · Limits, reproduction, and interpretation</a></li><li><a href="#apd-en-page-6">6 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Haw-Shiuan Chang, Nanyun Peng, Mohit Bansal, Anil Ramakrishna, Tagyoung Chung</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2411.01610v1</p><p><a href="https://arxiv.org/abs/2411.01610v1">2411.01610v1</a>
+ · <a href="https://github.com/amazon-science/llm-asymptotic-decoding">Author code</a>
+</p></div>
+<article class="sheet" id="apd-en-page-1" aria-labelledby="apd-en-page-1-heading"><header class="running"><h2 id="apd-en-page-1-heading">What is being extrapolated?</h2></header><div class="page-columns">
+<section class="column">
+<p>APD asks whether several models from one size-controlled family can improve the next-token distribution of the largest available model.</p>
+<p>The target is a hypothetical asymptotic distribution, not the output of an actually trained infinite model.</p>
+<p>The paper first interprets contrastive decoding as linear extrapolation in logit space, then replaces that inductive bias with saturating curves in probability space.</p>
+<p>An important failure case is an easy answer that both the small and large models already prefer.</p>
+<p>Subtracting the small model can suppress this answer and promote a less appropriate token whose probability grew more sharply with scale.</p>
+<p>The authors call this obvious blindness, illustrated by Bees versus Invertebrates in Figure 1.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-en-page-2" aria-labelledby="apd-en-page-2-heading"><header class="running"><h2 id="apd-en-page-2-heading">The conditional theorem</h2></header><div class="page-columns">
+<section class="column">
+<p>With expert logits E and amateur logits A, the paper uses z = E − A/T.</p>
+<p>For T &gt; 1, rewrite this as (1 − 1/T)[E + (E − A)/(T − 1)].</p>
+<div class="equation" role="math" aria-label="z_CD = E − A/T = (1 − 1/T) z_H;  log s_H = (T log s_E − log s_A)/(T − 1)">z_CD = E − A/T = (1 − 1/T) z_H;  log s_H = (T log s_E − log s_A)/(T − 1)</div>
+<p>If each token logit is affine in log model size, the bracketed expression is the logit at the extrapolated size s_H.</p>
+<p>The multiplicative factor means that CD samples this hypothetical model at temperature T/(T − 1).</p>
+<p>This algebra does not establish that real token logits follow a linear scaling law.</p>
+<p>Nor does extrapolation beyond observed sizes certify better factuality.</p>
+<p>As an independent illustration, T = 2 places the hypothetical model at s_E²/s_A and gives temperature 2.</p>
+<p>Taking T toward 1 makes the inferred size diverge, so the formula should not be read as a stable prediction in that limit.</p>
+<p>Section 8 says the theory does not cover T larger than 1, which conflicts with Theorem 1 and its own following discussion of smaller T.</p>
+<p>The theorem explicitly assumes T &gt; 1; this note follows that statement and flags the apparent textual error.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-en-page-3" aria-labelledby="apd-en-page-3-heading"><header class="running"><h2 id="apd-en-page-3-heading">How the learned correction is trained</h2></header><div class="page-columns">
+<section class="column">
+<p>APD collects candidate-token probabilities from several model sizes on one million lines of Wikipedia 2021.</p>
+<p>The candidates include the expert&#x27;s top 20 tokens and sampled lower-ranked tokens; each model is normalized over this candidate set.</p>
+<p>These are conditional probabilities on a selected vocabulary subset, not untouched full-vocabulary probabilities.</p>
+<p>Increasing curves are flipped by p ↦ 1 − p so that one decreasing parameterization can represent both directions.</p>
+<div class="equation" role="math" aria-label="p_hat(s) = P&#x27;_AP + a exp[−max(0, b(s − d))],  a,b,d &gt; 0;  s = log(model size)">p_hat(s) = P&#x27;_AP + a exp[−max(0, b(s − d))],  a,b,d &gt; 0;  s = log(model size)</div>
+<p>The proposed asymptote comes from softmax(E − A′), where A′ is a trainable copy of the amateur.</p>
+<p>A four-layer MLP receives the proposed asymptote and observed probabilities and predicts a, b, and d.</p>
+<p>The MLP checks whether that asymptote can explain the observed curve; it is not supervised by an infinite model.</p>
+<p>The first loss is a root-mean-square fit to all sizes except the largest.</p>
+<p>The second penalizes the positive excess of the fitted curve above the largest model&#x27;s flipped probability.</p>
+<p>Equation 10 takes the square root of the mean positive excess; it does not square that excess.</p>
+<p>The third loss limits the drift of A′ from the original amateur logits.</p>
+<div class="equation" role="math" aria-label="L = L₁ + 10L₂ + λ₃L₃;  λ₃ = 0.8 (Pythia), 0.4 (OPT), 1.0 (Qwen1.5)">L = L₁ + 10L₂ + λ₃L₃;  λ₃ = 0.8 (Pythia), 0.4 (OPT), 1.0 (Qwen1.5)</div>
+<p>Only the amateur and curve network are optimized; the expert stays fixed.</p>
+<p>At inference the curve network and intermediate models disappear, leaving the expert plus the updated amateur.</p>
+<p>Thus the similar inference cost is relative to two-model CD, not to a single-model decoder, and it excludes offline training.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-en-page-4" aria-labelledby="apd-en-page-4-heading"><header class="running"><h2 id="apd-en-page-4-heading">What the experiments actually measure</h2></header><div class="page-columns">
+<section class="column">
+<p>Figure 4 compares factuality and diversity together rather than reporting one isolated winning score.</p>
+<p>NEER measures named entities absent from retrieved Wikipedia evidence, while Dist-2 measures distinct bigrams.</p>
+<p>Both retrieval errors and the sampling threshold can influence the apparent factuality gain.</p>
+<p>In Table 1, OPT with top-p k20 at p = 0.8 changes NEER from 38.20 for CD to 34.06 for APD.</p>
+<p>Dist-2 changes from 44.13 to 45.72, but severe repetition rises from 0.78 to 3.39; all four numbers are percentages.</p>
+<p>This is evidence of a useful tradeoff, with a repetition cost that should remain visible.</p>
+<p>For Pythia in Table 2, LAMBADA perplexity is 2.237 for CD, 2.132 for APD, and 2.188 for the 12B model.</p>
+<p>CommonsenseQA perplexity is 6.176, 5.882, and 8.140 in the same order.</p>
+<p>These scores use top-20 filtering, candidate renormalization, and probability smoothing described in Appendix E.3.</p>
+<p>They are not standard full-vocabulary perplexities on the complete benchmark.</p>
+<p>The QA experiments also report the best temperature directly, so a new deployment should select temperature on separate validation data.</p>
+<p>The human evaluation uses 150 continuations with two annotators each; factuality ratings rise from 2.16 for CD + REAL to 2.31 for APD + REAL.</p>
+<p>The small sample and modest inter-annotator correlation limit the strength of deployment conclusions.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-en-page-5" aria-labelledby="apd-en-page-5-heading"><header class="running"><h2 id="apd-en-page-5-heading">Limits, reproduction, and interpretation</h2></header><div class="page-columns">
+<section class="column">
+<p>The main evidence concerns older pretrained model families, with mixed results for OPT and Qwen on some QA tasks.</p>
+<p>A shared tokenizer, comparable training data, and a useful range of model sizes make the extrapolation easier to interpret.</p>
+<p>The asymptote remains an inductive assumption; finite observations cannot uniquely identify the behavior of an infinite model.</p>
+<p>A useful reproduction should preserve candidate filtering, report unfiltered accuracy as well, and separate training cost from inference cost.</p>
+<p>The author repository is amazon-science/llm-asymptotic-decoding, linked from the paper.</p>
+<p>The key contribution is a learned replacement for a crude extrapolation rule, not proof that a small model literally contains a larger model.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 6</span><span>2411.01610v1</span></footer></article>
+<article class="sheet" id="apd-en-page-6" aria-labelledby="apd-en-page-6-heading"><header class="running"><h2 id="apd-en-page-6-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by/4.0/</p>
+<p>Author-code links in the source: https://github.com/amazon-science/llm-asymptotic-decoding</p>
+</section>
+</div><footer class="page-foot"><span>6 / 6</span><span>2411.01610v1</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

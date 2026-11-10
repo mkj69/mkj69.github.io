@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dynamic Negative Guidance of Diffusion Models | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/dynamic-negative-guidance/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Dynamic Negative Guidance of Diffusion Models</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/dynamic-negative-guidance/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="dynamic-negative-guidance"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>Dynamic Negative Guidance 针对不希望概念的补集，而不是无限地沿其分数场反方向排斥。</span><span data-paper-language-content="en" lang="en">Dynamic Negative Guidance targets the complement of an unwanted concept rather than indefinitely repelling its score field.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：带噪状态，以及对不期望类别后验概率的估计。这并不是对最终图像类别的确定判断。</span><span data-paper-language-content="en" lang="en">Input: a noisy state and an estimate of the posterior probability of an undesired class. This is not a classifier certainty about the final image.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>补集条件要求不属于该类别的概率。对其对数求导会引入后验赔率。</span><span data-paper-language-content="en" lang="en">Complement conditioning asks for the probability of not belonging to that class. Differentiating its log introduces posterior odds.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>负引导强度正比于 u/(1−u)。当不期望类别已很不可能时，它会减弱；接近一时则迅速增大。</span><span data-paper-language-content="en" lang="en">Negative-guidance strength is proportional to u/(1−u). It shrinks when the undesired class is already unlikely and grows sharply near one.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>实际采样器用转移似然估计后验并做稳定化处理。本滑块假设后验准确，并未复现这些估计误差。</span><span data-paper-language-content="en" lang="en">The practical sampler estimates posteriors using transition likelihoods and stabilizes them. The toy slider assumes an exact posterior and does not reproduce those estimation errors.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#dynamic-negative-guidance-zh-page-1">1 · 否定并不只是负系数</a></li><li><a href="#dynamic-negative-guidance-zh-page-2">2 · 如何估计未知后验</a></li><li><a href="#dynamic-negative-guidance-zh-page-3">3 · 实验证据</a></li><li><a href="#dynamic-negative-guidance-zh-page-4">4 · 局限与可复现检查</a></li><li><a href="#dynamic-negative-guidance-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Felix Koulischer, Johannes Deleu, Gabriel Raya, Thomas Demeester, Luca Ambrogioni</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2410.14398v3</p><p><a href="https://arxiv.org/abs/2410.14398v3">2410.14398v3</a>
+ · <a href="https://github.com/FelixKoulischer/Dynamic-Negative-Guidance">作者代码</a>
+</p></div>
+<article class="sheet" id="dynamic-negative-guidance-zh-page-1" aria-labelledby="dynamic-negative-guidance-zh-page-1-heading"><header class="running"><h2 id="dynamic-negative-guidance-zh-page-1-heading">否定并不只是负系数</h2></header><div class="page-columns">
+<section class="column">
+<p>Dynamic Negative Guidance 针对不希望概念的补集，而不是无限地沿其分数场反方向排斥。</p>
+<p>令 u(x,t) 表示当前带噪状态属于不希望概念的概率。</p>
+<p>对其补集条件化，会将基础密度乘以 1 − u。</p>
+<div class="equation" role="math" aria-label="p_allowed(x,t) ∝ p(x,t)[1 − u(x,t)]^λ₀">p_allowed(x,t) ∝ p(x,t)[1 − u(x,t)]^λ₀</div>
+<p>应用链式法则与贝叶斯公式，得到依赖几率的修正。</p>
+<div class="equation" role="math" aria-label="s_DNG = s_base − λ₀ u/(1 − u) (s_unwanted − s_base)">s_DNG = s_base − λ₀ u/(1 − u) (s_unwanted − s_base)</div>
+<p>当不希望概念概率接近零时，修正消失；接近一时则快速增大。</p>
+<p>在 λ₀ = 1 的合成例子中，概率 0.1 与 0.8 分别对应强度 1/9 和 4。</p>
+<p>这种不对称性既是核心机制，也是对后验估计误差敏感的来源。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-zh-page-2" aria-labelledby="dynamic-negative-guidance-zh-page-2-heading"><header class="running"><h2 id="dynamic-negative-guidance-zh-page-2-heading">如何估计未知后验</h2></header><div class="page-columns">
+<section class="column">
+<p>分数模型不会直接返回归一化概念概率。</p>
+<p>论文沿轨迹跟踪条件与无条件高斯反向转移的似然比。</p>
+<p>当转移方差相同时，对数比增量是到两个预测均值的平方距离之差。</p>
+<div class="equation" role="math" aria-label="log u_new ≈ log u_old − [||x_new − μ_unwanted||² − ||x_new − μ_base||²]/(2σ²)">log u_new ≈ log u_old − [||x_new − μ_unwanted||² − ||x_new − μ_base||²]/(2σ²)</div>
+<p>不希望概念模型的均值更接近新样本时，估计概念证据增加。</p>
+<p>实用估计器还加入温度缩放、偏移和概率截断。</p>
+<p>这些稳定化处理使实现与精确贝叶斯条件化存在差别。</p>
+<p>方法还交错执行后验估计和下一次引导步骤，以处理二者相互依赖。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-zh-page-3" aria-labelledby="dynamic-negative-guidance-zh-page-3-heading"><header class="running"><h2 id="dynamic-negative-guidance-zh-page-3-heading">实验证据</h2></header><div class="page-columns">
+<section class="column">
+<p>一维高斯混合实验允许精确计算后验，并测试移除一个模态。</p>
+<p>这是已知分布下的诊断，不是证明图像模型中的估计后验保持校准。</p>
+<p>MNIST 与 CIFAR10 实验移除一个类别，测量禁用类别频率、保留类别平衡及 FID。</p>
+<p>FID 使用 10,240 张生成图像，并以排除不希望类别的数据作为参考。</p>
+<p>与使用未修改模型样本作为 FID 参考的研究比较时，这一参考选择很重要。</p>
+<p>最显著的报告优势是在较强移除区域，对允许类别的干扰较小。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-zh-page-4" aria-labelledby="dynamic-negative-guidance-zh-page-4-heading"><header class="running"><h2 id="dynamic-negative-guidance-zh-page-4-heading">局限与可复现检查</h2></header><div class="page-columns">
+<section class="column">
+<p>理想补集需要兼容的概念条件分布与基础分布，并且允许部分的概率质量非零。</p>
+<p>截断防止数值发散，但也改变理论分数规则。</p>
+<p>复现应报告后验轨迹、截断频率、强度敏感性、保留多样性及具体采样器。</p>
+<p>推导针对状态依赖的引导；它不意味着每个负提示都对应一个校准良好的二元事件。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-zh-page-5" aria-labelledby="dynamic-negative-guidance-zh-page-5-heading"><header class="running"><h2 id="dynamic-negative-guidance-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by/4.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/FelixKoulischer/Dynamic-Negative-Guidance.git</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2410.14398v3</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#dynamic-negative-guidance-en-page-1">1 · Negation is not just a negative coefficient</a></li><li><a href="#dynamic-negative-guidance-en-page-2">2 · How the missing posterior is estimated</a></li><li><a href="#dynamic-negative-guidance-en-page-3">3 · Experimental evidence</a></li><li><a href="#dynamic-negative-guidance-en-page-4">4 · Limits and reproducible checks</a></li><li><a href="#dynamic-negative-guidance-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Felix Koulischer, Johannes Deleu, Gabriel Raya, Thomas Demeester, Luca Ambrogioni</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2410.14398v3</p><p><a href="https://arxiv.org/abs/2410.14398v3">2410.14398v3</a>
+ · <a href="https://github.com/FelixKoulischer/Dynamic-Negative-Guidance">Author code</a>
+</p></div>
+<article class="sheet" id="dynamic-negative-guidance-en-page-1" aria-labelledby="dynamic-negative-guidance-en-page-1-heading"><header class="running"><h2 id="dynamic-negative-guidance-en-page-1-heading">Negation is not just a negative coefficient</h2></header><div class="page-columns">
+<section class="column">
+<p>Dynamic Negative Guidance targets the complement of an unwanted concept rather than indefinitely repelling its score field.</p>
+<p>Let u(x,t) be the probability that the current noisy state belongs to the unwanted concept.</p>
+<p>Conditioning on its complement multiplies the base density by 1 − u.</p>
+<div class="equation" role="math" aria-label="p_allowed(x,t) ∝ p(x,t)[1 − u(x,t)]^λ₀">p_allowed(x,t) ∝ p(x,t)[1 − u(x,t)]^λ₀</div>
+<p>Applying the chain rule and Bayes&#x27; rule yields an odds-dependent correction.</p>
+<div class="equation" role="math" aria-label="s_DNG = s_base − λ₀ u/(1 − u) (s_unwanted − s_base)">s_DNG = s_base − λ₀ u/(1 − u) (s_unwanted − s_base)</div>
+<p>The correction vanishes when unwanted-concept probability approaches zero and grows rapidly near one.</p>
+<p>For a synthetic example with λ₀ = 1, probabilities 0.1 and 0.8 give strengths 1/9 and 4.</p>
+<p>The asymmetry is the core mechanism and also a source of sensitivity to posterior estimation error.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-en-page-2" aria-labelledby="dynamic-negative-guidance-en-page-2-heading"><header class="running"><h2 id="dynamic-negative-guidance-en-page-2-heading">How the missing posterior is estimated</h2></header><div class="page-columns">
+<section class="column">
+<p>A score model does not directly return a normalized concept probability.</p>
+<p>The paper tracks likelihood ratios of conditional and unconditional Gaussian reverse transitions along the trajectory.</p>
+<p>With equal transition variances, the log-ratio increment is a difference of squared distances to their predicted means.</p>
+<div class="equation" role="math" aria-label="log u_new ≈ log u_old − [||x_new − μ_unwanted||² − ||x_new − μ_base||²]/(2σ²)">log u_new ≈ log u_old − [||x_new − μ_unwanted||² − ||x_new − μ_base||²]/(2σ²)</div>
+<p>An undesired-model mean closer to the new sample increases the estimated concept evidence.</p>
+<p>The practical estimator adds temperature scaling, an offset, and probability clamping.</p>
+<p>These stabilizers separate the implementation from exact Bayesian conditioning.</p>
+<p>The method also staggers posterior estimation and the next guided step to resolve their mutual dependence.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-en-page-3" aria-labelledby="dynamic-negative-guidance-en-page-3-heading"><header class="running"><h2 id="dynamic-negative-guidance-en-page-3-heading">Experimental evidence</h2></header><div class="page-columns">
+<section class="column">
+<p>The one-dimensional Gaussian-mixture experiment permits exact posterior calculations and tests removal of one mode.</p>
+<p>It is a diagnostic with known distributions, not a proof that estimated posteriors remain calibrated in image models.</p>
+<p>MNIST and CIFAR10 experiments remove one class and measure forbidden-class frequency, retained class balance, and FID.</p>
+<p>FID uses 10,240 generated images and reference data excluding the unwanted class.</p>
+<p>This reference choice matters when comparing with studies whose FID reference is an unmodified model&#x27;s samples.</p>
+<p>The strongest reported advantage is less disruption of allowed classes in high-removal regimes.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-en-page-4" aria-labelledby="dynamic-negative-guidance-en-page-4-heading"><header class="running"><h2 id="dynamic-negative-guidance-en-page-4-heading">Limits and reproducible checks</h2></header><div class="page-columns">
+<section class="column">
+<p>The ideal complement requires compatible concept-conditioned and base distributions with nonzero allowed mass.</p>
+<p>Clamping prevents numerical divergence but changes the theoretical score rule.</p>
+<p>A reproduction should report posterior trajectories, clamping frequency, scale sensitivity, retained diversity, and the exact sampler.</p>
+<p>The derivation concerns state-dependent guidance; it does not imply that every negative prompt corresponds to a well-calibrated binary event.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2410.14398v3</span></footer></article>
+<article class="sheet" id="dynamic-negative-guidance-en-page-5" aria-labelledby="dynamic-negative-guidance-en-page-5-heading"><header class="running"><h2 id="dynamic-negative-guidance-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by/4.0/</p>
+<p>Author-code links in the source: https://github.com/FelixKoulischer/Dynamic-Negative-Guidance.git</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2410.14398v3</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

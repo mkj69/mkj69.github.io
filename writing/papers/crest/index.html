@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Beyond Token-Level Guidance: Inference-Time Alignment of Specialized LLMs via Cross-Family Representation Steering | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/crest/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Beyond Token-Level Guidance: Inference-Time Alignment of Specialized LLMs via Cross-Family Representation Steering</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/crest/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="crest"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>CREST 研究一种组合：专门模型掌握领域知识，另一个已对齐模型可能缺少这些知识。</span><span data-paper-language-content="en" lang="en">CREST studies a specialist model that has domain knowledge and a separate aligned model that may lack that knowledge.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：隐藏空间不同的基础模型与专用引导模型。配对样例用于拟合两个空间之间的映射。</span><span data-paper-language-content="en" lang="en">Input: a base model and a specialized guidance model with different hidden spaces. Paired examples fit a map between those spaces.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>探针估计与威胁方向的相似度。阈值决定是否启用引导。</span><span data-paper-language-content="en" lang="en">A probe estimates similarity to a threat direction. A threshold gates whether steering is enabled.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>低于阈值时强度为零。在阈值处，论文门控 sigmoid 跳到最大值的一半，并非从零平滑增加。</span><span data-paper-language-content="en" lang="en">Below the threshold, strength is zero. At the threshold, the paper’s gated sigmoid jumps to half its maximum; it is not a smooth ramp from zero.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>映射引导方向，并在有限词窗口内添加它。此图演示门控，不模拟学得的高维映射，也不构成安全证明。</span><span data-paper-language-content="en" lang="en">Map the guidance direction and add it during a limited token window. This diagram shows the gate, not a learned high-dimensional map or proof of safety.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#crest-zh-page-1">1 · 在安全引导中保留专门能力</a></li><li><a href="#crest-zh-page-2">2 · 准备阶段与表示映射</a></li><li><a href="#crest-zh-page-3">3 · 针对查询的干预</a></li><li><a href="#crest-zh-page-4">4 · 证据与边界</a></li><li><a href="#crest-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Jin Gan, Xin Li, Jun Luo</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2608.30319v1</p><p><a href="https://arxiv.org/abs/2608.30319v1">2608.30319v1</a>
+ · <a href="https://github.com/DecayingSeart/CREST">作者代码</a>
+</p></div>
+<article class="sheet" id="crest-zh-page-1" aria-labelledby="crest-zh-page-1-heading"><header class="running"><h2 id="crest-zh-page-1-heading">在安全引导中保留专门能力</h2></header><div class="page-columns">
+<section class="column">
+<p>CREST 研究一种组合：专门模型掌握领域知识，另一个已对齐模型可能缺少这些知识。</p>
+<p>用通用模型的词元偏好替代专门模型，可能损坏领域回答或停止行为。</p>
+<p>方法通过隐藏表示迁移安全方向，不要求词表匹配。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-zh-page-2" aria-labelledby="crest-zh-page-2-heading"><header class="running"><h2 id="crest-zh-page-2-heading">准备阶段与表示映射</h2></header><div class="page-columns">
+<section class="column">
+<p>准备阶段使用 100 个配对提示词，将选定引导模型层对齐到按深度比例匹配的基础模型层。</p>
+<div class="equation" role="math" aria-label="W = argmin_W ||H_b − H_g Wᵀ||_F">W = argmin_W ||H_b − H_g Wᵀ||_F</div>
+<p>论文将其称为 Procrustes 对齐，但展示的目标是无约束最小二乘，并未写出正交约束。</p>
+<p>提示词数量远少于隐藏维度时，映射可能欠定；复现时正则化与求解器选择很重要。</p>
+<p>安全检测器从专门模型自身的安全与不安全部分生成中计算。</p>
+<p>这样做旨在使检测器的准备数据分布匹配推理时遇到的生成状态。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-zh-page-3" aria-labelledby="crest-zh-page-3-heading"><header class="running"><h2 id="crest-zh-page-3-heading">针对查询的干预</h2></header><div class="page-columns">
+<section class="column">
+<p>基础模型先生成一小段未经引导的探测文本。</p>
+<p>根据其末层表示与安全减不安全方向的余弦相似度计算分数。</p>
+<div class="equation" role="math" aria-label="s = (1 − cos(h_probe,v))/2;  α = 0 if s &lt; τ, else α_max sigmoid(10(s − τ))">s = (1 − cos(h_probe,v))/2;  α = 0 if s &lt; τ, else α_max sigmoid(10(s − τ))</div>
+<p>该规则在阈值处从零跳到 α_max 的一半，因此不是从零连续上升的曲线。</p>
+<p>对触发查询，引导模型提供安全前缀查询表示与探测文本表示之差，并将其归一化。</p>
+<div class="equation" role="math" aria-label="h_l ← h_l + αρ_l W_l d_x">h_l ← h_l + αρ_l W_l d_x</div>
+<p>投影方向只在固定干预窗口内加入，之后移除。</p>
+<p>方法不会在每个词元重新估计危险，也不会自动擦除可能有问题的探测词元。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-zh-page-4" aria-labelledby="crest-zh-page-4-heading"><header class="running"><h2 id="crest-zh-page-4-heading">证据与边界</h2></header><div class="page-columns">
+<section class="column">
+<p>表 2 报告代码不安全率为 0.14，基础模型为 0.18，Nudging 为 0.17。</p>
+<p>数学安全回答率为 0.96，基础模型为 0.92；医学拒绝率保持为 0.99。</p>
+<p>这三个指标定义不同，不能平均为一个安全分数。</p>
+<p>相对零引导，所报告能力差值为 HumanEval +0.01，GSM8K 与 MedQA 均为 0.00。</p>
+<p>所称基础延迟的 1.3 倍来自具体评估配置，不是与架构无关的常数。</p>
+<p>复现应测试检测器错误、准备数据泄漏、投影稳定性及未经引导探测文本的处理。</p>
+<p>有用之处在于分离检测、跨模型迁移和干预窗口；其中任何一项都不能单独提供安全认证。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-zh-page-5" aria-labelledby="crest-zh-page-5-heading"><header class="running"><h2 id="crest-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by/4.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/DecayingSeart/CREST</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2608.30319v1</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#crest-en-page-1">1 · Preserve specialized competence during safety steering</a></li><li><a href="#crest-en-page-2">2 · Setup and the representation map</a></li><li><a href="#crest-en-page-3">3 · Query-specific intervention</a></li><li><a href="#crest-en-page-4">4 · Evidence and boundaries</a></li><li><a href="#crest-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Jin Gan, Xin Li, Jun Luo</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2608.30319v1</p><p><a href="https://arxiv.org/abs/2608.30319v1">2608.30319v1</a>
+ · <a href="https://github.com/DecayingSeart/CREST">Author code</a>
+</p></div>
+<article class="sheet" id="crest-en-page-1" aria-labelledby="crest-en-page-1-heading"><header class="running"><h2 id="crest-en-page-1-heading">Preserve specialized competence during safety steering</h2></header><div class="page-columns">
+<section class="column">
+<p>CREST studies a specialist model that has domain knowledge and a separate aligned model that may lack that knowledge.</p>
+<p>Replacing specialist token preferences with those of the general model can damage domain answers or stopping behavior.</p>
+<p>The method transfers a safety direction through hidden representations instead of requiring matching token vocabularies.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-en-page-2" aria-labelledby="crest-en-page-2-heading"><header class="running"><h2 id="crest-en-page-2-heading">Setup and the representation map</h2></header><div class="page-columns">
+<section class="column">
+<p>The setup uses 100 paired prompts to align selected guidance-model layers with proportionally matched base-model layers.</p>
+<div class="equation" role="math" aria-label="W = argmin_W ||H_b − H_g Wᵀ||_F">W = argmin_W ||H_b − H_g Wᵀ||_F</div>
+<p>The paper calls this Procrustes alignment, but the displayed objective is unconstrained least squares and does not state an orthogonality constraint.</p>
+<p>With far fewer prompts than hidden dimensions, the fitted map can be underdetermined; regularization and solver choice matter for reproduction.</p>
+<p>A safety detector is computed from safe and unsafe partial generations of the specialist itself.</p>
+<p>This attempts to match the detector&#x27;s setup distribution to the generation states seen at inference.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-en-page-3" aria-labelledby="crest-en-page-3-heading"><header class="running"><h2 id="crest-en-page-3-heading">Query-specific intervention</h2></header><div class="page-columns">
+<section class="column">
+<p>The base model first produces a short unsteered probe.</p>
+<p>Its last-layer representation is scored by cosine similarity to the safe-minus-unsafe direction.</p>
+<div class="equation" role="math" aria-label="s = (1 − cos(h_probe,v))/2;  α = 0 if s &lt; τ, else α_max sigmoid(10(s − τ))">s = (1 − cos(h_probe,v))/2;  α = 0 if s &lt; τ, else α_max sigmoid(10(s − τ))</div>
+<p>This rule jumps from zero to half of α_max at the threshold, so it is not a continuous ramp from zero.</p>
+<p>For triggered queries, the guidance model supplies a normalized difference between a safety-prefixed query representation and the probe representation.</p>
+<div class="equation" role="math" aria-label="h_l ← h_l + αρ_l W_l d_x">h_l ← h_l + αρ_l W_l d_x</div>
+<p>The projected direction is added for a fixed intervention window, then removed.</p>
+<p>The method does not continuously re-estimate danger at every token or erase potentially problematic probe tokens.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-en-page-4" aria-labelledby="crest-en-page-4-heading"><header class="running"><h2 id="crest-en-page-4-heading">Evidence and boundaries</h2></header><div class="page-columns">
+<section class="column">
+<p>Table 2 reports code insecure rate 0.14 versus 0.18 for the base and 0.17 for Nudging.</p>
+<p>Math safe-response rate is 0.96 versus 0.92 for the base, while medical refusal remains 0.99.</p>
+<p>These three metrics have different definitions and must not be averaged as one safety score.</p>
+<p>The reported capability differences relative to zero steering are +0.01 on HumanEval and 0.00 on GSM8K and MedQA.</p>
+<p>The claimed 1.3× base latency reflects a particular evaluation configuration, not an architecture-independent constant.</p>
+<p>A reproduction should test detector errors, setup-data leakage, projection stability, and the fate of the unsteered probe.</p>
+<p>The useful idea is to separate detection, cross-model transfer, and the intervention window; none of them alone supplies a safety certificate.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2608.30319v1</span></footer></article>
+<article class="sheet" id="crest-en-page-5" aria-labelledby="crest-en-page-5-heading"><header class="running"><h2 id="crest-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by/4.0/</p>
+<p>Author-code links in the source: https://github.com/DecayingSeart/CREST</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2608.30319v1</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

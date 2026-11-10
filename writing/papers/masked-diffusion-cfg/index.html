@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Improving Classifier-Free Guidance in Masked Diffusion: Low-Dim Theoretical Insights with High-Dim Impact | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/masked-diffusion-cfg/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Improving Classifier-Free Guidance in Masked Diffusion: Low-Dim Theoretical Insights with High-Dim Impact</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/masked-diffusion-cfg/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="masked-diffusion-cfg"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>在连续时间掩码扩散链中，转移包含两个部分：多久揭示一次词元，以及揭示哪个词元。</span><span data-paper-language-content="en" lang="en">In a continuous-time masked diffusion chain, a transition has two components: how often a token is revealed and which token is revealed.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：一个掩码位置的条件与无条件词预测。反向时间采样既决定何时揭开，也决定填入哪个词。</span><span data-paper-language-content="en" lang="en">Input: a masked position with conditional and unconditional token predictions. A reverse-time sampler chooses both when to unmask and which token to insert.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>幂形式的引导产生未归一化权重；其总和 Z 随引导强度改变。</span><span data-paper-language-content="en" lang="en">Power guidance creates unnormalized weights. Their sum Z can change with guidance strength.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>若把这些权重直接乘到跳转速率上，Z 也改变揭开掩码的时钟。这与改变词偏好是两个不同作用。</span><span data-paper-language-content="en" lang="en">If these weights multiply jump rates directly, Z also changes the unmasking clock. That is a separate effect from changing token preference.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>归一化词权重并保留预定跳转速率。之后可分别研究时序调度；生成进度增加对应正向扩散时间减小。</span><span data-paper-language-content="en" lang="en">Normalize the token weights and preserve the intended jump rate. Timing schedules can then be studied separately; increasing generation progress is decreasing forward diffusion time.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#masked-diffusion-cfg-zh-page-1">1 · 引导同时改变方向与时机</a></li><li><a href="#masked-diffusion-cfg-zh-page-2">2 · 为什么单词元计算有意义</a></li><li><a href="#masked-diffusion-cfg-zh-page-3">3 · 调度与时间约定</a></li><li><a href="#masked-diffusion-cfg-zh-page-4">4 · 实验与局限</a></li><li><a href="#masked-diffusion-cfg-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Kevin Rojas, Ye He, Chieh-Hsin Lai, Yuhta Takida, Yuki Mitsufuji, Molei Tao</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2507.08965v2</p><p><a href="https://arxiv.org/abs/2507.08965v2">2507.08965v2</a>
+</p></div>
+<article class="sheet" id="masked-diffusion-cfg-zh-page-1" aria-labelledby="masked-diffusion-cfg-zh-page-1-heading"><header class="running"><h2 id="masked-diffusion-cfg-zh-page-1-heading">引导同时改变方向与时机</h2></header><div class="page-columns">
+<section class="column">
+<p>在连续时间掩码扩散链中，转移包含两个部分：多久揭示一次词元，以及揭示哪个词元。</p>
+<p>本文指出，未归一化的几何混合可能在试图控制第二部分时，无意改变第一部分。</p>
+<p>将速率矩阵的一列写成离开速率 r(x) 与归一化跳转分布 p(y|x) 的乘积。</p>
+<div class="equation" role="math" aria-label="u(y|x) = p(y|x)^w q(y|x)^(1−w);  Z_w(x) = Σ_y u(y|x)">u(y|x) = p(y|x)^w q(y|x)^(1−w);  Z_w(x) = Σ_y u(y|x)</div>
+<p>直接使用 u 会将总离开速率乘以 Z_w。</p>
+<p>将 u 归一化为 u/Z_w，可以在引导词元身份的同时保留预期时钟。</p>
+<p>对角速率仍必须等于非对角速率之和的负值，保证每列总和为零。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-zh-page-2" aria-labelledby="masked-diffusion-cfg-zh-page-2-heading"><header class="running"><h2 id="masked-diffusion-cfg-zh-page-2-heading">为什么单词元计算有意义</h2></header><div class="page-columns">
+<section class="column">
+<p>在一维中，即使解掩码轨迹发生扭曲，终局词元分布仍可能是目标倾斜分布。</p>
+<p>配分函数出现在掩码存活概率的指数中，可能显著加快解掩码。</p>
+<p>有限步数值求解器因此面对不同、且可能刚性更强的过程。</p>
+<p>理想终局分布匹配，并不保证粗粒度数值模拟也能匹配。</p>
+<p>归一化掩码词元规则对 w log p + (1 − w) log q 使用 softmax，同时保留调度因子。</p>
+<p>这里 w = 1 表示普通条件生成，不同于以零表示无额外引导的约定。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-zh-page-3" aria-labelledby="masked-diffusion-cfg-zh-page-3-heading"><header class="running"><h2 id="masked-diffusion-cfg-zh-page-3-heading">调度与时间约定</h2></header><div class="page-columns">
+<section class="column">
+<p>论文的前向扩散时间从 0 时刻的干净数据走向 T 时刻的掩码状态。</p>
+<p>生成沿相反方向进行，因此沿生成过程增强引导，意味着该时间坐标下降时引导更强。</p>
+<p>双词元计算将输出分解为与词元揭示顺序及各区间引导强度相关的项。</p>
+<p>它在所研究设置中支持前期较弱、中后期较强的引导。</p>
+<p>这与 Commitment Before Realization 中提示词特定的早期交接不构成逻辑矛盾：两者的转移核、目标、引导约定和评估约束不同。</p>
+<p>两者都不能推出适用于所有掩码扩散模型的统一调度。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-zh-page-4" aria-labelledby="masked-diffusion-cfg-zh-page-4-heading"><header class="running"><h2 id="masked-diffusion-cfg-zh-page-4-heading">实验与局限</h2></header><div class="page-columns">
+<section class="column">
+<p>ImageNet-256 的归一化实验采用 MaskGIT、50 步以及 50,000 张生成图像计算 FID。</p>
+<p>调度比较使用 10,000 个样本，并报告沿生成过程增强引导的策略表现更好。</p>
+<p>Meissonic 与 Show-O 使用 GenEval 评估，LLaDA-8B-Instruct 则在 MATH-500 上测试。</p>
+<p>文本实验最多生成 256 个词元，采用 32 词元分块及不进行重新掩码的简单 Euler 采样器。</p>
+<p>这些结果不应直接与原始 LLaDA 基准配置比较。</p>
+<p>理论分析处于低维；高维改善属于实验证据，而不是一般定理。</p>
+<p>复现应区分速率归一化的变化、数值求解器变化和调度变化。</p>
+<p>来源为 v2，许可为 CC BY-SA 4.0；译本必须保留署名并采用相同的改编许可。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-zh-page-5" aria-labelledby="masked-diffusion-cfg-zh-page-5-heading"><header class="running"><h2 id="masked-diffusion-cfg-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by-sa/4.0/</p>
+<p>原文所列作者或相关代码链接：检查的来源中尚未核实作者代码链接。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2507.08965v2</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#masked-diffusion-cfg-en-page-1">1 · Guidance changes both direction and timing</a></li><li><a href="#masked-diffusion-cfg-en-page-2">2 · Why a one-token calculation matters</a></li><li><a href="#masked-diffusion-cfg-en-page-3">3 · Scheduling and the time convention</a></li><li><a href="#masked-diffusion-cfg-en-page-4">4 · Experiments and limits</a></li><li><a href="#masked-diffusion-cfg-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Kevin Rojas, Ye He, Chieh-Hsin Lai, Yuhta Takida, Yuki Mitsufuji, Molei Tao</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2507.08965v2</p><p><a href="https://arxiv.org/abs/2507.08965v2">2507.08965v2</a>
+</p></div>
+<article class="sheet" id="masked-diffusion-cfg-en-page-1" aria-labelledby="masked-diffusion-cfg-en-page-1-heading"><header class="running"><h2 id="masked-diffusion-cfg-en-page-1-heading">Guidance changes both direction and timing</h2></header><div class="page-columns">
+<section class="column">
+<p>In a continuous-time masked diffusion chain, a transition has two components: how often a token is revealed and which token is revealed.</p>
+<p>This paper shows that an unnormalized geometric blend can unintentionally change the first component while trying to control the second.</p>
+<p>Write a rate column as an exit rate r(x) times a normalized jump distribution p(y|x).</p>
+<div class="equation" role="math" aria-label="u(y|x) = p(y|x)^w q(y|x)^(1−w);  Z_w(x) = Σ_y u(y|x)">u(y|x) = p(y|x)^w q(y|x)^(1−w);  Z_w(x) = Σ_y u(y|x)</div>
+<p>Using u directly multiplies the total exit rate by Z_w.</p>
+<p>Normalizing u/Z_w preserves the intended clock while steering token identity.</p>
+<p>The diagonal rate must still be the negative sum of the off-diagonal rates, so each column sums to zero.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-en-page-2" aria-labelledby="masked-diffusion-cfg-en-page-2-heading"><header class="running"><h2 id="masked-diffusion-cfg-en-page-2-heading">Why a one-token calculation matters</h2></header><div class="page-columns">
+<section class="column">
+<p>In one dimension the terminal token distribution can be the desired tilt even when the unmasking trajectory is distorted.</p>
+<p>The partition function appears in the mask-survival exponent and can accelerate unmasking sharply.</p>
+<p>Finite-step numerical solvers then face a different and potentially stiff process.</p>
+<p>Matching an ideal terminal distribution does not guarantee that a coarse numerical simulation will match it.</p>
+<p>The normalized masked-token rule uses softmax of w log p + (1 − w) log q while retaining the schedule factor.</p>
+<p>Here w = 1 is ordinary conditional generation, unlike conventions where zero means no extra guidance.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-en-page-3" aria-labelledby="masked-diffusion-cfg-en-page-3-heading"><header class="running"><h2 id="masked-diffusion-cfg-en-page-3-heading">Scheduling and the time convention</h2></header><div class="page-columns">
+<section class="column">
+<p>The paper&#x27;s forward diffusion time runs from clean data at 0 to a masked state at T.</p>
+<p>Generation runs in the opposite direction, so increasing guidance during generation means stronger guidance as that time coordinate decreases.</p>
+<p>A two-token calculation decomposes the output into terms associated with token reveal order and guidance strengths in different intervals.</p>
+<p>It motivates low early guidance and stronger middle-to-late guidance in the studied setting.</p>
+<p>This is not logically inconsistent with a prompt-specific early handoff in Commitment Before Realization: the kernels, objectives, guidance conventions, and evaluated constraints differ.</p>
+<p>Neither result licenses one universal schedule for all masked diffusion models.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-en-page-4" aria-labelledby="masked-diffusion-cfg-en-page-4-heading"><header class="running"><h2 id="masked-diffusion-cfg-en-page-4-heading">Experiments and limits</h2></header><div class="page-columns">
+<section class="column">
+<p>ImageNet-256 normalization experiments use MaskGIT, 50 steps, and 50,000 generated samples for FID.</p>
+<p>The schedule comparison uses 10,000 samples and reports stronger results for guidance that increases along generation.</p>
+<p>Meissonic and Show-O are evaluated with GenEval, while LLaDA-8B-Instruct is tested on MATH-500.</p>
+<p>The text experiment uses up to 256 tokens, blocks of 32, and a simple Euler sampler without remasking.</p>
+<p>Those results should not be compared directly with the original LLaDA benchmark configuration.</p>
+<p>The theoretical analysis is low-dimensional; high-dimensional improvements are empirical evidence, not a general theorem.</p>
+<p>A reproduction should distinguish changing the rate normalization from changing the numerical solver or schedule.</p>
+<p>The source is v2 and carries CC BY-SA 4.0; a translated edition must retain attribution and the same adaptation license.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2507.08965v2</span></footer></article>
+<article class="sheet" id="masked-diffusion-cfg-en-page-5" aria-labelledby="masked-diffusion-cfg-en-page-5-heading"><header class="running"><h2 id="masked-diffusion-cfg-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by-sa/4.0/</p>
+<p>Author-code links in the source: No author-code link verified in the inspected source.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2507.08965v2</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gradient-Guided Reward Optimization for Inference-time Alignment | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/ggro/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Gradient-Guided Reward Optimization for Inference-time Alignment</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/ggro/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="ggro"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>GGRO 监测下一词熵，仅在超过阈值时干预。</span><span data-paper-language-content="en" lang="en">GGRO monitors next-token entropy and intervenes only when it exceeds a threshold.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：下一词分布与奖励模型。熵用于指示可能值得额外计算的不确定位置。</span><span data-paper-language-content="en" lang="en">Input: a next-token distribution and a reward model. Entropy signals uncertain positions where extra work may be useful.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>将熵与阈值比较，决定是否请求引导提议。这是一种计算资源分配启发式。</span><span data-paper-language-content="en" lang="en">Compare entropy with a threshold. The trigger controls whether to request guided proposals. It is a computation-allocation heuristic.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>论文使用奖励梯度提出替代词，再细化片段。此处演示候选选择，不演示原文公式中含义不明确的梯度符号。</span><span data-paper-language-content="en" lang="en">The paper uses reward gradients to propose token alternatives, then refines segments. We show candidate selection, not the ambiguous gradient sign in the printed formula.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>给生成的候选打分并保留选定续写。奖励是代理指标，额外推理并不改善每个基准。</span><span data-paper-language-content="en" lang="en">Score the resulting candidates and keep the selected continuation. Rewards are proxies, and extra inference does not improve every benchmark.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#ggro-zh-page-1">1 · 在模型不确定处使用搜索</a></li><li><a href="#ggro-zh-page-2">2 · 梯度提出候选，奖励进行选择</a></li><li><a href="#ggro-zh-page-3">3 · 定量证据</a></li><li><a href="#ggro-zh-page-4">4 · 计算与局限</a></li><li><a href="#ggro-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Hankun Lin, Ruqi Zhang</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2606.09635v1</p><p><a href="https://arxiv.org/abs/2606.09635v1">2606.09635v1</a>
+ · <a href="https://github.com/lhk2004/GGRO">作者代码</a>
+</p></div>
+<article class="sheet" id="ggro-zh-page-1" aria-labelledby="ggro-zh-page-1-heading"><header class="running"><h2 id="ggro-zh-page-1-heading">在模型不确定处使用搜索</h2></header><div class="page-columns">
+<section class="column">
+<p>GGRO 监测下一词熵，仅在超过阈值时干预。</p>
+<p>它利用奖励模型梯度提出提示性词元，重新生成片段，并保留得分最高的修订。</p>
+<p>这将何处干预的决策与如何干预的提议机制结合起来。</p>
+<div class="equation" role="math" aria-label="H_i = −Σ_v π(v|prefix) log π(v|prefix);  intervene if H_i &gt; τ_H">H_i = −Σ_v π(v|prefix) log π(v|prefix);  intervene if H_i &gt; τ_H</div>
+<p>高熵意味着基础模型不确定，不一定意味着有害或答错。</p>
+<p>因此，高置信失败可能绕过触发器，正常但含糊的续写也可能触发它。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-zh-page-2" aria-labelledby="ggro-zh-page-2-heading"><header class="running"><h2 id="ggro-zh-page-2-heading">梯度提出候选，奖励进行选择</h2></header><div class="page-columns">
+<section class="column">
+<p>论文将词元表示为 one-hot 坐标，并对这一表示求奖励梯度。</p>
+<p>所选词元作为新自回归片段的起点，而不是将每个词元替换成连续优化向量。</p>
+<p>在选择片段前，最多生成并评分 S 个修订。</p>
+<p>展示的式 4 使用 exp(−∇R · (1 − onehot))，但文字又将更高奖励描述为目标。</p>
+<p>对替换坐标分数直接进行一阶奖励上升，通常会使用相反符号。</p>
+<p>这一符号约定需要在实现中核实；因此教学演示展示提出候选和重排序流程，不声称已解决所展示梯度的符号问题。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-zh-page-3" aria-labelledby="ggro-zh-page-3-heading"><header class="running"><h2 id="ggro-zh-page-3-heading">定量证据</h2></header><div class="page-columns">
+<section class="column">
+<p>表 1 的 8B 配置中，HEx-PHI 攻击成功率从基础模型的 54.0 ± 1.6% 降至 GGRO 的 26.2 ± 0.8%。</p>
+<p>Best-of-64 为 34.3 ± 1.4%，因此与 GGRO 的绝对差为 8.1 个百分点。</p>
+<p>这一算术与论文附近文字所称的 8.7 个百分点不同，不应不加限定地重复后者。</p>
+<p>GGRO 的 XSTest 正常请求拒绝率为 3.6%，Best-of-64 为 0.4%，体现了安全权衡。</p>
+<p>GGRO 的 MMLU-Pro 准确率为 54.0 ± 0.7%，基础模型为 44.1 ± 1.5%。</p>
+<p>较小的 3B 配置提升更少，因此模型容量与奖励模型质量很重要。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-zh-page-4" aria-labelledby="ggro-zh-page-4-heading"><header class="running"><h2 id="ggro-zh-page-4-heading">计算与局限</h2></header><div class="page-columns">
+<section class="column">
+<p>对 100 个 MMLU-Pro 样本，表 4 报告 GGRO 用时 366.7 分钟，Best-of-64 为 1293.3 分钟。</p>
+<p>在 HH-RLHF 上，这一比较反转为 252.2 对 200.7 分钟。</p>
+<p>因此，方法并非始终更快，而且需要对奖励模型进行反向传播。</p>
+<p>奖励分布改善本身不能证明人类效用改善，也不能证明免疫奖励投机。</p>
+<p>忠实复现应比较相同计算预算、独立评判器、熵阈值及梯度符号约定。</p>
+<p>所检查 arXiv 版本仅授予分发权；本页是原创双语笔记，不是论文全文翻译。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-zh-page-5" aria-labelledby="ggro-zh-page-5-heading"><header class="running"><h2 id="ggro-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://arxiv.org/licenses/nonexclusive-distrib/1.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/lhk2004/GGRO; https://github.com/haizelabs/llama3-jailbreak</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2606.09635v1</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#ggro-en-page-1">1 · Spend search where the model is uncertain</a></li><li><a href="#ggro-en-page-2">2 · Gradients propose; rewards select</a></li><li><a href="#ggro-en-page-3">3 · Quantitative evidence</a></li><li><a href="#ggro-en-page-4">4 · Compute and limitations</a></li><li><a href="#ggro-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Hankun Lin, Ruqi Zhang</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2606.09635v1</p><p><a href="https://arxiv.org/abs/2606.09635v1">2606.09635v1</a>
+ · <a href="https://github.com/lhk2004/GGRO">Author code</a>
+</p></div>
+<article class="sheet" id="ggro-en-page-1" aria-labelledby="ggro-en-page-1-heading"><header class="running"><h2 id="ggro-en-page-1-heading">Spend search where the model is uncertain</h2></header><div class="page-columns">
+<section class="column">
+<p>GGRO monitors next-token entropy and intervenes only when it exceeds a threshold.</p>
+<p>It uses gradients from a reward model to propose a nudging token, regenerates a segment, and retains the best-scoring refinement.</p>
+<p>This combines a decision about where to intervene with a proposal mechanism for how to intervene.</p>
+<div class="equation" role="math" aria-label="H_i = −Σ_v π(v|prefix) log π(v|prefix);  intervene if H_i &gt; τ_H">H_i = −Σ_v π(v|prefix) log π(v|prefix);  intervene if H_i &gt; τ_H</div>
+<p>High entropy means uncertainty under the base model, not necessarily harmfulness or an incorrect answer.</p>
+<p>Confident failures can therefore escape the trigger, and benign ambiguous continuations can trigger it.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-en-page-2" aria-labelledby="ggro-en-page-2-heading"><header class="running"><h2 id="ggro-en-page-2-heading">Gradients propose; rewards select</h2></header><div class="page-columns">
+<section class="column">
+<p>The paper represents tokens as one-hot coordinates and differentiates the reward through that representation.</p>
+<p>The selected token seeds a new autoregressive segment rather than replacing every token with a continuous optimized vector.</p>
+<p>Up to S refinements are generated and scored before selecting a segment.</p>
+<p>The displayed Equation 4 uses exp(−∇R · (1 − onehot)), despite describing higher reward as the target.</p>
+<p>A direct first-order reward ascent would normally use the opposite sign for a replacement-coordinate score.</p>
+<p>This sign convention needs verification in the implementation; the teaching demo therefore illustrates the proposal-and-rerank workflow without claiming the displayed gradient sign is resolved.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-en-page-3" aria-labelledby="ggro-en-page-3-heading"><header class="running"><h2 id="ggro-en-page-3-heading">Quantitative evidence</h2></header><div class="page-columns">
+<section class="column">
+<p>For the 8B configuration in Table 1, HEx-PHI attack success falls from 54.0 ± 1.6% for the base model to 26.2 ± 0.8% for GGRO.</p>
+<p>Best-of-64 gives 34.3 ± 1.4%, so the absolute difference from GGRO is 8.1 percentage points.</p>
+<p>This arithmetic differs from the paper&#x27;s nearby 8.7-point description, which should not be repeated without qualification.</p>
+<p>XSTest benign refusal is 3.6% for GGRO versus 0.4% for Best-of-64, making the safety tradeoff visible.</p>
+<p>MMLU-Pro accuracy is 54.0 ± 0.7% for GGRO versus 44.1 ± 1.5% for the base model.</p>
+<p>The smaller 3B configuration shows smaller gains, so capacity and reward-model quality matter.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-en-page-4" aria-labelledby="ggro-en-page-4-heading"><header class="running"><h2 id="ggro-en-page-4-heading">Compute and limitations</h2></header><div class="page-columns">
+<section class="column">
+<p>For 100 MMLU-Pro samples, Table 4 reports 366.7 minutes for GGRO versus 1293.3 minutes for Best-of-64.</p>
+<p>On HH-RLHF the same comparison reverses to 252.2 versus 200.7 minutes.</p>
+<p>The method is therefore not uniformly faster, and it requires backward access to a reward model.</p>
+<p>Improved reward distributions do not alone prove improved human utility or immunity to reward hacking.</p>
+<p>A faithful reproduction should compare matched compute budgets, independent judges, entropy thresholds, and gradient sign conventions.</p>
+<p>The arXiv version inspected grants distribution rights only; this page is an original bilingual note, not a full-paper translation.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2606.09635v1</span></footer></article>
+<article class="sheet" id="ggro-en-page-5" aria-labelledby="ggro-en-page-5-heading"><header class="running"><h2 id="ggro-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://arxiv.org/licenses/nonexclusive-distrib/1.0/</p>
+<p>Author-code links in the source: https://github.com/lhk2004/GGRO; https://github.com/haizelabs/llama3-jailbreak</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2606.09635v1</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

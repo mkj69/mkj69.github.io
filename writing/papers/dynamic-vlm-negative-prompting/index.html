@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dynamic VLM-Guided Negative Prompting for Diffusion Models | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/dynamic-vlm-negative-prompting/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Dynamic VLM-Guided Negative Prompting for Diffusion Models</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/dynamic-vlm-negative-prompting/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="dynamic-vlm-negative-prompting"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>VL-DNP 在生成期间改变负提示内容，而不只是改变数值强度。</span><span data-paper-language-content="en" lang="en">VL-DNP changes the content of the negative prompt during generation, not only its numerical strength.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：中间带噪图像。先预测对应干净图像，再询问视觉语言模型还存在什么不期望内容。</span><span data-paper-language-content="en" lang="en">Input: an intermediate noisy image. Predict its clean image before asking a vision-language model what unwanted content remains.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>VLM 为当前预测提出负面短语。本合成例子是流程示意，并未运行 VLM。</span><span data-paper-language-content="en" lang="en">The VLM proposes a negative phrase for the current prediction. This synthetic example is a storyboard, not a VLM execution.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>在下一次预定观察前复用该短语进行负引导。固定负提示则会从头到尾保持相同短语。</span><span data-paper-language-content="en" lang="en">Reuse that phrase for negative guidance until the next scheduled observation. A fixed negative prompt would keep the same phrase throughout.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>后续观察可能改变短语。新增 VLM 调用有耗时，质量与移除效果可能权衡。笔记记录了原文引导公式的歧义。</span><span data-paper-language-content="en" lang="en">A later observation may change the phrase. Added VLM calls cost time; quality and removal can trade off. The note records the paper’s guidance-formula ambiguity.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#dynamic-vlm-negative-prompting-zh-page-1">1 · 由正在生成的图像决定负提示</a></li><li><a href="#dynamic-vlm-negative-prompting-zh-page-2">2 · 从潜变量状态到干预</a></li><li><a href="#dynamic-vlm-negative-prompting-zh-page-3">3 · 实验设置</a></li><li><a href="#dynamic-vlm-negative-prompting-zh-page-4">4 · 用表格核对 Pareto 主张</a></li><li><a href="#dynamic-vlm-negative-prompting-zh-page-5">5 · 局限</a></li><li><a href="#dynamic-vlm-negative-prompting-zh-page-6">6 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Hoyeon Chang, Seungjin Kim, Yoonseok Choi</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2510.26052v1</p><p><a href="https://arxiv.org/abs/2510.26052v1">2510.26052v1</a>
+</p></div>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-1" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-1-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-1-heading">由正在生成的图像决定负提示</h2></header><div class="page-columns">
+<section class="column">
+<p>VL-DNP 在生成期间改变负提示内容，而不只是改变数值强度。</p>
+<p>在选定去噪步骤，模型预测干净图像，并请视觉语言模型描述可见的不希望元素。</p>
+<p>这一描述成为后续步骤的负提示，直至下一次查询。</p>
+<p>不应悄悄将空描述或无关描述视为可靠的安全证据。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-2" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-2-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-2-heading">从潜变量状态到干预</h2></header><div class="page-columns">
+<section class="column">
+<p>对保持方差的扩散，干净图像估计使用当前潜变量与预测分数。</p>
+<div class="equation" role="math" aria-label="x̂₀ = [x_t + (1 − ᾱ_t)s_CFG(x_t,t)] / √ᾱ_t;  c⁻_i = VLM(x̂₀,D)">x̂₀ = [x_t + (1 − ᾱ_t)s_CFG(x_t,t)] / √ᾱ_t;  c⁻_i = VLM(x̂₀,D)</div>
+<p>后续修正将正向引导与负概念方向结合。</p>
+<p>式 5 从条件分数出发，而式 2 从无条件分数出发。</p>
+<p>因而在相同符号下，两者的正向引导系数相差一；复现必须核对实现约定。</p>
+<p>随时间变化的提示还会在采样中改变目标，因此该程序不是从一个固定倾斜分布进行精确采样。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-3" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-3-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-3-heading">实验设置</h2></header><div class="page-columns">
+<section class="column">
+<p>论文将 Stable Diffusion v1.4 与 Qwen2.5-VL-7B-Instruct 配合，使用 50 步 DPM-Solver++。</p>
+<p>十个 VLM 查询索引为 45、44、43、41、38、34、29、23、16 和 8。</p>
+<p>安全测试使用 Ring-a-Bell-16、P4D 与 Unlearn-Diff；正常内容评估仅有 100 个 COCO 提示词。</p>
+<p>负引导强度为 15 时，P4D ASR 对动态方法为 0.225，对静态负提示为 0.053。</p>
+<p>动态方法更好保留 CLIP，为 0.311 对 0.296，因此结果是权衡，而非过滤始终更强。</p>
+<p>所报告单图时间为动态提示 29.673 秒、静态提示 11.967 秒、基础模型 8.0 秒。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-4" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-4-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-4-heading">用表格核对 Pareto 主张</h2></header><div class="page-columns">
+<section class="column">
+<p>正文声称动态提示支配全部静态点和 SAFREE。</p>
+<p>但动态点的 CLIP 最高为 0.312，低于强度 7.5 的静态点 0.313，以及 SAFREE 的 0.315。</p>
+<p>因而报告数值不能证明在所展示安全与 CLIP 坐标上存在字面意义的 Pareto 支配。</p>
+<p>同样，动态强度从 20 增至 25 时，Ring-a-Bell ASR 从 0.011 升至 0.032，因此提升并非严格单调。</p>
+<p>应保留这些差异，而不是在总结中将它们改写成更强主张。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-5" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-5-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-5-heading">局限</h2></header><div class="page-columns">
+<section class="column">
+<p>早期干净图像预测可能模糊，VLM 可能遗漏内容或虚构负向描述。</p>
+<p>正常样本较少使 FID 比较不稳定，应进一步进行更大规模的重复评估。</p>
+<p>复现应记录每个中间图像、返回的负提示、引导权重和 VLM 延迟。</p>
+</section>
+</div><footer class="page-foot"><span>5 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-zh-page-6" aria-labelledby="dynamic-vlm-negative-prompting-zh-page-6-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-zh-page-6-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by/4.0/</p>
+<p>原文所列作者或相关代码链接：检查的来源中尚未核实作者代码链接。</p>
+</section>
+</div><footer class="page-foot"><span>6 / 6</span><span>2510.26052v1</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#dynamic-vlm-negative-prompting-en-page-1">1 · Let the emerging image choose the negative prompt</a></li><li><a href="#dynamic-vlm-negative-prompting-en-page-2">2 · From latent state to intervention</a></li><li><a href="#dynamic-vlm-negative-prompting-en-page-3">3 · Experimental setting</a></li><li><a href="#dynamic-vlm-negative-prompting-en-page-4">4 · Check the Pareto claim against the table</a></li><li><a href="#dynamic-vlm-negative-prompting-en-page-5">5 · Limitations</a></li><li><a href="#dynamic-vlm-negative-prompting-en-page-6">6 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Hoyeon Chang, Seungjin Kim, Yoonseok Choi</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2510.26052v1</p><p><a href="https://arxiv.org/abs/2510.26052v1">2510.26052v1</a>
+</p></div>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-1" aria-labelledby="dynamic-vlm-negative-prompting-en-page-1-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-1-heading">Let the emerging image choose the negative prompt</h2></header><div class="page-columns">
+<section class="column">
+<p>VL-DNP changes the content of the negative prompt during generation, not only its numerical strength.</p>
+<p>At selected denoising steps, the model predicts a clean image and asks a vision-language model to describe unwanted visible elements.</p>
+<p>That description becomes the negative prompt for subsequent steps until the next query.</p>
+<p>An empty or irrelevant description should not be silently treated as reliable evidence of safety.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-2" aria-labelledby="dynamic-vlm-negative-prompting-en-page-2-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-2-heading">From latent state to intervention</h2></header><div class="page-columns">
+<section class="column">
+<p>For variance-preserving diffusion, the clean-image estimate uses the current latent and predicted score.</p>
+<div class="equation" role="math" aria-label="x̂₀ = [x_t + (1 − ᾱ_t)s_CFG(x_t,t)] / √ᾱ_t;  c⁻_i = VLM(x̂₀,D)">x̂₀ = [x_t + (1 − ᾱ_t)s_CFG(x_t,t)] / √ᾱ_t;  c⁻_i = VLM(x̂₀,D)</div>
+<p>The subsequent correction combines positive guidance with a negative-concept direction.</p>
+<p>Equation 5 starts from the conditional score, whereas Equation 2 starts from the unconditional score.</p>
+<p>Consequently their positive-guidance coefficients differ by one under the same symbol; reproductions must verify the implemented convention.</p>
+<p>A time-varying prompt also changes the target during sampling, so the procedure is not exact sampling from one fixed tilted distribution.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-3" aria-labelledby="dynamic-vlm-negative-prompting-en-page-3-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-3-heading">Experimental setting</h2></header><div class="page-columns">
+<section class="column">
+<p>The paper pairs Stable Diffusion v1.4 with Qwen2.5-VL-7B-Instruct and uses 50 DPM-Solver++ steps.</p>
+<p>The ten VLM query indices are 45, 44, 43, 41, 38, 34, 29, 23, 16, and 8.</p>
+<p>Safety tests use Ring-a-Bell-16, P4D, and Unlearn-Diff; benign evaluation contains only 100 COCO prompts.</p>
+<p>At negative scale 15, P4D ASR is 0.225 for the dynamic method and 0.053 for static negative prompting.</p>
+<p>The dynamic method preserves CLIP better, at 0.311 versus 0.296, so the result is a tradeoff rather than uniformly stronger filtering.</p>
+<p>Reported per-image time is 29.673 seconds for dynamic prompting versus 11.967 for static prompting and 8.0 for the base.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-4" aria-labelledby="dynamic-vlm-negative-prompting-en-page-4-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-4-heading">Check the Pareto claim against the table</h2></header><div class="page-columns">
+<section class="column">
+<p>The text claims that dynamic prompting dominates all static points and SAFREE.</p>
+<p>But the dynamic points have CLIP at most 0.312, below static 0.313 at scale 7.5 and SAFREE 0.315.</p>
+<p>The reported values therefore do not establish literal Pareto dominance on the displayed safety-CLIP axes.</p>
+<p>Likewise the Ring-a-Bell ASR rises from 0.011 to 0.032 between dynamic scales 20 and 25, so improvement is not strictly monotone.</p>
+<p>These discrepancies should stay visible rather than being converted into stronger claims in a summary.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-5" aria-labelledby="dynamic-vlm-negative-prompting-en-page-5-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-5-heading">Limitations</h2></header><div class="page-columns">
+<section class="column">
+<p>Early clean-image predictions can be blurry, and the VLM can miss content or hallucinate a negative description.</p>
+<p>The small benign sample makes FID comparisons fragile and should motivate larger repeated evaluations.</p>
+<p>A reproduction should log every intermediate image, returned negative prompt, guidance weight, and VLM latency.</p>
+</section>
+</div><footer class="page-foot"><span>5 / 6</span><span>2510.26052v1</span></footer></article>
+<article class="sheet" id="dynamic-vlm-negative-prompting-en-page-6" aria-labelledby="dynamic-vlm-negative-prompting-en-page-6-heading"><header class="running"><h2 id="dynamic-vlm-negative-prompting-en-page-6-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by/4.0/</p>
+<p>Author-code links in the source: No author-code link verified in the inspected source.</p>
+</section>
+</div><footer class="page-foot"><span>6 / 6</span><span>2510.26052v1</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

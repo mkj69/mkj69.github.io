@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/attention-contrastive-decoding/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/attention-contrastive-decoding/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="attention-contrastive-decoding"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>ICML 官方页面确认论文正式标题为 Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding。</span><span data-paper-language-content="en" lang="en">The official ICML page identifies this paper as Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：条件输入与扰动输入的注意力行。它们是位置上的注意力权重，不是下一词概率。</span><span data-paper-language-content="en" lang="en">Input: conditional and perturbed-input attention rows. These are attention weights over positions, not probabilities of the next word.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>找出扰动注意力大于条件注意力的位置。掩码只选择这些位置执行减法。</span><span data-paper-language-content="en" lang="en">Find positions where perturbed attention exceeds conditional attention. The mask selects only these positions for subtraction.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>放大条件注意力行，并减去被掩码选中的扰动注意力。结果可能为负，也不必和为一。</span><span data-paper-language-content="en" lang="en">Scale the conditional row and subtract masked perturbed attention. The result can be negative and need not sum to one.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>把修改后的注意力用于前向传播，下一词分布在之后产生。论文保留噪声策略，并替换 logits 层面的组合。</span><span data-paper-language-content="en" lang="en">Use the modified attention in the model forward pass. A next-token distribution comes later. The paper retains the noise strategy while replacing the logit-level combination.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#attention-contrastive-decoding-zh-page-1">1 · 将减法移到前向计算内部</a></li><li><a href="#attention-contrastive-decoding-zh-page-2">2 · 自适应减法</a></li><li><a href="#attention-contrastive-decoding-zh-page-3">3 · X + ACD 的实际含义</a></li><li><a href="#attention-contrastive-decoding-zh-page-4">4 · 证据与局限</a></li><li><a href="#attention-contrastive-decoding-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Yujia Chen, Rui Sun, Huayu Mai, Wangkai Li, Zhangyu He, Bingzhou Wang, Aibing Li, Wenzhang Sun, Tianzhu Zhang</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · PMLR 306, 2026, pp. 16704–16741</p><p><a href="https://proceedings.mlr.press/v306/chen26dx.html">PMLR 306, 2026, pp. 16704–16741</a>
+ · <a href="https://github.com/jj-ccc/ACD">作者代码</a>
+</p></div>
+<article class="sheet" id="attention-contrastive-decoding-zh-page-1" aria-labelledby="attention-contrastive-decoding-zh-page-1-heading"><header class="running"><h2 id="attention-contrastive-decoding-zh-page-1-heading">将减法移到前向计算内部</h2></header><div class="page-columns">
+<section class="column">
+<p>ICML 官方页面确认论文正式标题为 Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding。</p>
+<p>本笔记使用 PMLR 306 的正式论文集 PDF，它链接至同一 OpenReview 记录。</p>
+<p>方法比较干净输入与诱发幻觉输入的注意力模式，而不是减去最终词表 logit。</p>
+<p>其预期优势是让后续网络将干预转化为连贯的输出分布。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-zh-page-2" aria-labelledby="attention-contrastive-decoding-zh-page-2-heading"><header class="running"><h2 id="attention-contrastive-decoding-zh-page-2-heading">自适应减法</h2></header><div class="page-columns">
+<section class="column">
+<p>令 A_c、A_n 表示干净输入与扰动输入在同一对齐位置上的注意力权重。</p>
+<p>均匀对比会使用 (1 + α)A_c − αA_n。</p>
+<p>自适应策略只在噪声权重大于干净权重的位置减去噪声项。</p>
+<div class="equation" role="math" aria-label="M_i = 1{A_n,i &gt; A_c,i};  A_ACD = (1 + α)A_c − α(A_n ⊙ M)">M_i = 1{A_n,i &gt; A_c,i};  A_ACD = (1 + α)A_c − α(A_n ⊙ M)</div>
+<p>当 M_i 为零时，干净权重直接放大，不含减法项。</p>
+<p>当 M_i 为一时，更新会压低被扰动增强的注意力分量。</p>
+<p>随后，value 通过这一修改后的注意力在解码器中聚合。</p>
+<p>展示的算术可能产生负分量，且不必和为一。</p>
+<p>因此，不应将修改后的权重展示为普通概率分布，或视作有保证的语义证据。</p>
+<p>论文的平滑性动机是关于干预位置的假设，而不是连贯性保留的证明。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-zh-page-3" aria-labelledby="attention-contrastive-decoding-zh-page-3-heading"><header class="running"><h2 id="attention-contrastive-decoding-zh-page-3-heading">X + ACD 的实际含义</h2></header><div class="page-columns">
+<section class="column">
+<p>第 4.1 节说明，X + ACD 保留 X 构造诱发幻觉分支的方法，但替换其 logit 减法和合理性筛选。</p>
+<p>不应未经核对就将它实现为两个独立对比修正的叠加。</p>
+<p>与 ICD 结合时，需要匹配提示词长度，以对齐注意力位置。</p>
+<p>默认设置将该操作应用于解码器各层与各注意力头。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-zh-page-4" aria-labelledby="attention-contrastive-decoding-zh-page-4-heading"><header class="running"><h2 id="attention-contrastive-decoding-zh-page-4-heading">证据与局限</h2></header><div class="page-columns">
+<section class="column">
+<p>表 1 中，LLaVA-1.5 的 VCD 实例级 CHAIR 在加入 ACD 后从 16.2 降至 14.3，召回率从 76.8 升至 78.3。</p>
+<p>SID 对应数值分别为 14.1 降至 13.3、78.2 升至 79.4。</p>
+<p>这些是特定基准的百分数，而非对任意图像或推理任务的保证。</p>
+<p>评估还包含 Qwen-VL、POPE、MME 和使用评判模型的 LLaVA-Bench 比较。</p>
+<p>有价值的复现应使用一致的采样和候选筛选设置，并将格式损坏输出与幻觉分开报告。</p>
+<p>噪声引起的注意力变化属于代理信号；某位置注意力较高本身不能证明相关内容是假的。</p>
+<p>作者代码链接为 jj-ccc/ACD。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-zh-page-5" aria-labelledby="attention-contrastive-decoding-zh-page-5-heading"><header class="running"><h2 id="attention-contrastive-decoding-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：CC BY 4.0 (PMLR publication agreement: https://proceedings.mlr.press/pmlr-license-agreement.html)</p>
+<p>原文所列作者或相关代码链接：https://github.com/jj-ccc/ACD</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#attention-contrastive-decoding-en-page-1">1 · Move the subtraction inside the forward pass</a></li><li><a href="#attention-contrastive-decoding-en-page-2">2 · Adaptive subtraction</a></li><li><a href="#attention-contrastive-decoding-en-page-3">3 · What X + ACD means</a></li><li><a href="#attention-contrastive-decoding-en-page-4">4 · Evidence and limitations</a></li><li><a href="#attention-contrastive-decoding-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Yujia Chen, Rui Sun, Huayu Mai, Wangkai Li, Zhangyu He, Bingzhou Wang, Aibing Li, Wenzhang Sun, Tianzhu Zhang</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · PMLR 306, 2026, pp. 16704–16741</p><p><a href="https://proceedings.mlr.press/v306/chen26dx.html">PMLR 306, 2026, pp. 16704–16741</a>
+ · <a href="https://github.com/jj-ccc/ACD">Author code</a>
+</p></div>
+<article class="sheet" id="attention-contrastive-decoding-en-page-1" aria-labelledby="attention-contrastive-decoding-en-page-1-heading"><header class="running"><h2 id="attention-contrastive-decoding-en-page-1-heading">Move the subtraction inside the forward pass</h2></header><div class="page-columns">
+<section class="column">
+<p>The official ICML page identifies this paper as Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding.</p>
+<p>This note uses the PMLR 306 proceedings PDF, linked to the same OpenReview record.</p>
+<p>The method compares clean and hallucination-inducing attention patterns rather than subtracting the final vocabulary logits.</p>
+<p>The intended benefit is to let the remaining network transform the intervention into a coherent output distribution.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-en-page-2" aria-labelledby="attention-contrastive-decoding-en-page-2-heading"><header class="running"><h2 id="attention-contrastive-decoding-en-page-2-heading">Adaptive subtraction</h2></header><div class="page-columns">
+<section class="column">
+<p>Let A_c and A_n be attention weights for clean and perturbed inputs at the same aligned positions.</p>
+<p>A uniform contrast would use (1 + α)A_c − αA_n.</p>
+<p>The adaptive strategy subtracts the noisy weight only where it exceeds the clean weight.</p>
+<div class="equation" role="math" aria-label="M_i = 1{A_n,i &gt; A_c,i};  A_ACD = (1 + α)A_c − α(A_n ⊙ M)">M_i = 1{A_n,i &gt; A_c,i};  A_ACD = (1 + α)A_c − α(A_n ⊙ M)</div>
+<p>When M_i is zero, the clean weight is amplified without the subtraction term.</p>
+<p>When M_i is one, the update suppresses an attention component increased by the perturbation.</p>
+<p>The values then aggregate through this modified attention within the decoder.</p>
+<p>The displayed arithmetic can produce negative entries and need not sum to one.</p>
+<p>Consequently the modified weights must not be presented as an ordinary probability distribution or as guaranteed semantic evidence.</p>
+<p>The paper&#x27;s smoothness motivation is a hypothesis about the intervention location, not a proof of preserved coherence.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-en-page-3" aria-labelledby="attention-contrastive-decoding-en-page-3-heading"><header class="running"><h2 id="attention-contrastive-decoding-en-page-3-heading">What X + ACD means</h2></header><div class="page-columns">
+<section class="column">
+<p>Section 4.1 states that X + ACD retains X&#x27;s hallucination-inducing construction but replaces its logit subtraction and plausibility filter.</p>
+<p>It should not be implemented as an unexamined stacking of two independent contrastive corrections.</p>
+<p>ICD integration requires matching prompt lengths to align attention positions.</p>
+<p>The default applies the operation across decoder layers and heads.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-en-page-4" aria-labelledby="attention-contrastive-decoding-en-page-4-heading"><header class="running"><h2 id="attention-contrastive-decoding-en-page-4-heading">Evidence and limitations</h2></header><div class="page-columns">
+<section class="column">
+<p>On LLaVA-1.5 in Table 1, VCD&#x27;s instance-level CHAIR decreases from 16.2 to 14.3 with ACD, while recall increases from 76.8 to 78.3.</p>
+<p>For SID the corresponding figures are 14.1 to 13.3 and 78.2 to 79.4.</p>
+<p>These are benchmark-specific percentages, not guarantees for arbitrary images or reasoning tasks.</p>
+<p>The evaluation includes Qwen-VL, POPE, MME, and judge-based LLaVA-Bench comparisons.</p>
+<p>A useful reproduction should compare against the same sampling and candidate-filter settings and report malformed outputs separately from hallucinations.</p>
+<p>Noise-induced attention changes are proxies; high attention on a location does not alone establish that the associated content is false.</p>
+<p>The author code is linked as jj-ccc/ACD.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<article class="sheet" id="attention-contrastive-decoding-en-page-5" aria-labelledby="attention-contrastive-decoding-en-page-5-heading"><header class="running"><h2 id="attention-contrastive-decoding-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: CC BY 4.0 (PMLR publication agreement: https://proceedings.mlr.press/pmlr-license-agreement.html)</p>
+<p>Author-code links in the source: https://github.com/jj-ccc/ACD</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>PMLR 306, 2026, pp. 16704–16741</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

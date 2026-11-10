@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VSF: Simple, Efficient, and Effective Negative Guidance in Few-Step Image Generation Models By Value Sign Flip | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/value-sign-flip/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">VSF: Simple, Efficient, and Effective Negative Guidance in Few-Step Image Generation Models By Value Sign Flip</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/value-sign-flip/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="value-sign-flip"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>VSF 在图像生成器的注意力内部引入负向引导，也适用于少步模型。</span><span data-paper-language-content="en" lang="en">VSF introduces negative guidance inside attention for image generators, including few-step models.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：正面与负面文本分支。两者的键在共享 softmax 中竞争；负面分支的值翻转符号。</span><span data-paper-language-content="en" lang="en">Input: positive and negative text branches. Their keys compete in a shared softmax. Negative values are sign-flipped.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>把共享注意力分成正面质量 W 与负面质量 1−W。翻转值不会翻转键或注意力概率。</span><span data-paper-language-content="en" lang="en">Separate the shared attention into positive mass W and negative mass 1−W. Flipping values does not flip keys or attention probabilities.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输出为 W 倍正面值减去 α(1−W) 倍负面值。这作用于注意力内部，而非相减最终噪声预测。</span><span data-paper-language-content="en" lang="en">The output is W times positive value minus α(1−W) times negative value. This acts inside attention, not by subtracting final noise predictions.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>在 MMDiT 构造中，负分支还需保留未翻转副本供自身更新。这个简单标量例子省略了完整网络动态。</span><span data-paper-language-content="en" lang="en">In the MMDiT construction, the negative branch must also keep an unflipped copy for its own updates. The simple scalar example omits full network dynamics.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#value-sign-flip-zh-page-1">1 · 用 key 匹配，用 value 反向作用</a></li><li><a href="#value-sign-flip-zh-page-2">2 · 为什么一次注意力计算会产生自适应权重</a></li><li><a href="#value-sign-flip-zh-page-3">3 · 联合注意力需要路由控制</a></li><li><a href="#value-sign-flip-zh-page-4">4 · 实验与局限</a></li><li><a href="#value-sign-flip-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Wenqi Guo, Shan Du</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2508.10931v6</p><p><a href="https://arxiv.org/abs/2508.10931v6">2508.10931v6</a>
+ · <a href="https://github.com/weathon/VSF/tree/main">作者代码</a>
+</p></div>
+<article class="sheet" id="value-sign-flip-zh-page-1" aria-labelledby="value-sign-flip-zh-page-1-heading"><header class="running"><h2 id="value-sign-flip-zh-page-1-heading">用 key 匹配，用 value 反向作用</h2></header><div class="page-columns">
+<section class="column">
+<p>VSF 在图像生成器的注意力内部引入负向引导，也适用于少步模型。</p>
+<p>它拼接正负提示的 key，但只翻转并缩放负提示的 value。</p>
+<p>保持负 key 不变，使图像 query 仍能匹配不希望出现的概念。</p>
+<div class="equation" role="math" aria-label="Z_VSF = softmax(Q[K⁺;K⁻]ᵀ/√d)[V⁺;−αV⁻]">Z_VSF = softmax(Q[K⁺;K⁻]ᵀ/√d)[V⁺;−αV⁻]</div>
+<p>翻转整个嵌入还会改变匹配，因此不是同一种操作。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-zh-page-2" aria-labelledby="value-sign-flip-zh-page-2-heading"><header class="running"><h2 id="value-sign-flip-zh-page-2-heading">为什么一次注意力计算会产生自适应权重</h2></header><div class="page-columns">
+<section class="column">
+<p>令 S⁺、S⁻ 为正负 key 对应指数化注意力分数之和。</p>
+<p>共享 softmax 分配的正向总质量为 W = S⁺/(S⁺ + S⁻)。</p>
+<div class="equation" role="math" aria-label="Z_VSF = W Z⁺ − α(1 − W)Z⁻">Z_VSF = W Z⁺ − α(1 − W)Z⁻</div>
+<p>其中 Z⁺、Z⁻ 在各自提示组内分别归一化注意力。</p>
+<p>这一恒等式解释了每个 query 的自适应权重，而无需两个独立注意力前向过程。</p>
+<p>它并未证明减去一个表示就能准确删除某一个语义概念。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-zh-page-3" aria-labelledby="value-sign-flip-zh-page-3-heading"><header class="running"><h2 id="value-sign-flip-zh-page-3-heading">联合注意力需要路由控制</h2></header><div class="page-columns">
+<section class="column">
+<p>在 MM-DiT 中，图像与文本词元共享注意力，因此未经保护的负 value 还可能扰动正负文本流。</p>
+<p>方法复制负词元，保留未翻转的更新流，并将翻转副本的影响限制在图像 query。</p>
+<p>它还使用注意力偏置并去除负提示 padding。</p>
+<p>第 3.2 节关于翻转副本是否充当 key/value 的文字存在冲突；式 9 与路由描述要求图像 query 能关注其 key 和翻转后的 value。</p>
+<p>因此，演示呈现明确公式与预期路由，而不重复那句矛盾表述。</p>
+<p>论文还指出作者仓库 issue 19 中存在实现层面的重复问题。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-zh-page-4" aria-labelledby="value-sign-flip-zh-page-4-heading"><header class="running"><h2 id="value-sign-flip-zh-page-4-heading">实验与局限</h2></header><div class="page-columns">
+<section class="column">
+<p>NegGenBench 包含 200 对提示，常要求删除必需部件，主实验采用两个种子。</p>
+<p>表 2 报告 VSF Strong 的正向、负向和质量分数为 0.870、0.545、0.952。</p>
+<p>VSF Quality 为 0.980、0.420、0.986，体现了对负向遵循度的主动权衡。</p>
+<p>原始 NAG 配置在同一报告评估下为 0.993、0.220、0.968。</p>
+<p>主要评判器是 MLLM；人工检查仅覆盖十个选定提示及两个种子。</p>
+<p>因此，应分别检查负向遵循度和视觉质量，包括不寻常但符合要求的对象。</p>
+<p>复现应固定代码版本、路由掩码、重复约定、α 和注意力偏置。</p>
+<p>作者仓库为 weathon/VSF。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-zh-page-5" aria-labelledby="value-sign-flip-zh-page-5-heading"><header class="running"><h2 id="value-sign-flip-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://creativecommons.org/licenses/by/4.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/weathon/VSF/tree/main; https://github.com/weathon/VSF/issues/19; https://github.com/hako-mikan/sd-webui-negpip/; https://github.com/huggingface/diffusers</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2508.10931v6</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#value-sign-flip-en-page-1">1 · Match with the key, oppose with the value</a></li><li><a href="#value-sign-flip-en-page-2">2 · Why one attention pass gives adaptive weights</a></li><li><a href="#value-sign-flip-en-page-3">3 · Joint attention needs routing controls</a></li><li><a href="#value-sign-flip-en-page-4">4 · Experiments and limitations</a></li><li><a href="#value-sign-flip-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Wenqi Guo, Shan Du</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2508.10931v6</p><p><a href="https://arxiv.org/abs/2508.10931v6">2508.10931v6</a>
+ · <a href="https://github.com/weathon/VSF/tree/main">Author code</a>
+</p></div>
+<article class="sheet" id="value-sign-flip-en-page-1" aria-labelledby="value-sign-flip-en-page-1-heading"><header class="running"><h2 id="value-sign-flip-en-page-1-heading">Match with the key, oppose with the value</h2></header><div class="page-columns">
+<section class="column">
+<p>VSF introduces negative guidance inside attention for image generators, including few-step models.</p>
+<p>It concatenates positive and negative prompt keys but flips and scales only the negative values.</p>
+<p>Keeping the negative key unchanged lets image queries still find the unwanted concept.</p>
+<div class="equation" role="math" aria-label="Z_VSF = softmax(Q[K⁺;K⁻]ᵀ/√d)[V⁺;−αV⁻]">Z_VSF = softmax(Q[K⁺;K⁻]ᵀ/√d)[V⁺;−αV⁻]</div>
+<p>Flipping the entire embedding would also change matching and is not the same operation.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-en-page-2" aria-labelledby="value-sign-flip-en-page-2-heading"><header class="running"><h2 id="value-sign-flip-en-page-2-heading">Why one attention pass gives adaptive weights</h2></header><div class="page-columns">
+<section class="column">
+<p>Let S⁺ and S⁻ be the summed exponentiated attention scores for positive and negative keys.</p>
+<p>The shared softmax assigns total positive mass W = S⁺/(S⁺ + S⁻).</p>
+<div class="equation" role="math" aria-label="Z_VSF = W Z⁺ − α(1 − W)Z⁻">Z_VSF = W Z⁺ − α(1 − W)Z⁻</div>
+<p>Here Z⁺ and Z⁻ use separately normalized attention within their prompt groups.</p>
+<p>This identity explains the per-query weight without requiring two separate attention passes.</p>
+<p>It does not prove that subtracting a representation removes exactly one semantic concept.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-en-page-3" aria-labelledby="value-sign-flip-en-page-3-heading"><header class="running"><h2 id="value-sign-flip-en-page-3-heading">Joint attention needs routing controls</h2></header><div class="page-columns">
+<section class="column">
+<p>In MM-DiT, image and text tokens share attention, so an unprotected negative value could also perturb positive and negative text streams.</p>
+<p>The method duplicates negative tokens, retains an unflipped updating stream, and restricts the flipped copy&#x27;s influence to image queries.</p>
+<p>It also uses attention bias and removes negative-prompt padding.</p>
+<p>Section 3.2 contains conflicting wording about whether the flipped copy acts as a key/value; Equation 9 and the routing description require that image queries can attend to its keys and flipped values.</p>
+<p>The demonstration therefore visualizes the explicit equation and intended routing rather than reproducing that contradictory sentence.</p>
+<p>The paper also flags an implementation duplication issue in the author repository&#x27;s issue 19.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-en-page-4" aria-labelledby="value-sign-flip-en-page-4-heading"><header class="running"><h2 id="value-sign-flip-en-page-4-heading">Experiments and limitations</h2></header><div class="page-columns">
+<section class="column">
+<p>NegGenBench contains 200 prompt pairs, often requesting removal of an essential part, with two seeds for the main experiment.</p>
+<p>Table 2 reports positive, negative, and quality scores of 0.870, 0.545, and 0.952 for VSF Strong.</p>
+<p>VSF Quality gives 0.980, 0.420, and 0.986, showing a deliberate tradeoff in negative adherence.</p>
+<p>The original NAG configuration gives 0.993, 0.220, and 0.968 under the same reported evaluation.</p>
+<p>The main judge is an MLLM; the human check covers only ten selected prompts with two seeds.</p>
+<p>Negative adherence and visual quality must therefore be inspected separately, including unusual but correct objects.</p>
+<p>A reproduction should pin the code revision, routing mask, duplication convention, α, and attention bias.</p>
+<p>The author repository is weathon/VSF.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2508.10931v6</span></footer></article>
+<article class="sheet" id="value-sign-flip-en-page-5" aria-labelledby="value-sign-flip-en-page-5-heading"><header class="running"><h2 id="value-sign-flip-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://creativecommons.org/licenses/by/4.0/</p>
+<p>Author-code links in the source: https://github.com/weathon/VSF/tree/main; https://github.com/weathon/VSF/issues/19; https://github.com/hako-mikan/sd-webui-negpip/; https://github.com/huggingface/diffusers</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2508.10931v6</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>

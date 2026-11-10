@@ -4,6 +4,370 @@
   "description": "Detailed reading notes on methods, evidence, and limits. Figures and tables stay close to the claims they support.",
   "papers": [
     {
+      "slug": "apd",
+      "paper_title": "Explaining and Improving Contrastive Decoding by Extrapolating the Probabilities of a Huge and Hypothetical LM",
+      "short_title": "Explaining and Improving Contrastive Decoding by Extrapolating the Probabilities of a Huge and Hypothetical LM",
+      "authors": "Haw-Shiuan Chang, Nanyun Peng, Mohit Bansal, Anil Ramakrishna, Tagyoung Chung",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2411.01610v1",
+      "source_label": "2411.01610v1",
+      "summary": "APD asks whether several models from one size-controlled family can improve the next-token distribution of the largest available model.",
+      "summary_zh": "APD 问的是：同一家族内不同规模的模型，能否共同改善当前可用最大模型的下一词分布。",
+      "url": "https://mkj69.github.io/writing/papers/apd/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/apd/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "commitment-before-realization",
+      "paper_title": "Commitment Before Realization: When Classifier-Free Guidance Becomes Unnecessary in Masked Diffusion Language Models",
+      "short_title": "Commitment Before Realization: When Classifier-Free Guidance Becomes Unnecessary in Masked Diffusion Language Models",
+      "authors": "Fan Zhou, Weitian Wang, Tim Van de Cruys",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2608.08082v1",
+      "source_label": "2608.08082v1",
+      "summary": "This paper asks when classifier-free guidance can be removed from a masked diffusion decoder without materially reducing final constraint success.",
+      "summary_zh": "本文研究何时可以关闭掩码扩散解码器的 classifier-free guidance，同时不实质降低最终约束满足率。",
+      "url": "https://mkj69.github.io/writing/papers/commitment-before-realization/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/commitment-before-realization/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "ucd",
+      "paper_title": "UCD: Unlearning in LLMs via Contrastive Decoding",
+      "short_title": "UCD: Unlearning in LLMs via Contrastive Decoding",
+      "authors": "Vinith M. Suriyakumar, Ayush Sekhari, Ashia Wilson",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2506.12097v1",
+      "source_label": "2506.12097v1",
+      "summary": "UCD changes the next-token distribution of a large model using two smaller auxiliary models.",
+      "summary_zh": "UCD 利用两个较小的辅助模型改变大模型的下一词分布。",
+      "url": "https://mkj69.github.io/writing/papers/ucd/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/ucd/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "rethinking-contrastive-decoding",
+      "paper_title": "Rethinking the Effectiveness of Contrastive Decoding in Mitigating Hallucinations in MLLMs",
+      "short_title": "Rethinking the Effectiveness of Contrastive Decoding in Mitigating Hallucinations in MLLMs",
+      "authors": "Arnav Bendre, Guneesh Gupta, Shreyansh Modi, Kavish Grover, Chayan Aggarwal",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2607.25196v2",
+      "source_label": "2607.25196v2",
+      "summary": "This study asks whether hallucination improvements attributed to contrastive decoding actually come from its contrastive term.",
+      "summary_zh": "本研究追问：归因于对比解码的幻觉改善，是否真的来自对比项。",
+      "url": "https://mkj69.github.io/writing/papers/rethinking-contrastive-decoding/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/rethinking-contrastive-decoding/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "attention-contrastive-decoding",
+      "paper_title": "Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding",
+      "short_title": "Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding",
+      "authors": "Yujia Chen, Rui Sun, Huayu Mai, Wangkai Li, Zhangyu He, Bingzhou Wang, Aibing Li, Wenzhang Sun, Tianzhu Zhang",
+      "published": "2026-11-10",
+      "source_url": "https://proceedings.mlr.press/v306/chen26dx.html",
+      "source_label": "PMLR 306, 2026, pp. 16704–16741",
+      "summary": "The official ICML page identifies this paper as Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding.",
+      "summary_zh": "ICML 官方页面确认论文正式标题为 Beyond Logits: Coherent Hallucination Mitigation via Attention Contrastive Decoding。",
+      "url": "https://mkj69.github.io/writing/papers/attention-contrastive-decoding/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/attention-contrastive-decoding/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "masked-diffusion-cfg",
+      "paper_title": "Improving Classifier-Free Guidance in Masked Diffusion: Low-Dim Theoretical Insights with High-Dim Impact",
+      "short_title": "Improving Classifier-Free Guidance in Masked Diffusion: Low-Dim Theoretical Insights with High-Dim Impact",
+      "authors": "Kevin Rojas, Ye He, Chieh-Hsin Lai, Yuhta Takida, Yuki Mitsufuji, Molei Tao",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2507.08965v2",
+      "source_label": "2507.08965v2",
+      "summary": "In a continuous-time masked diffusion chain, a transition has two components: how often a token is revealed and which token is revealed.",
+      "summary_zh": "在连续时间掩码扩散链中，转移包含两个部分：多久揭示一次词元，以及揭示哪个词元。",
+      "url": "https://mkj69.github.io/writing/papers/masked-diffusion-cfg/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/masked-diffusion-cfg/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "segue",
+      "paper_title": "Decoding-Unlearning: Fact Forgetting via Entropy-Guided Inference",
+      "short_title": "Decoding-Unlearning: Fact Forgetting via Entropy-Guided Inference",
+      "authors": "Jingwen Pu, Mingjun Shi, Xinrui Ren, Yizhe Wang, Xinyu Zhang, Zhaokun Wang, Kun She",
+      "published": "2026-11-10",
+      "source_url": "https://aclanthology.org/2026.acl-long.1850/",
+      "source_label": "ACL 2026, pp. 39834–39860",
+      "summary": "SEGUE performs inference-time fact suppression without updating model weights.",
+      "summary_zh": "SEGUE 在不更新模型权重的情况下进行推理时事实抑制。",
+      "url": "https://mkj69.github.io/writing/papers/segue/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/segue/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "lara",
+      "paper_title": "Safe Inference-Time Alignment via Lagrangian Reward Augmentation",
+      "short_title": "Safe Inference-Time Alignment via Lagrangian Reward Augmentation",
+      "authors": "Yaswanth Chittepu, Ativ Joshi, Sohini Chintala, Scott Niekum",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2607.02781v2",
+      "source_label": "2607.02781v2",
+      "summary": "LARA adds a calibrated cost penalty to an existing reward and passes the result to an inference-time alignment procedure.",
+      "summary_zh": "LARA 在已有奖励中加入经过校准的代价惩罚，并将结果交给推理时对齐程序。",
+      "url": "https://mkj69.github.io/writing/papers/lara/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/lara/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "ggro",
+      "paper_title": "Gradient-Guided Reward Optimization for Inference-time Alignment",
+      "short_title": "Gradient-Guided Reward Optimization for Inference-time Alignment",
+      "authors": "Hankun Lin, Ruqi Zhang",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2606.09635v1",
+      "source_label": "2606.09635v1",
+      "summary": "GGRO monitors next-token entropy and intervenes only when it exceeds a threshold.",
+      "summary_zh": "GGRO 监测下一词熵，仅在超过阈值时干预。",
+      "url": "https://mkj69.github.io/writing/papers/ggro/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/ggro/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "crest",
+      "paper_title": "Beyond Token-Level Guidance: Inference-Time Alignment of Specialized LLMs via Cross-Family Representation Steering",
+      "short_title": "Beyond Token-Level Guidance: Inference-Time Alignment of Specialized LLMs via Cross-Family Representation Steering",
+      "authors": "Jin Gan, Xin Li, Jun Luo",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2608.30319v1",
+      "source_label": "2608.30319v1",
+      "summary": "CREST studies a specialist model that has domain knowledge and a separate aligned model that may lack that knowledge.",
+      "summary_zh": "CREST 研究一种组合：专门模型掌握领域知识，另一个已对齐模型可能缺少这些知识。",
+      "url": "https://mkj69.github.io/writing/papers/crest/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/crest/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "dynamic-negative-guidance",
+      "paper_title": "Dynamic Negative Guidance of Diffusion Models",
+      "short_title": "Dynamic Negative Guidance of Diffusion Models",
+      "authors": "Felix Koulischer, Johannes Deleu, Gabriel Raya, Thomas Demeester, Luca Ambrogioni",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2410.14398v3",
+      "source_label": "2410.14398v3",
+      "summary": "Dynamic Negative Guidance targets the complement of an unwanted concept rather than indefinitely repelling its score field.",
+      "summary_zh": "Dynamic Negative Guidance 针对不希望概念的补集，而不是无限地沿其分数场反方向排斥。",
+      "url": "https://mkj69.github.io/writing/papers/dynamic-negative-guidance/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/dynamic-negative-guidance/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "dynamic-vlm-negative-prompting",
+      "paper_title": "Dynamic VLM-Guided Negative Prompting for Diffusion Models",
+      "short_title": "Dynamic VLM-Guided Negative Prompting for Diffusion Models",
+      "authors": "Hoyeon Chang, Seungjin Kim, Yoonseok Choi",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2510.26052v1",
+      "source_label": "2510.26052v1",
+      "summary": "VL-DNP changes the content of the negative prompt during generation, not only its numerical strength.",
+      "summary_zh": "VL-DNP 在生成期间改变负提示内容，而不只是改变数值强度。",
+      "url": "https://mkj69.github.io/writing/papers/dynamic-vlm-negative-prompting/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/dynamic-vlm-negative-prompting/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "value-sign-flip",
+      "paper_title": "VSF: Simple, Efficient, and Effective Negative Guidance in Few-Step Image Generation Models By Value Sign Flip",
+      "short_title": "VSF: Simple, Efficient, and Effective Negative Guidance in Few-Step Image Generation Models By Value Sign Flip",
+      "authors": "Wenqi Guo, Shan Du",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2508.10931v6",
+      "source_label": "2508.10931v6",
+      "summary": "VSF introduces negative guidance inside attention for image generators, including few-step models.",
+      "summary_zh": "VSF 在图像生成器的注意力内部引入负向引导，也适用于少步模型。",
+      "url": "https://mkj69.github.io/writing/papers/value-sign-flip/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/value-sign-flip/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
+      "slug": "concept-removal-guidance",
+      "paper_title": "Concept Removal Guidance: Evidence-Calibrated Negative Guidance for Safe Diffusion Sampling",
+      "short_title": "Concept Removal Guidance: Evidence-Calibrated Negative Guidance for Safe Diffusion Sampling",
+      "authors": "Yoonseok Choi, Chaeyoung Oh, Hyunjun Choi, Seokin Seo, Kee-Eung Kim",
+      "published": "2026-11-10",
+      "source_url": "https://arxiv.org/abs/2606.29801v1",
+      "source_label": "2606.29801v1",
+      "summary": "CRG aims to suppress a target image concept only when estimated evidence exceeds a threshold.",
+      "summary_zh": "CRG 旨在仅当估计证据超过阈值时抑制目标图像概念。",
+      "url": "https://mkj69.github.io/writing/papers/concept-removal-guidance/",
+      "topics": [
+        "Inference-time methods"
+      ],
+      "languages": [
+        "en",
+        "zh-CN"
+      ],
+      "study_guides": [
+        {
+          "url": "https://mkj69.github.io/writing/papers/concept-removal-guidance/aligned/",
+          "title_en": "Sentence-aligned original note",
+          "title_zh": "原创笔记逐句中英对照"
+        }
+      ]
+    },
+    {
       "slug": "value-filtered-decoding",
       "short_title": "Value-filtered decoding",
       "paper_title": "Selective Safety Steering via Value-Filtered Decoding",

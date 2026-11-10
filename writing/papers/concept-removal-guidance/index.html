@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Concept Removal Guidance: Evidence-Calibrated Negative Guidance for Safe Diffusion Sampling | Kaijing Ma</title><link rel="canonical" href="https://mkj69.github.io/writing/papers/concept-removal-guidance/"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Long+Cang&family=Lora:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Nunito+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Titillium+Web:wght@300;400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../assets/paper-notes.css?v=74c2f674a45a"><script src="../../assets/paper-notes.js?v=8d2d4a722fad" defer></script>
+<link rel="stylesheet" href="/writing/assets/method-demos.css"><script src="/writing/assets/method-demos.js" defer></script></head>
+<body class="paper-notes-site"><div class="notes-site-shell"><header class="notes-site-header"><a class="site-brand" href="../../../">Kaijing Ma</a><nav aria-label="Site navigation"><a href="../../?layout=single-column-en">Paper Notes</a><a href="../../../#writing">Writing</a><a href="../../../">Home</a></nav></header><main class="paper-note-reader" data-paper-reader data-language="en"><header class="notes-hero"><p class="eyebrow">Paper Notes</p><h1 lang="en">Concept Removal Guidance: Evidence-Calibrated Negative Guidance for Safe Diffusion Sampling</h1></header><p class="paper-edition-link"><a href="https://mkj69.github.io/writing/papers/concept-removal-guidance/aligned/"><span data-paper-language-content="zh" lang="zh-CN" hidden>原创笔记逐句中英对照</span><span data-paper-language-content="en" lang="en">Sentence-aligned original note</span> <span aria-hidden="true">↗</span></a></p><div class="reader-toolbar"><a href="../../?layout=single-column-en">Paper Notes</a><div class="paper-language-controls" role="group" aria-label="语言 / Language"><button type="button" data-paper-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-paper-language="en" lang="en" aria-pressed="true">English</button></div></div><section class="method-demo" data-demo="concept-removal-guidance"><h2><span data-paper-language-content="zh" lang="zh-CN" hidden>逐步理解方法</span><span data-paper-language-content="en" lang="en">Explore the method</span></h2><p><span data-paper-language-content="zh" lang="zh-CN" hidden>合成教学数值，不是论文实验结果。默认静止；所有步骤均可在下方静态说明中阅读。</span><span data-paper-language-content="en" lang="en">Synthetic teaching values, not paper results. Nothing plays automatically; all steps remain available in the static explanation.</span></p><div class="demo-controls"></div><div class="demo-stage"></div><details open><summary><span data-paper-language-content="zh" lang="zh-CN" hidden>静态解释与适用限制</span><span data-paper-language-content="en" lang="en">Static explanation and limits</span></summary><p><span data-paper-language-content="zh" lang="zh-CN" hidden>CRG 旨在仅当估计证据超过阈值时抑制目标图像概念。</span><span data-paper-language-content="en" lang="en">CRG aims to suppress a target image concept only when estimated evidence exceeds a threshold.</span></p><ol class="demo-static"><li><span data-paper-language-content="zh" lang="zh-CN" hidden>输入：拟议的去噪步与不期望概念的证据分数。证据是代理量，不是校准概率。</span><span data-paper-language-content="en" lang="en">Input: a proposed denoising step and an evidence score for an unwanted concept. Evidence is a surrogate, not a calibrated probability.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>使用当前方向与短期前瞻，把证据约束近似为半空间。</span><span data-paper-language-content="en" lang="en">Approximate the evidence constraint by a half-space using the current direction and a short lookahead.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>若约束已满足，则保持原步不动；否则沿证据方向投影到边界，使欧氏位移最小。</span><span data-paper-language-content="en" lang="en">If the constraint is satisfied, leave the step alone. Otherwise project to the boundary along the evidence direction with minimum Euclidean displacement.</span></li><li><span data-paper-language-content="zh" lang="zh-CN" hidden>保证只涉及局部代理约束。证据方向范数为零时，已违反的约束可能不可行。放大投影步会失去最小位移结论。</span><span data-paper-language-content="en" lang="en">The guarantee concerns the local surrogate. A zero evidence-direction norm can make a violated constraint infeasible. Scaling beyond the projection sacrifices the minimum-displacement statement.</span></li></ol></details></section><section class="paper-language-panel" data-paper-language-content="zh" lang="zh-CN" hidden>
+<nav class="paper-contents" aria-label="本文目录"><ol><li><a href="#concept-removal-guidance-zh-page-1">1 · 估计超额概念证据</a></li><li><a href="#concept-removal-guidance-zh-page-2">2 · 将证据转为半空间约束</a></li><li><a href="#concept-removal-guidance-zh-page-3">3 · 实验支持什么</a></li><li><a href="#concept-removal-guidance-zh-page-4">4 · 局限与复现</a></li><li><a href="#concept-removal-guidance-zh-page-5">5 · 来源与阅读范围</a></li></ol></nav>
+<div class="bibliography"><p>Yoonseok Choi, Chaeyoung Oh, Hyunjun Choi, Seokin Seo, Kee-Eung Kim</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2606.29801v1</p><p><a href="https://arxiv.org/abs/2606.29801v1">2606.29801v1</a>
+</p></div>
+<article class="sheet" id="concept-removal-guidance-zh-page-1" aria-labelledby="concept-removal-guidance-zh-page-1-heading"><header class="running"><h2 id="concept-removal-guidance-zh-page-1-heading">估计超额概念证据</h2></header><div class="page-columns">
+<section class="column">
+<p>CRG 旨在仅当估计证据超过阈值时抑制目标图像概念。</p>
+<p>概念存在分数由扩散模型自身的条件、无条件和负概念噪声预测构建。</p>
+<p>它是证据分数，不是 [0,1] 内的校准概率。</p>
+<p>推导省略概念先验，并以噪声预测差异近似似然差异。</p>
+<div class="equation" role="math" aria-label="CP ≈ E[κ_t (||ε_c − ε_u||² − ||ε_c − ε_-||²)]">CP ≈ E[κ_t (||ε_c − ε_u||² − ||ε_c − ε_-||²)]</div>
+<p>在这一比较中，若提示所预测的生成相较无条件参考更接近负概念，其证据就更高。</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-zh-page-2" aria-labelledby="concept-removal-guidance-zh-page-2-heading"><header class="running"><h2 id="concept-removal-guidance-zh-page-2-heading">将证据转为半空间约束</h2></header><div class="page-columns">
+<section class="column">
+<p>在线估计器结合已累积轨迹证据，以及围绕 Tweedie 干净图像估计的高斯前瞻近似。</p>
+<p>方差尺度 k 控制前瞻项，仍是一个超参数。</p>
+<p>固定当前负向方向和历史证据后，代理约束对新的噪声预测是仿射的。</p>
+<div class="equation" role="math" aria-label="minimize_e ½||e − ε_c||²  subject to CP_k(e) ≤ τ">minimize_e ½||e − ε_c||²  subject to CP_k(e) ≤ τ</div>
+<p>若当前点可行，最优更新为零。</p>
+<p>否则，最小距离投影沿负向引导方向移动。</p>
+<div class="equation" role="math" aria-label="ε* = ε_c − [(CP_k(ε_c) − τ)/(k||Δε||²)] Δε,  when CP_k(ε_c) &gt; τ">ε* = ε_c − [(CP_k(ε_c) − τ)/(k||Δε||²)] Δε,  when CP_k(ε_c) &gt; τ</div>
+<p>这对仿射代理问题是精确的，但不对真实视觉概念缺失提供精确保证。</p>
+<p>零方向需要显式处理：若约束被违反而法向为零，该投影公式无定义。</p>
+<p>实用放大系数 λ₀ &gt; 1 会越过最小距离边界，因此改变优化解释。</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-zh-page-3" aria-labelledby="concept-removal-guidance-zh-page-3-heading"><header class="running"><h2 id="concept-removal-guidance-zh-page-3-heading">实验支持什么</h2></header><div class="page-columns">
+<section class="column">
+<p>主设置使用 Stable Diffusion v1.4、50 步 DDPM 以及对抗提示套件。</p>
+<p>表 1 中，CRG 的 P4D ASR 为 0.026，DNG 为 0.225，静态负提示为 0.338。</p>
+<p>在 MMA-Diff 上，CRG 为 0.164，DNG 为 0.139，因此 CRG 并非每种攻击上最佳。</p>
+<p>正常内容 FID 以原模型生成图像为参考，质量评估使用 1,000 个 COCO 提示。</p>
+<p>较低值衡量相对该参考的保留程度，而不是通用照片真实感。</p>
+<p>额外测试覆盖 SDXL、SD v3、确定性采样、暴力内容和艺术家风格移除。</p>
+<p>在人工评估的 Van Gogh 风格移除中，目标风格准确率为 0.259，其他风格准确率为 0.820。</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-zh-page-4" aria-labelledby="concept-removal-guidance-zh-page-4-heading"><header class="running"><h2 id="concept-removal-guidance-zh-page-4-heading">局限与复现</h2></header><div class="page-columns">
+<section class="column">
+<p>CP 近似、检测器标签、负提示和阈值共同影响观察到的安全与质量权衡。</p>
+<p>逐步投影不保证后续模型动力学不会重新引入概念。</p>
+<p>复现应记录约束超额量、方向范数、干预频率，以及最终独立评估的概念存在情况。</p>
+<p>所检查 arXiv 版本仅有分发许可，因此这里交付原创双语笔记及其对照版。</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-zh-page-5" aria-labelledby="concept-removal-guidance-zh-page-5-heading"><header class="running"><h2 id="concept-removal-guidance-zh-page-5-heading">来源与阅读范围</h2></header><div class="page-columns">
+<section class="column">
+<p>本原创笔记覆盖上文讨论的方法和选定实验证据，不是论文全文翻译；本次未运行模型复现实验。来源许可：https://arxiv.org/licenses/nonexclusive-distrib/1.0/</p>
+<p>原文所列作者或相关代码链接：https://github.com/notAI-tech/NudeNet</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2606.29801v1</span></footer></article>
+<p class="edition">原图与数据来自原论文。解释与比较属于阅读笔记。版本和图表编号随正文标明。</p></section><section class="paper-language-panel" data-paper-language-content="en" lang="en">
+<nav class="paper-contents" aria-label="On this page"><ol><li><a href="#concept-removal-guidance-en-page-1">1 · Estimate surplus concept evidence</a></li><li><a href="#concept-removal-guidance-en-page-2">2 · Turn evidence into a half-space constraint</a></li><li><a href="#concept-removal-guidance-en-page-3">3 · What the experiments support</a></li><li><a href="#concept-removal-guidance-en-page-4">4 · Limits and reproduction</a></li><li><a href="#concept-removal-guidance-en-page-5">5 · Sources and reading scope</a></li></ol></nav>
+<div class="bibliography"><p>Yoonseok Choi, Chaeyoung Oh, Hyunjun Choi, Seokin Seo, Kee-Eung Kim</p><p>Original reading note; cited methods and evidence, not an experimental reproduction. · 2606.29801v1</p><p><a href="https://arxiv.org/abs/2606.29801v1">2606.29801v1</a>
+</p></div>
+<article class="sheet" id="concept-removal-guidance-en-page-1" aria-labelledby="concept-removal-guidance-en-page-1-heading"><header class="running"><h2 id="concept-removal-guidance-en-page-1-heading">Estimate surplus concept evidence</h2></header><div class="page-columns">
+<section class="column">
+<p>CRG aims to suppress a target image concept only when estimated evidence exceeds a threshold.</p>
+<p>Its concept-presence score is built from the diffusion model&#x27;s own conditional, unconditional, and negative-concept noise predictions.</p>
+<p>It is an evidence score, not a calibrated probability in [0,1].</p>
+<p>The derivation drops the concept prior and approximates likelihood discrepancies with noise-prediction discrepancies.</p>
+<div class="equation" role="math" aria-label="CP ≈ E[κ_t (||ε_c − ε_u||² − ||ε_c − ε_-||²)]">CP ≈ E[κ_t (||ε_c − ε_u||² − ||ε_c − ε_-||²)]</div>
+<p>A prompt has higher evidence when its predicted generation is closer to the negative concept than to the unconditional reference in this comparison.</p>
+</section>
+</div><footer class="page-foot"><span>1 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-en-page-2" aria-labelledby="concept-removal-guidance-en-page-2-heading"><header class="running"><h2 id="concept-removal-guidance-en-page-2-heading">Turn evidence into a half-space constraint</h2></header><div class="page-columns">
+<section class="column">
+<p>The online estimator combines accumulated trajectory evidence with a Gaussian look-ahead approximation around a Tweedie clean-image estimate.</p>
+<p>The variance scale k controls the look-ahead term and remains a hyperparameter.</p>
+<p>With the current negative direction and past evidence fixed, the surrogate constraint is affine in the new noise prediction.</p>
+<div class="equation" role="math" aria-label="minimize_e ½||e − ε_c||²  subject to CP_k(e) ≤ τ">minimize_e ½||e − ε_c||²  subject to CP_k(e) ≤ τ</div>
+<p>If the current point is feasible, the optimal update is zero.</p>
+<p>Otherwise the minimum-distance projection moves along the negative-guidance direction.</p>
+<div class="equation" role="math" aria-label="ε* = ε_c − [(CP_k(ε_c) − τ)/(k||Δε||²)] Δε,  when CP_k(ε_c) &gt; τ">ε* = ε_c − [(CP_k(ε_c) − τ)/(k||Δε||²)] Δε,  when CP_k(ε_c) &gt; τ</div>
+<p>This is exact for the affine surrogate, not for true visual concept absence.</p>
+<p>A zero direction needs explicit handling: if the constraint is violated and its normal is zero, this projection formula is undefined.</p>
+<p>The practical amplification λ₀ &gt; 1 moves past the minimum-distance boundary and therefore changes the optimization interpretation.</p>
+</section>
+</div><footer class="page-foot"><span>2 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-en-page-3" aria-labelledby="concept-removal-guidance-en-page-3-heading"><header class="running"><h2 id="concept-removal-guidance-en-page-3-heading">What the experiments support</h2></header><div class="page-columns">
+<section class="column">
+<p>The main setting uses Stable Diffusion v1.4 with 50 DDPM steps and adversarial prompt suites.</p>
+<p>In Table 1, CRG has P4D ASR 0.026 versus 0.225 for DNG and 0.338 for static negative prompting.</p>
+<p>On MMA-Diff, CRG is 0.164 while DNG is 0.139, so CRG is not best on every attack.</p>
+<p>The benign FID reference is images from the original model, with 1,000 COCO prompts used for quality evaluation.</p>
+<p>A lower value measures preservation relative to that reference, not universal photorealism.</p>
+<p>Additional tests cover SDXL, SD v3, deterministic sampling, violence, and artist-style removal.</p>
+<p>For human-rated Van Gogh style removal, target-style accuracy is 0.259 and unrelated-style accuracy is 0.820.</p>
+</section>
+</div><footer class="page-foot"><span>3 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-en-page-4" aria-labelledby="concept-removal-guidance-en-page-4-heading"><header class="running"><h2 id="concept-removal-guidance-en-page-4-heading">Limits and reproduction</h2></header><div class="page-columns">
+<section class="column">
+<p>The CP approximation, detector labels, negative prompt, and threshold all contribute to the observed safety-quality tradeoff.</p>
+<p>Sequential projection does not guarantee that later model dynamics cannot reintroduce a concept.</p>
+<p>A reproduction should log constraint surplus, direction norm, intervention frequency, and final independently assessed concept presence.</p>
+<p>The inspected arXiv version has a distribution-only license, so the deliverable here is an original bilingual note and its aligned edition.</p>
+</section>
+</div><footer class="page-foot"><span>4 / 5</span><span>2606.29801v1</span></footer></article>
+<article class="sheet" id="concept-removal-guidance-en-page-5" aria-labelledby="concept-removal-guidance-en-page-5-heading"><header class="running"><h2 id="concept-removal-guidance-en-page-5-heading">Sources and reading scope</h2></header><div class="page-columns">
+<section class="column">
+<p>This original note covers the method and selected experimental evidence discussed above. It is not a full-paper translation. No model experiments were run for this note. Source license: https://arxiv.org/licenses/nonexclusive-distrib/1.0/</p>
+<p>Author-code links in the source: https://github.com/notAI-tech/NudeNet</p>
+</section>
+</div><footer class="page-foot"><span>5 / 5</span><span>2606.29801v1</span></footer></article>
+<p class="edition">Original figures and data come from the cited paper. Explanations and comparisons are reading notes. Source versions and figure labels appear beside the material.</p></section><dialog id="paper-image-dialog" class="paper-image-dialog" aria-label="论文图片 / Paper figure"><button type="button" class="paper-dialog-close" aria-label="关闭图片 / Close figure">关闭 / Close</button><img alt=""></dialog><p class="reader-status sr-only" role="status" aria-live="polite"></p></main><footer class="notes-site-footer"><span>Kaijing Ma</span><a href="../../../#writing">Writing &amp; Projects</a></footer></div></body>
+</html>
