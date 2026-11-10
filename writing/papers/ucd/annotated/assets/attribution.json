@@ -1,0 +1,53 @@
+{
+  "paper": "arXiv:2506.12097v1",
+  "source": "https://arxiv.org/abs/2506.12097v1",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "modification": "Chinese translation, bilingual layout, responsive styling, accessibility metadata, and fixed-version PDF figure crops without data redrawing.",
+  "files": [
+    {
+      "file": "figure_1_UCD.png",
+      "sha256": "8d5716b5a7e2dcaacc2e9df7a73a121047cb8c96da348be57c368532824aec7f"
+    },
+    {
+      "file": "tofu_forget05_alpha.png",
+      "sha256": "c6e4fa2b30137b8ae6932fc4da399444fb6a1fd140c2d95bae3aae74cacde250"
+    },
+    {
+      "file": "tofu_forget05_bootstrap.png",
+      "sha256": "09f3a480602dd0b970fe288512ecc0be17d97696b69356090f4265775f0056c4"
+    },
+    {
+      "file": "tofu_forget05_compare.png",
+      "sha256": "a43cfb45ae8dd442100c875510504a8b7d21beeae93bb7c01cfe399ba733caaa"
+    },
+    {
+      "file": "tofu_forget05_sampling.png",
+      "sha256": "6b735ddd2cf98ad29fd685fef71bf45eee71d8767e5fce35f13481596f5a0919"
+    },
+    {
+      "file": "tofu_forget10_alpha.png",
+      "sha256": "ba4143bfb0eab8835a93b7e6dd427958fb120a8bd7ffe5c84aeb040e65d5603d"
+    },
+    {
+      "file": "tofu_forget10_bootstrap.png",
+      "sha256": "2121376bc24218d9e7751749b5595b144aec9d91c99a3d016aec150c416788de"
+    },
+    {
+      "file": "tofu_forget10_compare.png",
+      "sha256": "034f9e98a2baa1edcf6b1381a9bb4f36801bdc65ce9c8cda28e60863c3c3340f"
+    },
+    {
+      "file": "tofu_forget10_sampling.png",
+      "sha256": "d6d0b84a213bd33eb00106271144ea468bda288da8a812f2f7ae7f8a8faad875"
+    },
+    {
+      "file": "tofu_forget10_scaling.png",
+      "sha256": "ce4262c4ad658a8570901e830b2bee742e29680131ab5b8dc27eee1884251fd2"
+    },
+    {
+      "file": "tofu_forget_main.png",
+      "sha256": "3f0fed4a71938a27342b3144acfd44c97ca659942244aafb0726a330ee00678d"
+    }
+  ]
+}
