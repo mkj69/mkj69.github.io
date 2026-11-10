@@ -1,0 +1,57 @@
+{
+  "paper": "arXiv:2608.08082v1",
+  "source": "https://arxiv.org/abs/2608.08082v1",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "modification": "Chinese translation, bilingual layout, responsive styling, and accessibility metadata.",
+  "files": [
+    {
+      "file": "astar_dist_reanalysis.png",
+      "sha256": "9a338851c5336e4ba719b802b0797e033cd007a1d2502211b3f127714e6ac884"
+    },
+    {
+      "file": "fig_astar_ofat_gen.svg",
+      "sha256": "09f3ce99b4339eee6326e57c8111c266f171b7401c33d298452925317d4c4feb"
+    },
+    {
+      "file": "fig_astar_ofat_steps.svg",
+      "sha256": "756746eb82588c8dc71dd77bc4a392dc9309b0fcd76f117f8877b53c5bd9a1eb"
+    },
+    {
+      "file": "fig_astar_ofat_w.svg",
+      "sha256": "f0bfc9bd66eb8f4a9352aaebcedb20861611219318c29b96d3bbc8f61008965e"
+    },
+    {
+      "file": "fig_failure_modes.png",
+      "sha256": "820700200f0c3ea5b67404f6ef139970d93dd275b2822fb07f5d715b0cf79f26"
+    },
+    {
+      "file": "fig_failure_shares.svg",
+      "sha256": "b777fa90cbbac5d3eaf2492fc843204ba5bf49278622bf878f2cab0d67aba797"
+    },
+    {
+      "file": "fig_freeze_plateau.svg",
+      "sha256": "a0e6735b963525a16566620a6a562909e7b2b4195ba827e256e29b8df0362f75"
+    },
+    {
+      "file": "fig_gate_k_abs_ppl.svg",
+      "sha256": "c349c7cd393a987e4226f23fe34295db72a0fe586722459077b2b66ef2c4422d"
+    },
+    {
+      "file": "fig_gate_k_abs_sr.svg",
+      "sha256": "d92e7a50685ef6b6512ea1abc6c29e9e5b1d96819798409dd284d134389e8aff"
+    },
+    {
+      "file": "fig_ofat_axes.svg",
+      "sha256": "0703859c9ed46e5995a31ca87940c007afab54ee3bc106995c5905a87b831995"
+    },
+    {
+      "file": "fig_parallel_k.svg",
+      "sha256": "8cd37382f6502f2f5873a94d3446e4a7a58da2bd2d8f36d455fdc62965cfa41a"
+    },
+    {
+      "file": "fig_typology_compact.svg",
+      "sha256": "848823283313e5c7bb454068c00291d42cf0b66efae23582bb4192614951f008"
+    }
+  ]
+}

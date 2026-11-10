@@ -62,7 +62,18 @@
           "title_en": "Sentence-aligned original note",
           "title_zh": "原创笔记逐句中英对照"
         }
-      ]
+      ],
+      "annotated_reader": {
+        "url": "https://mkj69.github.io/writing/papers/commitment-before-realization/annotated/",
+        "published": "2026-11-10",
+        "source_version": "arXiv:2608.08082v1",
+        "layout": "english-then-chinese",
+        "glossary_entries": 12,
+        "translated_units": 1003,
+        "reference_titles": 46,
+        "table_cells": 4044,
+        "source_graphics": 12
+      }
     },
     {
       "slug": "ucd",
