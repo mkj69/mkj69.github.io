@@ -12,6 +12,7 @@ body.paper-notes-site {
     --notes-green: #397451;
     min-height: 100vh;
     margin: 0;
+    overflow-x: clip;
     color: var(--notes-ink);
     background:
         radial-gradient(circle at 8% 2%, rgba(121, 106, 92, .016), transparent 31rem),
