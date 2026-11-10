@@ -30,7 +30,16 @@
           "title_zh": "笔记中英逐句对照版",
           "title_en": "Sentence-aligned bilingual note"
         }
-      ]
+      ],
+      "annotated_reader": {
+        "url": "https://mkj69.github.io/writing/papers/value-filtered-decoding/annotated/",
+        "published": "2026-11-10",
+        "source_version": "arXiv:2605.14746v3",
+        "layout": "english-then-chinese",
+        "glossary_entries": 16,
+        "translated_units": 474,
+        "reference_titles": 55
+      }
     },
     {
       "slug": "deep-learning-2015",

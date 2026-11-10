@@ -1,0 +1,108 @@
+{
+  "source": "arXiv:2605.14746v3",
+  "authors": "Einbinder et al.",
+  "basis": "User supplied PDF transformed into bilingual reading edition. Assets match the same version HTML. No code license is asserted for figures.",
+  "pdf_sha256": "538e4f77e951190c08f3f7cda399a102bbd111cc5ba4b099b63e432dc2012bfb",
+  "assets": [
+    {
+      "file": "distributions.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/distributions.png",
+      "sha256": "6fdfce9ae28c820b1b6996a09640a22ed4c246af68a95e79749f8740927ad727"
+    },
+    {
+      "file": "legend_only_tv.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/legend_only_tv.png",
+      "sha256": "5ac6465dfe1091979fcf8eb2a7459d768fb80f7c48eaa12bab78cd9320f0636a"
+    },
+    {
+      "file": "phase_bimodal_skewed.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/phase_bimodal_skewed.png",
+      "sha256": "01198aa3d71ef2c8e8382b710ecf525b8973e77e8c70dd55902b241b1a33ceac"
+    },
+    {
+      "file": "phase_boundary_heavy.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/phase_boundary_heavy.png",
+      "sha256": "3128ec3144c9308185a4fff825089dca1f0b7a707505163a052900ad65cc0686"
+    },
+    {
+      "file": "tightness_bimodal_skewed.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tightness_bimodal_skewed.png",
+      "sha256": "e6879ab4ae1a0e900c39f360ca01752839c6b03e707e0d60e68ec3147488cca6"
+    },
+    {
+      "file": "tightness_concentrated_low.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tightness_concentrated_low.png",
+      "sha256": "1137dfb71f3c727aa692a6aaabeac276fcd7dab1a241f654f918e3b11d923c5f"
+    },
+    {
+      "file": "tradeoff_legend.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tradeoff_legend.png",
+      "sha256": "cf2ce5f4dc743bc558784576f8b0e2b36741c9732798635c79220d8337f03478"
+    },
+    {
+      "file": "tv_distance_concentrated.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tv_distance_concentrated.png",
+      "sha256": "e882f51366d767f7f75cdca74c041ac9b06f5a5c2ef3f52a0120723802562b24"
+    },
+    {
+      "file": "tv_distance_polarized.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tv_distance_polarized.png",
+      "sha256": "5b205386fc33bc9e0fc1dd8d0e6bb03ea8a901287ee820456f6b2579f1c1b685"
+    },
+    {
+      "file": "tv_distance_uniform.png",
+      "source": "https://arxiv.org/html/2605.14746v3/figures/tv_distance_uniform.png",
+      "sha256": "917ebee6ae44afd3e69c935c47fcb01a39baf3662ac2307e7e23239190c238d5"
+    },
+    {
+      "file": "maintext_phase.png",
+      "source": "https://arxiv.org/html/2605.14746v3/maintext_phase.png",
+      "sha256": "4aff3a67fcffe0e23147144c4a05525f54a63d19b33dc7cef4649ac5495c7c98"
+    },
+    {
+      "file": "maintext_tightness.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/maintext_tightness.svg",
+      "sha256": "fee6b31f3db423fb81fba8bfbe9112f835b50e77d587725da81eb3f57386f545"
+    },
+    {
+      "file": "runtime_hf.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/runtime_hf.svg",
+      "sha256": "7f7097d5a3e4440087c2809a92eea941bd0b9fb7f4c679bb53e5f799ac59344f"
+    },
+    {
+      "file": "runtime_vllm.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/runtime_vllm.svg",
+      "sha256": "77aaa3139f31064e19e793e7c9f2970e8d253df31d81850de04c70af4c9d5918"
+    },
+    {
+      "file": "tradeoff_beavertails.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/tradeoff_beavertails.svg",
+      "sha256": "4c9620b8edfb92c4e9bb7c72c3a1a9b20e7e058a1113ec0147909901362813f2"
+    },
+    {
+      "file": "tradeoff_hh-rlhf.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/tradeoff_hh-rlhf.svg",
+      "sha256": "3ccbc544e7be2a95eff8dcd47247f19b1f93db12b3f6504dc1b2bfc19b57df9b"
+    },
+    {
+      "file": "tradeoff_hh-rlhf_safe.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/tradeoff_hh-rlhf_safe.svg",
+      "sha256": "ec0bbffae81e75bcef04e0e7d3bcea53cc5be45613793b97d8977c335e60ef67"
+    },
+    {
+      "file": "tradeoff_hh-rlhf_unsafe.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/tradeoff_hh-rlhf_unsafe.svg",
+      "sha256": "ecf792452fb6932d69d64714dfb909fad855d21e13761219e7b72a2775e19634"
+    },
+    {
+      "file": "tradeoff_pku_saferlhf.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/tradeoff_pku_saferlhf.svg",
+      "sha256": "bb7f6934ac3d4237ff6383a113624f46c13b9610b552d0450311983aafee0b28"
+    },
+    {
+      "file": "type1.svg",
+      "source": "https://arxiv.org/html/2605.14746v3/type1.svg",
+      "sha256": "5de39065210598d55bba9beee433d2fdb8ff1ed362a6d80dba31f49dd4c64e64"
+    }
+  ]
+}
