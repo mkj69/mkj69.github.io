@@ -1,0 +1,25 @@
+{
+  "paper": "arXiv:2411.01610v1",
+  "source": "https://arxiv.org/abs/2411.01610v1",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "modification": "Chinese translation, bilingual layout, responsive styling, and accessibility metadata.",
+  "files": [
+    {
+      "file": "common_animal_fig_large.png",
+      "sha256": "f5f484ec4dad54cb9e9cefe7f8f0248d5d11e2b2cf4e0605357aeb49848c22e3"
+    },
+    {
+      "file": "our_model_vertical.png",
+      "sha256": "b00f8cfb9faa2db52d1fce1b5fc9693bbb696fadfa679a10160f922f3d2af7ca"
+    },
+    {
+      "file": "thoery.png",
+      "sha256": "e8be7ece316d5b6dd5786a90a2a7bc44f332d378c2a042640d0b1a9b54746f5c"
+    },
+    {
+      "file": "visualization_final.png",
+      "sha256": "2e51538c5a54377c679eeced0aa7bbfd5d185360e32ed6e6e18ee818f27983d1"
+    }
+  ]
+}
